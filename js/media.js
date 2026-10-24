@@ -11,6 +11,7 @@
  *
  * New:
  *   playReactionVideo()
+ *   preloadMatchVideos()
  *   KFMedia.freezeSides()
  *   KFMedia.cancelAll()
  *   KFMedia.status()
@@ -36,6 +37,7 @@
 
   const tasks = new Map();
   const preferredSources = new Map();
+  const blobCache = new Map();
 
   let requestNumber = 0;
   let epoch = 0;
@@ -184,32 +186,35 @@
       const file = String(item || "").trim();
       if (!file) continue;
 
+      const baseName = file.split("/").pop();
+
+      if (blobCache.has(baseName)) {
+        candidates.push(blobCache.get(baseName));
+        continue;
+      }
+
+      if (blobCache.has(file)) {
+        candidates.push(blobCache.get(file));
+        continue;
+      }
+
       if (/^(blob:|data:|https?:)/i.test(file)) {
         candidates.push(file);
         continue;
       }
 
-      if (file.includes("/")) {
-        candidates.push(file);
-        const base = file.split("/").pop();
-        if (base) {
-          candidates.push(
-            `assets/videos/${rider}/${base}`,
-            `assets/videos/${rider}_${base}`,
-            `assets/videos/${base}`
-          );
-        }
+      const filename = /\.(mp4|webm)$/i.test(file) ? file : `${file}.mp4`;
+      const fullPath = `assets/videos/${rider}/${filename}`;
+
+      if (blobCache.has(fullPath)) {
+        candidates.push(blobCache.get(fullPath));
         continue;
       }
-
-      const filename = /\.(mp4|webm)$/i.test(file)
-        ? file
-        : `${file}.mp4`;
 
       const lower = filename.toLowerCase();
 
       candidates.push(
-        `assets/videos/${rider}/${filename}`,
+        fullPath,
         `assets/videos/${rider}_${filename}`,
         `assets/videos/${filename}`
       );
@@ -224,6 +229,73 @@
     }
 
     return [...new Set(candidates)];
+  }
+
+  /**
+   * Downloads and caches all system & move video clips for the selected riders into RAM Blobs.
+   */
+  async function preloadMatchVideos(p1RiderId, p2RiderId, onProgress = null) {
+    const systemClips = [
+      "idle.mp4", "hit_physical.mp4", "hit.mp4", "guard.mp4",
+      "dodge.mp4", "faint.mp4", "ko.mp4", "mid-air.mp4", "victory.mp4", "victory2.mp4"
+    ];
+
+    function getMoveFiles(riderId) {
+      const riderKey = String(riderId).toLowerCase();
+      const rosterMoves = g.ROSTER?.[riderKey]?.moves || g.RIDERS?.[riderKey]?.moves || g.CHARACTERS?.[riderKey]?.moves || g.MOVES?.[riderKey] || {};
+      return Object.values(rosterMoves)
+        .map(move => move.video || move.videoFile || move.clip || move.src)
+        .filter(Boolean);
+    }
+
+    const targets = [];
+    const addRiderClips = (riderId) => {
+      const rider = String(riderId).toLowerCase();
+      const clips = [...new Set([...systemClips, ...getMoveFiles(riderId)])];
+
+      for (const clip of clips) {
+        const filename = /\.(mp4|webm)$/i.test(clip) ? clip : `${clip}.mp4`;
+        const path = `assets/videos/${rider}/${filename}`;
+        targets.push({ rider, filename, path });
+      }
+    };
+
+    if (p1RiderId) addRiderClips(p1RiderId);
+    if (p2RiderId) addRiderClips(p2RiderId);
+
+    let loadedCount = 0;
+    const totalCount = targets.length;
+
+    if (totalCount === 0) {
+      if (onProgress) onProgress(1.0);
+      return;
+    }
+
+    await Promise.allSettled(
+      targets.map(async (item) => {
+        if (blobCache.has(item.filename) || blobCache.has(item.path)) {
+          loadedCount++;
+          if (onProgress) onProgress(loadedCount / totalCount);
+          return;
+        }
+
+        try {
+          const response = await fetch(item.path);
+          if (response.ok) {
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            blobCache.set(item.filename, blobUrl);
+            blobCache.set(item.path, blobUrl);
+            preferredSources.set(`${item.rider}|action|${item.filename}`, blobUrl);
+          }
+        } catch (err) {
+          console.warn("[KFMedia] Preload skipped missing video:", item.path);
+        } finally {
+          loadedCount++;
+          if (onProgress) onProgress(loadedCount / totalCount);
+        }
+      })
+    );
   }
 
   function scope(options = {}) {
@@ -379,7 +451,6 @@
             return;
           }
 
-          // Transient play() interruption while loading: allow retry if not exhausted.
           if (playRetries < 3) {
             playRetries += 1;
             playInFlight = false;
@@ -393,7 +464,6 @@
 
           complete("error", error);
         } else if (error?.name === "NotAllowedError") {
-          // Ensure muted fallback and retry once before giving up as blocked.
           if (video && playRetries < 2) {
             playRetries += 1;
             playInFlight = false;
@@ -429,7 +499,6 @@
 
           log("playing", task.id, attemptToken, src);
 
-          // Background loops resolve as soon as playback is active.
           if (task.background) {
             task.ready({ status: "playing", src });
             complete("playing");
@@ -459,7 +528,6 @@
                 complete("cancelled");
                 return;
               }
-              // If already playing despite promise rejection, ignore.
               if (started || !video.paused) {
                 markPlaying();
                 return;
@@ -543,7 +611,6 @@
 
           const now = performance.now();
 
-          // Do not count a backgrounded tab as a playback stall.
           if (document.hidden) {
             lastProgress = now;
             lastTime = video.currentTime;
@@ -564,7 +631,6 @@
             return;
           }
 
-          // If browser paused a foreground clip mid-playback without ending, resume it.
           if (
             started &&
             !task.background &&
@@ -760,7 +826,6 @@
               preferredSources.delete(task.cacheKey);
             }
 
-            // Only this loop advances the candidate list.
             continue;
           }
 
@@ -773,8 +838,6 @@
             return result;
           }
 
-          // Autoplay restriction or missing DOM:
-          // do not misclassify every filename as missing.
           break;
         }
 
@@ -819,7 +882,6 @@
 
         spec.signal?.removeEventListener("abort", externalAbort);
 
-        // Keep background loop alive in the DOM after attemptVideo resolves "playing".
         if (!task.background || result.status !== "playing") {
           controller.abort();
           if (tasks.get(channel) === task) {
@@ -854,7 +916,6 @@
       pendingForeground -= 1;
     });
 
-    // A failed job must not poison the queue.
     queue = completed.then(
       () => undefined,
       () => undefined
@@ -878,7 +939,7 @@
       candidates: candidatePaths(rider, files),
       cacheKey: `${rider}|reaction|${state}`,
       identity: `${rider}|${state}`,
-      background: false, // Even FAINT must end when used as a reaction.
+      background: false,
       transform,
       stallMs: options.stallMs,
       signal: options.signal,
@@ -898,7 +959,6 @@
       return playReactionVideo(slot, state, options);
     }
 
-    // Do not let unrelated idle updates interrupt a combat sequence.
     if (
       pendingForeground > 0 ||
       g.gameState?.roundPhase === "RESOLUTION"
@@ -973,11 +1033,7 @@
           identity: `${rider}|${videoFile}`,
           background: false,
           transform,
-
-          // Compatibility argument now acts as a no-progress timeout.
-          // A healthy clip longer than 8 seconds is not cut short.
           stallMs: options.stallMs ?? maxDurationMs,
-
           signal: options.signal,
           valid
         });
@@ -986,14 +1042,11 @@
           centerOwner = null;
           centerVisible(false);
         }
-
-        // Intentionally NO updateCharacterMedia(..., "IDLE") here.
       }
     }, options);
   }
 
   function cancelAll() {
-    // Invalidates active AND queued requests.
     epoch += 1;
 
     for (const task of tasks.values()) {
@@ -1077,7 +1130,8 @@
     VERSION,
     freezeSides,
     cancelAll,
-    status
+    status,
+    preloadMatchVideos
   };
 
   for (const id of VIDEO_IDS) prepareVideo(el(id));
