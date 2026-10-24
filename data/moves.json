@@ -400,7 +400,7 @@
       "chiCost": 5,
       "baseDamage": 450,
       "hitChance": 78,
-      "video": "jaguar_shock.mp4",
+      "video": "jaguar.mp4",
       "debuff": {
         "id": "bleeding",
         "label": "BLEEDING",
