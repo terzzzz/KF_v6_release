@@ -1,13 +1,14 @@
-/* js/match_manager.js
+/*
+ * js/match_manager.js
  * Live input and search-controller adapter.
  * Build: v5-state256-action17
  *
  * Playback interface: live-ui-2
  *
  * CPU policy:
- *   NOVICE / BALANCED / MASTER / SOUL -> pure Foresee search.
- *   RIDER -> Foresee search with an exact-matchup ACTIVE model.
- *   RIDER without a model -> explicit pure SOUL fallback.
+ *    NOVICE / BALANCED / MASTER / SOUL -> pure Foresee search.
+ *    RIDER -> Foresee search with an exact-matchup ACTIVE model.
+ *    RIDER without a model -> explicit pure SOUL fallback.
  *
  * ACTIVE checkpoints are copied once per gameState object.
  * A new match must use a new gameState object.
@@ -30,10 +31,6 @@
   const KEYS = [...DIRS, ...BUTTONS];
   const HUMAN_INPUTS = new Set([...KEYS, "IDLE", "DO_NOTHING"]);
 
-  /*
-   * The supplied v5 SoulEnv keeps STEP and limit() private.
-   * These mirror that file's timing rules.
-   */
   const STEP_MS = 50;
 
   function roundLimitMs() {
@@ -47,7 +44,6 @@
   let bound = false;
   let focused = true;
 
-  // Private frozen snapshots, separate for each match object.
   const frozenModels = new WeakMap();
 
   const byId = id => document.getElementById(id);
@@ -71,8 +67,6 @@
     ).toLowerCase();
 
     if (raw === "novice") return "easy";
-
-    // Compatibility alias only; this is not an MCTS implementation.
     if (raw === "mcts") return "rider";
 
     if (["easy", "balanced", "master", "soul", "rider"].includes(raw)) {
@@ -121,7 +115,6 @@
     const gs = g.gameState;
 
     if (gs) {
-      // Invalidates pending planning results and playback ownership.
       gs.roundToken = (Number(gs.roundToken) || 0) + 1;
       gs.inputPausedAt = null;
       gs.soulQueue = [];
@@ -173,7 +166,6 @@
   }
 
   function cloneCheckpoint(checkpoint) {
-    // Checkpoints contain JSON-compatible data.
     return checkpoint
       ? JSON.parse(JSON.stringify(checkpoint))
       : null;
@@ -234,7 +226,6 @@
         );
 
         if (!checkpoint) {
-          // Deliberate no-model snapshot for this match.
           record.models[slot] = null;
           continue;
         }
@@ -259,7 +250,6 @@
 
     frozenModels.set(gs, record);
 
-    // Permit a retry if loading failed before a snapshot was established.
     record.promise.catch(() => {
       if (frozenModels.get(gs) === record) {
         frozenModels.delete(gs);
@@ -329,7 +319,6 @@
       const cell = env.cells[slot];
       const idle = cell.action?.key === "DO_NOTHING";
 
-      // Planned action objects do not set cell.direction in v5 SoulEnv.
       const actionDirection = cell.action?.key?.split("+")[0];
       const direction = cell.direction || (
         DIRS.includes(actionDirection) ? actionDirection : null
@@ -382,7 +371,6 @@
       if (slot === "p1") gs.input = presentation;
       else gs.p2Input = presentation;
 
-      // Presentation only: do not mutate gs.core combat state.
       if (gs[slot]) {
         gs[slot].activeChargePercent = cell.charge;
       }
@@ -433,8 +421,6 @@
     return true;
   }
 
-  // Compatibility entry point.
-  // A caller-supplied charge cannot bypass human charging time.
   function confirm(slot, requested) {
     if (
       requested?.key === "DO_NOTHING" ||
@@ -474,7 +460,6 @@
   }
 
   function tick(gs, token, now) {
-    // A stale callback must not clear a newer round's frame handle.
     if (!owns(gs, token) || gs.roundPhase !== "INPUT") return;
 
     frame = null;
@@ -495,27 +480,25 @@
         ) {
           const inputs = { p1: [], p2: [] };
 
-          // Both CPU decisions are collected before either is applied.
           for (const slot of SLOTS) {
             if (env.cells[slot].locked) continue;
 
             const actor = gs.soulActors[slot];
 
-           if (actor) {
-  const proposal = actor(env, slot);
+            if (actor) {
+              const proposal = actor(env, slot);
 
-  if (Array.isArray(proposal)) {
-    inputs[slot].push(...proposal);
-  } else {
-    inputs[slot].push(proposal);
-  }
-}
+              if (Array.isArray(proposal)) {
+                inputs[slot].push(...proposal);
+              } else {
+                inputs[slot].push(proposal);
+              }
+            }
           }
 
           const remaining = [];
 
           for (const event of gs.soulQueue) {
-            // Drop extra input queued after an action was locked.
             if (env.cells[event.slot].locked) continue;
 
             if (event.at <= env.t) {
@@ -538,8 +521,6 @@
               );
             }
 
-            // Additional same-tick inputs after a successful lock
-            // are harmless; do not report them as low-CHI failures.
             if (!env.cells[failure.slot].locked) {
               g.UI.showDamagePopup(
                 failure.slot + "-box",
@@ -591,6 +572,29 @@
         throw new Error("AIService.plan is missing.");
       }
 
+      // Preload fighter videos on match start / Round 1
+      if (gs.core.round === 1 && typeof g.KFMedia?.preloadMatchVideos === "function") {
+        const splashScreen = document.getElementById("match-transition-screen");
+        const progressFill = document.getElementById("preload-bar-fill");
+        const statusText = document.getElementById("preload-status-text");
+
+        if (splashScreen) splashScreen.hidden = false;
+
+        await g.KFMedia.preloadMatchVideos(
+          gs.core.p1.id,
+          gs.core.p2.id,
+          (ratio) => {
+            const percentage = Math.round(ratio * 100);
+            if (progressFill) progressFill.style.width = `${percentage}%`;
+            if (statusText) statusText.textContent = `PRELOADING FIGHTER ASSETS… ${percentage}%`;
+          }
+        );
+
+        if (statusText) statusText.textContent = "READY TO FIGHT!";
+        await new Promise(resolve => setTimeout(resolve, 300));
+        if (splashScreen) splashScreen.hidden = true;
+      }
+
       g.UI.showActionBanner("");
       g.UI.showBattleBanner("PREPARING CONTROLLERS…");
 
@@ -605,7 +609,6 @@
       gs.aiPlans = {};
       gs.aiDebug = {};
 
-      // History is plain combat action data.
       const history = JSON.parse(JSON.stringify(gs.history || []));
       const previous = history.length
         ? history[history.length - 1]
@@ -644,7 +647,6 @@
             strategy: "Forced faint recovery"
           };
 
-          // E.create() already locked this fighter to DO_NOTHING.
           return;
         }
 
@@ -659,20 +661,9 @@
             before.round,
             slot
           ),
-
-          /*
-           * Pass a copy so a same-thread AIService implementation
-           * cannot mutate our match-frozen checkpoint.
-           *
-           * Explicit null is intentional: no worker-side repository
-           * substitution when this match has no frozen ACTIVE model.
-           */
           policyWeights: difficulty === "rider"
             ? cloneCheckpoint(models.models[slot])
             : null,
-
-          // Also prevents a same-thread dispatcher from consulting
-          // a newer ACTIVE model during this match.
           disableAgent: true
         };
 
@@ -702,12 +693,6 @@
           );
         }
 
-        /*
-         * With the supplied v5 dispatcher, debug.neural reports
-         * whether the neural evaluator was passed to Foresee.
-         * Detect a dropped policyWeights field rather than silently
-         * claiming the frozen model was used.
-         */
         if (difficulty === "rider") {
           const expectedNeural = Boolean(models.models[slot]);
 
@@ -736,7 +721,6 @@
             : "none — pure search"
         };
 
-        // Preserve both key and search-selected charge.
         gs.soulActors[slot] = E.planned(action);
       }));
 
@@ -885,7 +869,6 @@
           try {
             element.setPointerCapture(event.pointerId);
           } catch (_) {
-            // Pointer capture may be unavailable after cancellation.
           }
         });
 
@@ -902,8 +885,6 @@
         element.addEventListener("click", event => {
           event.preventDefault();
 
-          // Keyboard/accessibility activation.
-          // Pointer activation was already handled on pointerdown.
           if (event.detail === 0) {
             queueInput(slot, key);
           }
