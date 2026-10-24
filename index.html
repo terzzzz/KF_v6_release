@@ -137,6 +137,14 @@
     <div class="splash-content">
       <h1 id="splash-round-text">GET READY!</h1>
       <h2 id="splash-names-text"></h2>
+
+      <div id="preload-bar-wrapper" class="loading-bar-wrapper" style="width: 80%; margin: 20px auto 5px auto;">
+        <div id="preload-bar-fill" class="loading-bar-fill" style="width: 0%;"></div>
+      </div>
+
+      <div id="preload-status-text" style="font-size: 0.85rem; color: #00ffcc; letter-spacing: 0.08em;">
+        PRELOADING FIGHTER ASSETS… 0%
+      </div>
     </div>
   </section>
 
@@ -217,7 +225,7 @@
         return `
           <div class="player-hud ${slot}-hud">
             <h2 id="${slot}-name"></h2>
-            <div id="${slot}-subtext" class="rider-subtext">HUMAN</div>
+            <div id="${slot}-subtext" class="rider-subtext"></div>
 
             <div class="stat-line">
               <span id="${slot}-lp" class="stat-value-styled"></span>
