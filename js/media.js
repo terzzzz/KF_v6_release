@@ -106,6 +106,10 @@
     ).toLowerCase();
   }
 
+  function isP2MirrorPalette(slot) {
+    return slot === "p2" && riderFor("p1") === riderFor("p2");
+  }
+
   function getTransformFlip(player, slot, move = null) {
     if (move?.unmirrored === true) return "scaleX(1)";
 
@@ -283,6 +287,7 @@
     pause(video);
 
     video.classList.remove("mirror-flip");
+    video.classList.toggle("p2-mirror-palette", Boolean(task.mirrorPalette));
     prepareVideo(video);
 
     video.loop = Boolean(task.background);
@@ -662,6 +667,8 @@
         sprite.onerror = null;
         sprite.src = src;
         sprite.classList.add("rider-media");
+        sprite.classList.toggle("p2-mirror-palette", Boolean(task.mirrorPalette));
+        sprite.style.transform = task.transform;
 
         pause(el(`${task.channel}-video`));
         visible(el(`${task.channel}-video`), false);
@@ -697,10 +704,14 @@
       resolveReady = resolve;
     });
 
+    const slot = spec.slot || channel;
+
     const task = {
       id: ++requestNumber,
       attempt: 0,
       channel,
+      slot,
+      mirrorPalette: isP2MirrorPalette(slot),
       background: !!spec.background,
       controller,
       video: null,
@@ -874,6 +885,7 @@
     const transform = getTransformFlip(playerFor(slot), slot);
 
     return enqueueForeground(valid => runChannel(slot, {
+      slot,
       rider,
       candidates: candidatePaths(rider, files),
       cacheKey: `${rider}|reaction|${state}`,
@@ -917,12 +929,14 @@
       existing.video &&
       !existing.video.paused
     ) {
+      existing.video.classList.toggle("p2-mirror-palette", isP2MirrorPalette(slot));
       return existing.readyPromise;
     }
 
     const baseValid = scope(options);
 
     return runChannel(slot, {
+      slot,
       rider,
       candidates: candidatePaths(rider, filesForState(state)),
       cacheKey: `${rider}|background|${state}`,
@@ -967,6 +981,7 @@
 
       try {
         return await runChannel("center", {
+          slot,
           rider,
           candidates: candidatePaths(rider, [videoFile]),
           cacheKey: `${rider}|action|${videoFile}`,
@@ -1007,6 +1022,7 @@
 
       clearVideoHandlers(video);
       pause(video);
+      video.classList.remove("p2-mirror-palette");
 
       try {
         video.removeAttribute("src");
@@ -1033,6 +1049,7 @@
     if (video) {
       clearVideoHandlers(video);
       pause(video);
+      video.classList.remove("p2-mirror-palette");
       try {
         video.removeAttribute("src");
         video.load();
