@@ -1,5 +1,5 @@
 /**
- * Character Selection Screen, BGM Manager, Match Preparation & Credits Modal
+ * Character Selection Screen, BGM Manager & Match Preparation
  * Path: js/vs_select.js
  */
 
@@ -24,6 +24,54 @@
     rider: 'Rider'
   };
 
+  const CREDITS_CONTENT = [
+    'Thank you for playing!! I sincerely wish you a joyful game experience and able to beat all Riders in rider mode!!',
+    '',
+    '========================================',
+    'GAME CREDITS',
+    '========================================',
+    '',
+    'Dedicated to the heroes who taught us the meaning of Henshin!!',
+    '',
+    '[ Kamen Fight]',
+    'A Game By Terence Cheng',
+    '',
+    '----------------------------------------',
+    'CREATED & DEVELOPED BY',
+    '----------------------------------------',
+    'Lead Developer: Terence Cheng',
+    'Game Designer: Terence Cheng',
+    'Programming: Terence Cheng',
+    '',
+    '----------------------------------------',
+    'ART & ANIMATION',
+    '----------------------------------------',
+    'Lead Artist: Terence Cheng',
+    'UI / UX Design: Terence Cheng',
+    'Asset Packs: Terence Cheng',
+    '',
+    '----------------------------------------',
+    'AUDIO & MUSIC',
+    '----------------------------------------',
+    'Composer: Terence Cheng',
+    '',
+    '',
+    '----------------------------------------',
+    'SPECIAL THANKS',
+    '----------------------------------------',
+    '    Friends of Terence Cheng',
+    '    All of my game testers ',
+    '',
+    '========================================',
+    'Thank you for playing!',
+    '© 2026',
+    '========================================'
+  ].join('\n');
+
+  /*
+   * Add more IDs here when their RIDER models are ready.
+   * This controls selection availability, not checkpoint validation.
+   */
   const RIDER_READY_IDS = new Set([
     'ichigo',
     'nigo',
@@ -36,28 +84,51 @@
   }
 
   function difficultyOptions(rider) {
-    const options = ['easy', 'balanced', 'master', 'soul'];
+    const options = [
+      'easy',
+      'balanced',
+      'master',
+      'soul'
+    ];
+
     if (riderLevelAvailable(rider)) {
       options.push('rider');
     }
+
     return options;
   }
 
   function normalizeSelectedDifficulty(value, rider) {
     let difficulty = String(value || 'balanced').toLowerCase();
-    if (difficulty === 'mcts') difficulty = 'rider';
-    if (!Object.prototype.hasOwnProperty.call(DIFF_LABELS, difficulty)) {
+
+    if (difficulty === 'mcts') {
+      difficulty = 'rider';
+    }
+
+    if (!Object.prototype.hasOwnProperty.call(
+      DIFF_LABELS,
+      difficulty
+    )) {
       difficulty = 'balanced';
     }
-    if (difficulty === 'rider' && !riderLevelAvailable(rider)) {
+
+    if (
+      difficulty === 'rider' &&
+      !riderLevelAvailable(rider)
+    ) {
       return 'soul';
     }
+
     return difficulty;
   }
 
-  /* Static CSS Injection for Rider Badge & Floating Credits Modal */
+  /*
+   * Static rainbow text + Credits link & upper-layer modal styles.
+   */
   function installRiderBadgeStyles() {
-    if (document.getElementById('kf-rider-badge-styles')) return;
+    if (document.getElementById('kf-rider-badge-styles')) {
+      return;
+    }
 
     const style = document.createElement('style');
     style.id = 'kf-rider-badge-styles';
@@ -88,6 +159,7 @@
             #a7a0ff 83%,
             #f58bff 100%
           );
+
           background-clip: text;
           -webkit-background-clip: text;
           color: transparent;
@@ -95,97 +167,127 @@
         }
       }
 
-      /* Fixed Floating Credits Button */
-      .credits-btn-trigger {
+      @media (forced-colors: active) {
+        .kf-rider-rainbow {
+          background: none;
+          color: ButtonText;
+          -webkit-text-fill-color: ButtonText;
+        }
+      }
+
+      /* --- Credits Link & Upper Layer Modal --- */
+      .kf-credits-link {
         position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 99999;
-        padding: 10px 20px;
-        background: rgba(10, 15, 25, 0.9);
-        border: 2px solid #00ffcc;
-        color: #00ffcc;
-        font-family: monospace, sans-serif;
-        font-size: 0.9rem;
-        font-weight: bold;
-        letter-spacing: 0.1em;
+        bottom: 14px;
+        right: 18px;
+        z-index: 120;
+        background: rgba(15, 18, 28, 0.88);
+        color: #ffe17d;
+        border: 1px solid rgba(255, 225, 125, 0.55);
+        border-radius: 6px;
+        padding: 6px 14px;
+        font-family: inherit;
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
-        border-radius: 4px;
+        text-decoration: underline;
         cursor: pointer;
-        box-shadow: 0 0 12px rgba(0, 255, 204, 0.4);
-        transition: all 0.2s ease;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+        transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
       }
 
-      .credits-btn-trigger:hover {
-        background: #00ffcc;
-        color: #05080f;
-        box-shadow: 0 0 18px rgba(0, 255, 204, 0.8);
+      .kf-credits-link:hover,
+      .kf-credits-link:focus-visible {
+        background: rgba(35, 42, 64, 0.96);
+        border-color: #ffffff;
+        color: #ffffff;
+        transform: translateY(-1px);
+        outline: none;
       }
 
-      /* Credits Modal Overlay */
-      .credits-modal-overlay {
+      .kf-credits-modal-backdrop {
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(5, 8, 15, 0.92);
+        inset: 0;
+        z-index: 9999;
+        background: rgba(5, 7, 12, 0.86);
         backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
         display: flex;
-        justify-content: center;
         align-items: center;
-        z-index: 999999;
-        padding: 20px;
+        justify-content: center;
+        padding: 16px;
         box-sizing: border-box;
       }
 
-      .credits-modal-card {
-        background: #0d1117;
-        border: 2px solid #00ffcc;
-        box-shadow: 0 0 25px rgba(0, 255, 204, 0.5);
-        border-radius: 8px;
-        width: 100%;
-        max-width: 580px;
-        max-height: 85vh;
+      .kf-credits-modal-backdrop[hidden] {
+        display: none !important;
+      }
+
+      .kf-credits-modal-card {
+        width: min(640px, 94vw);
+        max-height: 86vh;
+        background: linear-gradient(180deg, #141926 0%, #0b0e17 100%);
+        border: 2px solid #ffe17d;
+        border-radius: 12px;
+        box-shadow: 0 0 28px rgba(0, 0, 0, 0.9), 0 0 16px rgba(255, 225, 125, 0.25);
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        color: #f4f6fb;
       }
 
-      .credits-modal-body {
-        padding: 24px;
+      .kf-credits-modal-body {
+        padding: 20px 24px;
         overflow-y: auto;
-        color: #e6edf3;
-        font-family: monospace, 'Courier New', Courier, sans-serif;
-        font-size: 0.88rem;
-        line-height: 1.45;
+        flex: 1 1 auto;
+      }
+
+      .kf-credits-pre {
+        margin: 0;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: clamp(0.78rem, 1.8vw, 0.95rem);
+        line-height: 1.55;
         white-space: pre-wrap;
         word-break: break-word;
+        text-align: center;
+        color: #f4f6fb;
       }
 
-      .credits-modal-footer {
-        padding: 12px 24px;
-        background: #161b22;
-        border-top: 1px solid rgba(0, 255, 204, 0.2);
-        text-align: right;
+      .kf-credits-modal-footer {
+        padding: 12px 20px 16px;
+        border-top: 1px solid rgba(255, 225, 125, 0.22);
+        display: flex;
+        justify-content: center;
+        background: rgba(8, 10, 16, 0.9);
       }
 
-      .credits-close-btn {
-        padding: 8px 20px;
-        background: #00ffcc;
-        border: none;
-        color: #05080f;
-        font-weight: bold;
+      .kf-credits-ok-btn {
+        min-width: 130px;
+        padding: 9px 28px;
         font-family: inherit;
-        font-size: 0.9rem;
-        border-radius: 4px;
+        font-size: 0.95rem;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #111520;
+        background: linear-gradient(180deg, #ffe793 0%, #f5b935 100%);
+        border: 2px solid #fff3c4;
+        border-radius: 8px;
         cursor: pointer;
-        transition: transform 0.1s ease, background-color 0.2s ease;
+        box-shadow: 0 3px 12px rgba(245, 185, 53, 0.35);
+        transition: transform 0.12s ease, filter 0.15s ease;
       }
 
-      .credits-close-btn:hover {
-        background: #78ff9c;
-        transform: scale(1.03);
+      .kf-credits-ok-btn:hover,
+      .kf-credits-ok-btn:focus-visible {
+        filter: brightness(1.08);
+        transform: translateY(-1px);
+        outline: none;
+      }
+
+      .kf-credits-ok-btn:active {
+        transform: translateY(0);
       }
     `;
 
@@ -193,6 +295,123 @@
   }
 
   installRiderBadgeStyles();
+
+  /** Opens the upper-layer Credits modal on the VS Selection screen. */
+  window.openCreditsModal = function (e) {
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
+
+    ensureCreditsUI();
+
+    const modal = document.getElementById('kf-credits-modal');
+    if (!modal) return;
+
+    modal.hidden = false;
+    modal.style.display = 'flex';
+
+    const body = modal.querySelector('.kf-credits-modal-body');
+    if (body) body.scrollTop = 0;
+
+    const okBtn = document.getElementById('kf-credits-ok-btn');
+    if (okBtn) okBtn.focus();
+  };
+
+  /** Closes the Credits modal and returns focus to the VS Selection screen. */
+  window.closeCreditsModal = function (e) {
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
+
+    const modal = document.getElementById('kf-credits-modal');
+    if (!modal) return;
+
+    modal.hidden = true;
+    modal.style.display = 'none';
+  };
+
+  /** Ensures the Credits link and upper-layer modal exist inside #vs-select-screen. */
+  function ensureCreditsUI() {
+    const selectScreen = document.getElementById('vs-select-screen');
+    if (!selectScreen) return;
+
+    // 1. Ensure Credits trigger link exists
+    let linkBtn =
+      document.getElementById('kf-credits-link') ||
+      document.getElementById('credits-btn');
+
+    if (!linkBtn) {
+      linkBtn = document.createElement('button');
+      linkBtn.id = 'kf-credits-link';
+      linkBtn.type = 'button';
+      linkBtn.className = 'kf-credits-link';
+      linkBtn.textContent = 'CREDITS';
+      selectScreen.appendChild(linkBtn);
+    }
+
+    if (!linkBtn.dataset.kfCreditsBound) {
+      linkBtn.addEventListener('click', window.openCreditsModal);
+      linkBtn.dataset.kfCreditsBound = '1';
+    }
+
+    // 2. Ensure upper-layer Credits modal exists
+    let modal = document.getElementById('kf-credits-modal');
+
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'kf-credits-modal';
+      modal.className = 'kf-credits-modal-backdrop';
+      modal.hidden = true;
+      modal.style.display = 'none';
+      modal.setAttribute('role', 'dialog');
+      modal.setAttribute('aria-modal', 'true');
+      modal.setAttribute('aria-label', 'Game Credits');
+
+      const card = document.createElement('div');
+      card.className = 'kf-credits-modal-card';
+
+      const body = document.createElement('div');
+      body.className = 'kf-credits-modal-body';
+
+      const pre = document.createElement('pre');
+      pre.className = 'kf-credits-pre';
+      pre.textContent = CREDITS_CONTENT;
+
+      body.appendChild(pre);
+
+      const footer = document.createElement('div');
+      footer.className = 'kf-credits-modal-footer';
+
+      const okBtn = document.createElement('button');
+      okBtn.id = 'kf-credits-ok-btn';
+      okBtn.type = 'button';
+      okBtn.className = 'kf-credits-ok-btn';
+      okBtn.textContent = 'OK';
+      okBtn.addEventListener('click', window.closeCreditsModal);
+
+      footer.appendChild(okBtn);
+      card.appendChild(body);
+      card.appendChild(footer);
+      modal.appendChild(card);
+
+      // Clicking outside the card closes the modal
+      modal.addEventListener('click', function (event) {
+        if (event.target === modal) {
+          window.closeCreditsModal(event);
+        }
+      });
+
+      selectScreen.appendChild(modal);
+    }
+  }
+
+  // Close Credits modal on Escape key
+  document.addEventListener('keydown', function (event) {
+    const modal = document.getElementById('kf-credits-modal');
+    if (!modal || modal.hidden) return;
+
+    if (event.key === 'Escape' || event.key === 'Enter') {
+      window.closeCreditsModal(event);
+    }
+  });
 
   // Default fallback roster definitions
   window.AVAILABLE_RIDERS = window.AVAILABLE_RIDERS || [
@@ -214,123 +433,36 @@
     p2Difficulty: 'balanced'
   };
 
-  /** Displays the Game Credits modal overlay. */
-  window.showCreditsModal = function () {
-    if (document.getElementById('credits-modal-overlay')) return;
-
-    const creditsText = `Thank you for playing!! I sincerely wish you a joyful game experience and able to beat all Riders in rider mode!!
-
-========================================
-              GAME CREDITS
-========================================
-
-Dedicated to the heroes who taught us the meaning of  Henshin!!
-
-[ Kamen Fight]
-A Game By Terence Cheng
-
-----------------------------------------
-CREATED & DEVELOPED BY
-----------------------------------------
-Lead Developer:       Terence Cheng
-Game Designer:       Terence Cheng
-Programming:           Terence Cheng
-
-----------------------------------------
-ART & ANIMATION
-----------------------------------------
-Lead Artist:          Terence Cheng
-UI / UX Design:       Terence Cheng
-Asset Packs:         Terence Cheng
-
-----------------------------------------
-AUDIO & MUSIC
-----------------------------------------
-Composer:            Terence Cheng 
-
-
-----------------------------------------
-SPECIAL THANKS
-----------------------------------------
-- Friends of Terence Cheng
-- All of my game testers
-
-========================================
-   Thank you for playing!
-   © 2026 
-========================================`;
-
-    const overlay = document.createElement('div');
-    overlay.id = 'credits-modal-overlay';
-    overlay.className = 'credits-modal-overlay';
-
-    const card = document.createElement('div');
-    card.className = 'credits-modal-card';
-
-    const body = document.createElement('div');
-    body.className = 'credits-modal-body';
-    body.textContent = creditsText;
-
-    const footer = document.createElement('div');
-    footer.className = 'credits-modal-footer';
-
-    const closeBtn = document.createElement('button');
-    closeBtn.type = 'button';
-    closeBtn.className = 'credits-close-btn';
-    closeBtn.textContent = 'CLOSE';
-    closeBtn.onclick = function () {
-      window.hideCreditsModal();
-    };
-
-    footer.appendChild(closeBtn);
-    card.appendChild(body);
-    card.appendChild(footer);
-    overlay.appendChild(card);
-
-    overlay.addEventListener('click', function (e) {
-      if (e.target === overlay) {
-        window.hideCreditsModal();
-      }
-    });
-
-    document.body.appendChild(overlay);
-  };
-
-  /** Removes the Game Credits modal overlay. */
-  window.hideCreditsModal = function () {
-    const overlay = document.getElementById('credits-modal-overlay');
-    if (overlay && overlay.parentNode) {
-      overlay.parentNode.removeChild(overlay);
-    }
-  };
-
-  /** Ensures the Credits button is present on the page. */
-  function ensureCreditsButton() {
-    let btn = document.getElementById('credits-btn');
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.id = 'credits-btn';
-      btn.type = 'button';
-      btn.className = 'credits-btn-trigger';
-      btn.textContent = 'CREDITS';
-      btn.onclick = window.showCreditsModal;
-      document.body.appendChild(btn);
-    }
-  }
-
   /** Applies difficulty badge styling classes to UI element. */
   function setDiffBadgeClasses(el, difficulty, isCPU) {
     if (!el) return;
-    el.classList.remove('easy', 'normal', 'balanced', 'hard', 'master', 'soul', 'rider');
+
+    el.classList.remove(
+      'easy',
+      'normal',
+      'balanced',
+      'hard',
+      'master',
+      'soul',
+      'rider'
+    );
+
     if (!isCPU) return;
 
-    const name = Object.prototype.hasOwnProperty.call(DIFF_LABELS, difficulty) ? difficulty : 'balanced';
+    const name = Object.prototype.hasOwnProperty.call(
+      DIFF_LABELS,
+      difficulty
+    )
+      ? difficulty
+      : 'balanced';
+
     el.classList.add(name);
 
     if (name === 'rider') {
       const label = document.createElement('span');
       label.className = 'kf-rider-rainbow';
       label.textContent = DIFF_LABELS.rider;
+
       el.replaceChildren(label);
     }
   }
@@ -375,6 +507,7 @@ SPECIAL THANKS
     window.updateSelectionUI();
   };
 
+  // Step confirmation alias mappings
   window.handleConfirmStep = window.confirmStep;
   window.handleBackStep = window.goBackStep;
 
@@ -462,21 +595,27 @@ SPECIAL THANKS
 
   /** Toggles player control type between Human and CPU. */
   window.toggleControlType = function(playerKey) {
-    if (playerKey !== 'p1' && playerKey !== 'p2') return;
+    if (playerKey !== 'p1' && playerKey !== 'p2') {
+      return;
+    }
 
     const state = window.vsSelectionState;
     const currentStep = parseInt(state.step, 10) || 1;
     const requiredStep = playerKey === 'p1' ? 1 : 2;
 
-    if (currentStep !== requiredStep) return;
+    if (currentStep !== requiredStep) {
+      return;
+    }
 
     state[playerKey + 'IsCPU'] = !state[playerKey + 'IsCPU'];
     window.updateSelectionUI();
   };
 
-  /** Cycles CPU difficulty setting. */
+  /** Cycles CPU difficulty setting (easy -> balanced -> master -> soul -> [rider]). */
   window.toggleDifficulty = function(playerKey) {
-    if (playerKey !== 'p1' && playerKey !== 'p2') return;
+    if (playerKey !== 'p1' && playerKey !== 'p2') {
+      return;
+    }
 
     const state = window.vsSelectionState;
     const riders = window.AVAILABLE_RIDERS || [];
@@ -484,22 +623,37 @@ SPECIAL THANKS
     const currentStep = parseInt(state.step, 10) || 1;
     const requiredStep = playerKey === 'p1' ? 1 : 2;
 
-    if (currentStep !== requiredStep || !state[playerKey + 'IsCPU']) return;
+    if (
+      currentStep !== requiredStep ||
+      !state[playerKey + 'IsCPU']
+    ) {
+      return;
+    }
 
-    const rider = riders[state[playerKey + 'Index']] || riders[0];
+    const rider =
+      riders[state[playerKey + 'Index']] ||
+      riders[0];
+
     if (!rider) return;
 
     const options = difficultyOptions(rider);
-    const current = normalizeSelectedDifficulty(state[playerKey + 'Difficulty'], rider);
+
+    const current = normalizeSelectedDifficulty(
+      state[playerKey + 'Difficulty'],
+      rider
+    );
+
     const index = options.indexOf(current);
 
-    state[playerKey + 'Difficulty'] = options[(index + 1) % options.length];
+    state[playerKey + 'Difficulty'] =
+      options[(index + 1) % options.length];
+
     window.updateSelectionUI();
   };
 
-  /** Synchronizes selection screen UI elements. */
+  /** Synchronizes selection screen UI elements, controls, and card highlights with selection state. */
   window.updateSelectionUI = function() {
-    ensureCreditsButton();
+    ensureCreditsUI();
 
     const riders = window.AVAILABLE_RIDERS;
     const state = window.vsSelectionState;
@@ -513,8 +667,15 @@ SPECIAL THANKS
     const p1 = riders[state.p1Index] || riders[0];
     const p2 = riders[state.p2Index] || riders[0];
 
-    state.p1Difficulty = normalizeSelectedDifficulty(state.p1Difficulty, p1);
-    state.p2Difficulty = normalizeSelectedDifficulty(state.p2Difficulty, p2);
+    state.p1Difficulty = normalizeSelectedDifficulty(
+      state.p1Difficulty,
+      p1
+    );
+
+    state.p2Difficulty = normalizeSelectedDifficulty(
+      state.p2Difficulty,
+      p2
+    );
 
     // P1 Display updates
     const p1ImgEl = document.getElementById('p1-img');
@@ -642,8 +803,10 @@ SPECIAL THANKS
     }
   };
 
-  /** Validates selection state and transitions to live battle mode. */
+  /** Validates selection state and transitions to live battle mode via startBattle(). */
   window.validateAndStartMatch = function() {
+    window.closeCreditsModal();
+
     if (typeof window.unlockMobileVideos === 'function') {
       window.unlockMobileVideos();
     }
@@ -691,12 +854,14 @@ SPECIAL THANKS
     }
   });
 
-  /** Main Initialization Function */
-  async function initVSSelect() {
+  // DOM initialization and roster fetching
+  document.addEventListener('DOMContentLoaded', async () => {
     const selectScreen = document.getElementById('vs-select-screen');
     const battleScreen = document.getElementById('battle-screen');
     if (selectScreen) selectScreen.hidden = false;
     if (battleScreen) battleScreen.hidden = true;
+
+    ensureCreditsUI();
 
     try {
       const res = await fetch('data/riders.json');
@@ -723,13 +888,6 @@ SPECIAL THANKS
     window.addEventListener('click', unlockAudio);
     window.addEventListener('touchstart', unlockAudio, { passive: true });
     window.addEventListener('keydown', unlockAudio);
-  }
-
-  // Safe DOM Execution Check: Handles scripts loaded async, deferred, or after DOMContentLoaded
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initVSSelect);
-  } else {
-    initVSSelect();
-  }
+  });
 
 })(window);
