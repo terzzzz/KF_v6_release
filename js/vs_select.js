@@ -24,6 +24,16 @@
     rider: 'Rider'
   };
 
+  // Candidate paths for the Credits QR code image (tries in order)
+  const CREDITS_QR_PATHS = [
+    'assets/images/bmc_qr.png',
+    'assets/images/bmc_qr.jpg',
+    'assets/images/qr.png',
+    'assets/images/qr.jpg',
+    'bmc_qr.png',
+    'qr.png'
+  ];
+
   const CREDITS_CONTENT = [
     'Thank you for playing!! I sincerely wish you a joyful game experience and able to beat all Riders in rider mode!!',
     '',
@@ -241,9 +251,33 @@
         padding: 20px 24px;
         overflow-y: auto;
         flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .kf-credits-qr-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+      }
+
+      .kf-credits-qr-img {
+        width: clamp(140px, 32vw, 185px);
+        height: clamp(140px, 32vw, 185px);
+        object-fit: contain;
+        background: #ffffff;
+        padding: 8px;
+        border-radius: 12px;
+        border: 2px solid #ffe17d;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.65);
+        display: block;
       }
 
       .kf-credits-pre {
+        width: 100%;
         margin: 0;
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         font-size: clamp(0.78rem, 1.8vw, 0.95rem);
@@ -371,6 +405,31 @@
       const body = document.createElement('div');
       body.className = 'kf-credits-modal-body';
 
+      // QR Code at the start of the Credits prompt
+      const qrWrap = document.createElement('div');
+      qrWrap.className = 'kf-credits-qr-wrap';
+
+      const qrImg = document.createElement('img');
+      qrImg.id = 'kf-credits-qr-img';
+      qrImg.className = 'kf-credits-qr-img';
+      qrImg.alt = 'Support QR Code';
+      qrImg.dataset.pathIndex = '0';
+      qrImg.src = CREDITS_QR_PATHS[0];
+
+      // Automatic fallback through candidate paths if named differently
+      qrImg.addEventListener('error', function () {
+        const nextIdx = (parseInt(qrImg.dataset.pathIndex, 10) || 0) + 1;
+        if (nextIdx < CREDITS_QR_PATHS.length) {
+          qrImg.dataset.pathIndex = String(nextIdx);
+          qrImg.src = CREDITS_QR_PATHS[nextIdx];
+        } else {
+          qrWrap.style.display = 'none';
+        }
+      });
+
+      qrWrap.appendChild(qrImg);
+      body.appendChild(qrWrap);
+
       const pre = document.createElement('pre');
       pre.className = 'kf-credits-pre';
       pre.textContent = CREDITS_CONTENT;
@@ -403,7 +462,7 @@
     }
   }
 
-  // Close Credits modal on Escape key
+  // Close Credits modal on Escape or Enter key
   document.addEventListener('keydown', function (event) {
     const modal = document.getElementById('kf-credits-modal');
     if (!modal || modal.hidden) return;
