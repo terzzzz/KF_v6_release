@@ -1,7 +1,7 @@
 /* js/ui.js
  * Battle HUD and status presentation.
  *
- * Patch: numeric-status-hud-1 + lp-bar-subtext-2
+ * Patch: numeric-status-hud-1 + lp-bar-subtext-3
  */
 (function (g) {
   "use strict";
@@ -204,6 +204,47 @@
     tray.replaceChildren(fragment);
   }
 
+  /**
+   * Resolves whether a given slot ("p1" or "p2") is controlled by CPU and its difficulty,
+   * checking player properties, gameState, and vsSelectionState as fallbacks.
+   */
+  function resolveControllerInfo(slot, player) {
+    const vs = g.vsSelectionState || {};
+    const gs = g.gameState || {};
+
+    let isCPU;
+    if (typeof player?.isCPU === "boolean") {
+      isCPU = player.isCPU;
+    } else if (typeof player?.isCpu === "boolean") {
+      isCPU = player.isCpu;
+    } else if (typeof player?.cpu === "boolean") {
+      isCPU = player.cpu;
+    } else if (typeof player?.ai === "boolean") {
+      isCPU = player.ai;
+    } else if (typeof player?.controller === "string") {
+      isCPU = player.controller.toLowerCase() === "cpu";
+    } else if (typeof gs[`${slot}IsCPU`] === "boolean") {
+      isCPU = gs[`${slot}IsCPU`];
+    } else if (typeof vs[`${slot}IsCPU`] === "boolean") {
+      isCPU = vs[`${slot}IsCPU`];
+    } else {
+      isCPU = false;
+    }
+
+    const rawDiff =
+      player?.difficulty ||
+      player?.cpuDifficulty ||
+      player?.aiDifficulty ||
+      gs[`${slot}Difficulty`] ||
+      vs[`${slot}Difficulty`] ||
+      "balanced";
+
+    let diffKey = String(rawDiff).toLowerCase();
+    if (diffKey === "mcts") diffKey = "rider";
+
+    return { isCPU, diffKey };
+  }
+
   function updatePlayerHUD(slot, player) {
     if (!player) return;
 
@@ -236,18 +277,20 @@
       nameElement.textContent = player.name || slot.toUpperCase();
     }
 
-    // Dynamic Subtext (HUMAN or Difficulty)
+    // Dynamic Subtext (Blank for Human, Difficulty label for CPU)
     if (subtextElement) {
-      if (player.isCPU) {
-        const diffKey = String(player.difficulty || "balanced").toLowerCase();
+      const { isCPU, diffKey } = resolveControllerInfo(slot, player);
+
+      if (isCPU) {
         const label = DIFF_LABELS[diffKey] || diffKey.toUpperCase();
         subtextElement.textContent = label;
         subtextElement.classList.add("cpu-subtext");
         subtextElement.classList.remove("human-subtext");
+        subtextElement.hidden = false;
       } else {
-        subtextElement.textContent = "HUMAN";
-        subtextElement.classList.add("human-subtext");
-        subtextElement.classList.remove("cpu-subtext");
+        subtextElement.textContent = "";
+        subtextElement.classList.remove("cpu-subtext", "human-subtext");
+        subtextElement.hidden = true;
       }
     }
 
@@ -427,6 +470,7 @@
         margin-top: -1px;
         margin-bottom: 2px;
         text-transform: uppercase;
+        min-height: 1.1em;
       }
 
       .rider-subtext.human-subtext {
