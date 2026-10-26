@@ -135,7 +135,7 @@
       .toUpperCase();
 
     const aliases = {
-      HIT_PHYSICAL: "HIT",
+      HIT_PHYSICAL: "HIT2",
       BEING_HIT: "HIT",
       BLOCK: "GUARD",
       MISS: "DODGE",
@@ -165,13 +165,13 @@
       IDLE: ["idle.mp4"],
 
       // Actual reaction filename first; legacy alias second.
-      HIT: ["hit_physical.mp4", "hit.mp4"],
-
+      HIT: ["hit.mp4"],
+      HIT2: ["hit_physical.mp4", "hit.mp4"],
       GUARD: ["guard.mp4"],
       DODGE: ["dodge.mp4", "guard.mp4"],
       FAINT: ["faint.mp4"],
-      KO: ["ko.mp4", "faint.mp4"],
-      "MID-AIR": ["mid-air.mp4", "mid_air.mp4", "idle.mp4"],
+      KO: ["ko.mp4"],
+      "MID-AIR": ["mid-air.mp4", "mid_air.mp4"],
 
       VICTORY: Math.random() < 0.5
         ? ["victory.mp4", "victory2.mp4"]
