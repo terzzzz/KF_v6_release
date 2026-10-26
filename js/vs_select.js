@@ -78,6 +78,67 @@
     '========================================'
   ].join('\n');
 
+  const HOW_TO_PLAY_HTML = `
+    <div class="kf-howto-content">
+      <h2 class="kf-howto-main-title">HOW TO PLAY</h2>
+
+      <div class="kf-howto-section">
+        <h3>1. Select Your Rider &amp; Match Setup</h3>
+        <p>Pick your Kamen Rider (Ichigo, Nigo, V3, etc..) on the character selection screen. Choose whether to battle a friend (support in later version) or face off against CPU opponents ranging from rugrat (easy) to geek (red).</p>
+      </div>
+
+      <div class="kf-howto-section">
+        <h3>2. Learn the Combat Controls</h3>
+        <p>Every action requires combining a <strong>Direction Key</strong> (to choose move type and build charge) with an <strong>Action Key</strong> (to execute the move).</p>
+
+        <div class="kf-howto-table-wrap">
+          <table class="kf-howto-table">
+            <thead>
+              <tr>
+                <th>Direction Key</th>
+                <th>Stance Type</th>
+                <th>Action Buttons (I, J, K, L) Outcome</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="kf-key-cell">W Key</td>
+                <td class="kf-stance-cell">Utility &amp; Buffs</td>
+                <td>High Jumps, Speed Enhancements, Attack Focus, and Stun Recovery</td>
+              </tr>
+              <tr>
+                <td class="kf-key-cell">D Key</td>
+                <td class="kf-stance-cell">Physical Attacks</td>
+                <td>Quick Punches, Kicks, and Combos that generate extra CHI</td>
+              </tr>
+              <tr>
+                <td class="kf-key-cell">S Key</td>
+                <td class="kf-stance-cell">Special Moves</td>
+                <td>Heavy Finisher Attacks (e.g., Rider Kick, Rider Punch, etc..)</td>
+              </tr>
+              <tr>
+                <td class="kf-key-cell">A Key</td>
+                <td class="kf-stance-cell">Defensive Guard</td>
+                <td>Shields and Blocks to reduce incoming damage and absorb bonus CHI.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="kf-howto-section">
+        <h3>3. General Strategy</h3>
+        <ul class="kf-howto-list">
+          <li><strong>Hold a Direction Key:</strong> Hold W, A, S, or D to charge your power up to 100%.</li>
+          <li><strong>Lock in Your Move:</strong> Press I, J, K, or L before the decision timer expires to confirm your action.</li>
+          <li><strong>Build CHI with Basic Strikes:</strong> Use D-Stance physical attacks to hit your opponent and quickly fill your CHI meter.</li>
+          <li><strong>Guard Incoming Threats:</strong> Use A-Stance blocks to reduce damage when you suspect your opponent is preparing a large attack.</li>
+          <li><strong>Unleash Finishers:</strong> Once your CHI meter is high, use S-Stance to deal big damage to KO your opponent.</li>
+        </ul>
+      </div>
+    </div>
+  `;
+
   /*
    * Add more IDs here when their RIDER models are ready.
    * This controls selection availability, not checkpoint validation.
@@ -133,7 +194,7 @@
   }
 
   /*
-   * Static rainbow text + Credits link & upper-layer modal styles.
+   * Static rainbow text + Credits & How-To-Play links & upper-layer modal styles.
    */
   function installRiderBadgeStyles() {
     if (document.getElementById('kf-rider-badge-styles')) {
@@ -185,7 +246,7 @@
         }
       }
 
-      /* --- Credits Link & Upper Layer Modal --- */
+      /* --- Credits Link (Bottom Right) --- */
       .kf-credits-link {
         position: fixed;
         bottom: 14px;
@@ -216,6 +277,48 @@
         outline: none;
       }
 
+      /* --- How To Play Link (Just Below BGM Tune-Bar at Top Right) --- */
+      .kf-howto-link {
+        position: absolute;
+        top: calc(max(8px, env(safe-area-inset-top, 0px)) + 28px);
+        right: max(12px, env(safe-area-inset-right, 0px));
+        z-index: 120;
+        background: rgba(15, 18, 28, 0.92);
+        color: #00ffcc;
+        border: 1px solid rgba(0, 255, 204, 0.7);
+        border-radius: 6px;
+        padding: 5px 12px;
+        font-family: inherit;
+        font-size: 0.8rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-decoration: underline;
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(0, 255, 204, 0.25), 0 2px 8px rgba(0, 0, 0, 0.6);
+        transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .kf-howto-link:hover,
+      .kf-howto-link:focus-visible {
+        background: rgba(0, 255, 204, 0.18);
+        border-color: #ffffff;
+        color: #ffffff;
+        box-shadow: 0 0 14px rgba(0, 255, 204, 0.55);
+        transform: translateY(-1px);
+        outline: none;
+      }
+
+      @media (orientation: portrait) {
+        .kf-howto-link {
+          top: calc(max(6px, env(safe-area-inset-top, 0px)) + 22px);
+          right: max(8px, env(safe-area-inset-right, 0px));
+          font-size: 0.7rem;
+          padding: 4px 9px;
+        }
+      }
+
+      /* --- Upper Layer Modal Shared Styles --- */
       .kf-credits-modal-backdrop {
         position: fixed;
         inset: 0;
@@ -235,7 +338,7 @@
       }
 
       .kf-credits-modal-card {
-        width: min(640px, 94vw);
+        width: min(680px, 94vw);
         max-height: 86vh;
         background: linear-gradient(180deg, #141926 0%, #0b0e17 100%);
         border: 2px solid #ffe17d;
@@ -245,6 +348,11 @@
         flex-direction: column;
         overflow: hidden;
         color: #f4f6fb;
+      }
+
+      .kf-howto-modal-card {
+        border-color: #00ffcc;
+        box-shadow: 0 0 28px rgba(0, 0, 0, 0.9), 0 0 16px rgba(0, 255, 204, 0.25);
       }
 
       .kf-credits-modal-body {
@@ -286,6 +394,95 @@
         word-break: break-word;
         text-align: center;
         color: #f4f6fb;
+      }
+
+      /* --- How To Play Content Formatting --- */
+      .kf-howto-content {
+        width: 100%;
+        text-align: left;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: clamp(0.78rem, 1.8vw, 0.92rem);
+        line-height: 1.55;
+        color: #e2e8f0;
+      }
+
+      .kf-howto-main-title {
+        text-align: center;
+        color: #ffcc00;
+        font-size: clamp(1.1rem, 2.8vw, 1.4rem);
+        letter-spacing: 0.1em;
+        margin: 0 0 16px 0;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(0, 255, 204, 0.35);
+        text-shadow: 0 0 8px rgba(255, 204, 0, 0.45);
+      }
+
+      .kf-howto-section {
+        margin-bottom: 16px;
+      }
+
+      .kf-howto-section h3 {
+        color: #00ffcc;
+        font-size: clamp(0.88rem, 2vw, 1.02rem);
+        margin: 0 0 6px 0;
+      }
+
+      .kf-howto-section p {
+        margin: 0 0 8px 0;
+        color: #f4f6fb;
+      }
+
+      .kf-howto-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        margin-top: 8px;
+      }
+
+      .kf-howto-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: clamp(0.72rem, 1.7vw, 0.86rem);
+        background: rgba(10, 14, 23, 0.75);
+        border: 1px solid rgba(0, 255, 204, 0.4);
+      }
+
+      .kf-howto-table th,
+      .kf-howto-table td {
+        border: 1px solid rgba(0, 255, 204, 0.28);
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .kf-howto-table th {
+        background: rgba(0, 255, 204, 0.14);
+        color: #ffcc00;
+        font-weight: 800;
+      }
+
+      .kf-howto-table .kf-key-cell {
+        color: #00ffcc;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .kf-howto-table .kf-stance-cell {
+        color: #ffe17d;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .kf-howto-list {
+        margin: 6px 0 0 0;
+        padding-left: 18px;
+      }
+
+      .kf-howto-list li {
+        margin-bottom: 6px;
+      }
+
+      .kf-howto-list strong {
+        color: #ffe17d;
       }
 
       .kf-credits-modal-footer {
@@ -335,6 +532,10 @@
     if (e && e.preventDefault) e.preventDefault();
     if (e && e.stopPropagation) e.stopPropagation();
 
+    if (typeof window.closeHowToPlayModal === 'function') {
+      window.closeHowToPlayModal();
+    }
+
     ensureCreditsUI();
 
     const modal = document.getElementById('kf-credits-modal');
@@ -356,6 +557,42 @@
     if (e && e.stopPropagation) e.stopPropagation();
 
     const modal = document.getElementById('kf-credits-modal');
+    if (!modal) return;
+
+    modal.hidden = true;
+    modal.style.display = 'none';
+  };
+
+  /** Opens the upper-layer How To Play modal on the VS Selection screen. */
+  window.openHowToPlayModal = function (e) {
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
+
+    if (typeof window.closeCreditsModal === 'function') {
+      window.closeCreditsModal();
+    }
+
+    ensureHowToPlayUI();
+
+    const modal = document.getElementById('kf-howto-modal');
+    if (!modal) return;
+
+    modal.hidden = false;
+    modal.style.display = 'flex';
+
+    const body = modal.querySelector('.kf-credits-modal-body');
+    if (body) body.scrollTop = 0;
+
+    const okBtn = document.getElementById('kf-howto-ok-btn');
+    if (okBtn) okBtn.focus();
+  };
+
+  /** Closes the How To Play modal and returns focus to the VS Selection screen. */
+  window.closeHowToPlayModal = function (e) {
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
+
+    const modal = document.getElementById('kf-howto-modal');
     if (!modal) return;
 
     modal.hidden = true;
@@ -462,13 +699,88 @@
     }
   }
 
-  // Close Credits modal on Escape or Enter key
-  document.addEventListener('keydown', function (event) {
-    const modal = document.getElementById('kf-credits-modal');
-    if (!modal || modal.hidden) return;
+  /** Ensures the How To Play link (below BGM slider) and upper-layer modal exist inside #vs-select-screen. */
+  function ensureHowToPlayUI() {
+    const selectScreen = document.getElementById('vs-select-screen');
+    if (!selectScreen) return;
 
-    if (event.key === 'Escape' || event.key === 'Enter') {
+    // 1. Ensure How To Play trigger link exists just below BGM tune-bar
+    let linkBtn =
+      document.getElementById('kf-howto-link') ||
+      document.getElementById('how-to-play-btn');
+
+    if (!linkBtn) {
+      linkBtn = document.createElement('button');
+      linkBtn.id = 'kf-howto-link';
+      linkBtn.type = 'button';
+      linkBtn.className = 'kf-howto-link';
+      linkBtn.textContent = 'HOW TO PLAY';
+      selectScreen.appendChild(linkBtn);
+    }
+
+    if (!linkBtn.dataset.kfHowtoBound) {
+      linkBtn.addEventListener('click', window.openHowToPlayModal);
+      linkBtn.dataset.kfHowtoBound = '1';
+    }
+
+    // 2. Ensure upper-layer How To Play modal exists
+    let modal = document.getElementById('kf-howto-modal');
+
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'kf-howto-modal';
+      modal.className = 'kf-credits-modal-backdrop';
+      modal.hidden = true;
+      modal.style.display = 'none';
+      modal.setAttribute('role', 'dialog');
+      modal.setAttribute('aria-modal', 'true');
+      modal.setAttribute('aria-label', 'How To Play');
+
+      const card = document.createElement('div');
+      card.className = 'kf-credits-modal-card kf-howto-modal-card';
+
+      const body = document.createElement('div');
+      body.className = 'kf-credits-modal-body';
+      body.innerHTML = HOW_TO_PLAY_HTML;
+
+      const footer = document.createElement('div');
+      footer.className = 'kf-credits-modal-footer';
+
+      const okBtn = document.createElement('button');
+      okBtn.id = 'kf-howto-ok-btn';
+      okBtn.type = 'button';
+      okBtn.className = 'kf-credits-ok-btn';
+      okBtn.textContent = 'OK';
+      okBtn.addEventListener('click', window.closeHowToPlayModal);
+
+      footer.appendChild(okBtn);
+      card.appendChild(body);
+      card.appendChild(footer);
+      modal.appendChild(card);
+
+      // Clicking outside the card closes the modal
+      modal.addEventListener('click', function (event) {
+        if (event.target === modal) {
+          window.closeHowToPlayModal(event);
+        }
+      });
+
+      selectScreen.appendChild(modal);
+    }
+  }
+
+  // Close Credits or How To Play modal on Escape or Enter key
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Escape' && event.key !== 'Enter') return;
+
+    const creditsModal = document.getElementById('kf-credits-modal');
+    if (creditsModal && !creditsModal.hidden) {
       window.closeCreditsModal(event);
+    }
+
+    const howtoModal = document.getElementById('kf-howto-modal');
+    if (howtoModal && !howtoModal.hidden) {
+      window.closeHowToPlayModal(event);
     }
   });
 
@@ -713,6 +1025,7 @@
   /** Synchronizes selection screen UI elements, controls, and card highlights with selection state. */
   window.updateSelectionUI = function() {
     ensureCreditsUI();
+    ensureHowToPlayUI();
 
     const riders = window.AVAILABLE_RIDERS;
     const state = window.vsSelectionState;
@@ -865,6 +1178,7 @@
   /** Validates selection state and transitions to live battle mode via startBattle(). */
   window.validateAndStartMatch = function() {
     window.closeCreditsModal();
+    window.closeHowToPlayModal();
 
     if (typeof window.unlockMobileVideos === 'function') {
       window.unlockMobileVideos();
@@ -921,6 +1235,7 @@
     if (battleScreen) battleScreen.hidden = true;
 
     ensureCreditsUI();
+    ensureHowToPlayUI();
 
     try {
       const res = await fetch('data/riders.json');
