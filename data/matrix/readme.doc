@@ -2921,66 +2921,104 @@ R14: Learner [ S+J Riderman Kick     @ 100% ] (LP: 857 Chi: 0 Fnt: 0) vs Opponen
 
 005_002:
 
-### Benchmark Evaluation Report: Candidate `951036712` (Kamen Rider X vs. Nigo)
+## Merged Performance Summary
 
-**Model Build:** `v5-state256-action17`
+The evaluation tests **Kamen Rider X** (`005`, Max LP: 3100) against **Kamen Rider Nigo** (`002`, Max LP: 3300) using the `v5-state256-action17` architecture under the `charge1-reset1` patch. Across all three difficulty tiers (Master, Soul, and Easy), the neural policy demonstrates strong Expected Value ($Q$-value) scaling and consistent strategic execution.
 
-**Patch Schema:** `charge1-reset1`
-
-**Matchup:** Kamen Rider X (`x`) vs. Kamen Rider Nigo (`nigo`) — Matchup ID `005_002`
-
-**Learner Policy:** `rider` (Neural-Guided Monte Carlo Search Engine)
-
-**Checkpoint Fingerprint:** `951036712`
-
-**Evaluation Dataset:** 154 Evaluated Matches across 4 Difficulty Tiers
-
-Candidate **`951036712`** successfully clears all four benchmark difficulty tiers for matchup `005_002`, achieving an aggregate **66.2% win rate** (102 Wins / 52 Losses / 0 Draws). Most notably, it breaks through the top-tier AI barriers, securing a **54.0% win rate against Master** and a **51.4% win rate against Soul**.
+| Evaluation Metric | vs. Master AI | vs. Soul AI | vs. Easy AI |
+| --- | --- | --- | --- |
+| **Win Rate** | **52.1%** (25W / 23L) | **58.3%** (28W / 20L) | **85.4%** (41W / 7L) |
+| **Average Round Length** | 17.6 Rounds | 16.5 Rounds | 17.9 Rounds |
+| **Mean Selected $Q$-Value** | 1.7951 | 1.8634 | 2.0252 |
+| **P1 / P2 Win Split** | 13W-11L / 12W-12L | 12W-12L / 16W-8L | 18W-6L / 23W-1L |
+| **Dominant Stances** | D (42.1%), S (28.0%), W (22.9%) | D (40.6%), S (28.8%), W (23.6%) | D (42.8%), S (29.9%), W (22.9%) |
 
 ---
 
-### Benchmark Performance Matrix
+## Strategic Core & Action Distribution Analysis
 
-| Difficulty Tier | Opponent Policy | Completed Games | W / L / D | Win Rate | Avg. Rounds | Action Distribution ($D$ / $S$ / $W$ / $A$ / IDLE) | Evaluation Status |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| **EASY** | `easy` search | 17 / 50 | 14 / 3 / 0 | **82.4%** | 16.2 | 43.3% / 33.4% / 18.4% / 2.4% / 2.4% | **PASSED** |
-| **BALANCED** | `balanced` search | 50 / 50 | 42 / 8 / 0 | **84.0%** | 16.5 | 45.7% / 33.5% / 16.0% / 1.6% / 3.3% | **PASSED** |
-| **MASTER** | `master` search | 50 / 50 | 27 / 23 / 0 | **54.0%** | 16.5 | 42.1% / 31.1% / 19.3% / 1.8% / 5.7% | **PASSED** |
-| **SOUL** | `soul` search | 37 / 50 | 19 / 18 / 0 | **51.4%** | 17.3 | 40.9% / 31.1% / 20.2% / 1.7% / 6.1% | **PASSED** |
-| **AGGREGATE** | — | **154 / 200** | **102 / 52 / 0** | **66.2%** | **16.6** | **43.0% / 32.3% / 18.5% / 1.9% / 4.3%** | **PASSED ALL** |
+Kamen Rider X is designed as a *Ridol Weapon Specialist*. Despite Nigo holding a baseline +200 LP advantage (3300 vs. 3100), the AI exploits X's unique utility and physical refund mechanics to control the match flow.
+
+```
+       ┌───────────────────────────────────────────────────────────┐
+       │                NEUTRAL POKE PHASE                         │
+       │  D+I (Ridol Whip Lash) & D+L (Ridol Rod Strike)           │
+       │  • Generates +3 CHI on hit                                │
+       │  • Builds enemy Faint (Stun) meter                        │
+       └─────────────────────────────┬─────────────────────────────┘
+                                     │
+                                     ▼
+       ┌───────────────────────────────────────────────────────────┐
+       │               SUSTAIN & BUFF PHASE                        │
+       │  W+L (Kaizorg Vitality)                                   │
+       │  • Restores +420 LP & -25 Faint when damaged              │
+       │  • Erases Nigo's heavy physical trade advantage           │
+       └─────────────────────────────┬─────────────────────────────┘
+                                     │
+                                     ▼
+       ┌───────────────────────────────────────────────────────────┐
+       │                 PUNISH & FINISH PHASE                     │
+       │  S+J (Rider Kick) / S+K (X-Kick)                          │
+       │  • Converts banked CHI into 440–700 burst damage          │
+       │  • Punishes opponent stun (DO_NOTHING) turns              │
+       └───────────────────────────────────────────────────────────┘
+
+```
+
+### Key Move Choices & Synergies
+
+1. **`D+I` (Ridol Whip Lash — 73% of D-Stance choices):** Costs 1 CHI, deals 100 base damage, inflicts 25 Faint damage, and features a **+3 CHI refund on hit** at an 84% hit rate. This allows X to gain net CHI while dealing mid-range damage.
+2. **`W+L` (Kaizorg Vitality — ~78% of W-Stance choices):** Costs 2 CHI, restores **+420 LP** and **-25 Faint**. This move is the cornerstone of X's strategy, allowing him to out-sustain heavy hitters like Nigo by repeatedly healing through mid-game damage.
+3. **`S+J` (Rider Kick) & `S+K` (X-Kick):** Main burst options (3 CHI / 440 Dmg and 6 CHI / 700 Dmg). `S+J` is prioritized for quick punishes, while `S+K` is saved for full-charge execution.
+4. **Near-Zero Defensive Stance (`A-Stance` < 1.7%):** The policy completely ignores static blocking, relying instead on high-value `W+L` healing to absorb incoming damage while maintaining offensive momentum.
 
 ---
 
-### Key Tactical Highlights & Mechanics
+## Match Walkthroughs
 
-```
-                   BALANCED ATTACK & EMERGENCY RECOVERY ENGINE
-========================================================================================
-Nigo (Heavy Power)           --> [ LP: 3,300 | High Base Dmg Physicals & Heavy Faint ]
-                                                 |
-                                                 v  (Consistent Pace: ~16.5 Rounds)
-Kamen Rider X (Counter-Burst) --> [ Physical Chi Battery + REACH Special Punishes ]
-                                   + Heavy D+I Whip Lash usage for +3 Chi refund on hit
-                                   + High S-Stance (31-33%) output to match Nigo's burst
-                                   + Capped W-Stance (16-20%) avoids passive stall traps
-                                   + W+L Kaizorg Vitality used strictly for clutch healing
-========================================================================================
+### Walkthrough 1: Out-Stunning Master AI (Master Match #1 — 16 Rounds)
 
-```
+*Demonstrates how X builds Faint damage to lock down high-level opponents.*
 
-1. **Full Four-Tier Sweep (Passing SOUL at 51.4%):**
-The candidate maintains a positive win margin against Soul Nigo (19W / 18L). It handles Nigo's intense rushdown by using `D+I` (*Ridol Whip Lash*, 182 uses in Soul) to keep Nigo's faint meter stacking towards 100-Faint stuns.
-2. **Disciplined Stance Distribution:**
-Unlike earlier models that over-indexed on utility jumping or passive blocking, candidate `951036712` enforces a stable, aggressive distribution:
-* **$D$-Stance Physicals (40.9%–45.7%):** Primary neutral tool to harvest Chi refunds (+3 Chi per hit).
-* **$S$-Stance Specials (31.1%–33.5%):** High frequency of `S+J` (*Rider Kick*) and `S+K` (*X-Kick*) to match Nigo's raw LP damage.
-* **$W$-Stance Utility (16.0%–20.2%):** Capped frequency ensures X uses `W+L` (*Kaizorg Vitality*) for high-value health resets without giving up offensive momentum.
+* **Rounds 1–5 (Resource Building):** X opens with `W+J` (Mercury Overdrive) to set up speed/damage, then exchanges pokes. In Round 3 and 5, X lands `D+I` (Ridol Whip Lash), accumulating CHI via refunds while building Nigo's Faint meter to 92.
+* **Round 6 (Stun Trigger):** Both fighters exchange `S+J` special attacks. X's attack pushes Nigo's Faint meter over 100, causing Nigo to collapse.
+* **Round 7 (Stun Punish Window):** Nigo is forced into `DO_NOTHING` (0% charge). X capitalizes with a free `D+L` (Ridol Rod Strike @ 90% charge), dropping Nigo to 1028 LP.
+* **Rounds 8–14 (Controlled Trading):** X alternates between `D+I` pokes and `S+J` chops, keeping Nigo under constant threat while maintaining a safe LP margin.
+* **Round 15–16 (The Execution):** In Round 15, X's `D+I` hits Nigo's `S+L`, causing Nigo to hit 100 Faint a second time. In Round 16, Nigo is locked in `DO_NOTHING`, and X executes a 100% charged `S+J` (Rider Kick) to deal final lethal damage (702 LP to 0).
+
+---
+
+### Walkthrough 2: The Sustain Turnaround (Soul Match #4 — 14 Rounds)
+
+*Demonstrates back-to-back `W+L` (Kaizorg Vitality) casts to reverse an early health deficit.*
+
+* **Rounds 1–4 (Early Deficit):** Nigo lands heavy physical hits early (`D+L` combo). By Round 4, X is down to 1733 LP while Nigo remains at 2425 LP.
+* **Rounds 5–6 (Double Kaizorg Vitality):** Facing an 692 LP gap, X registers back-to-back `W+L` (Kaizorg Vitality) commands at 100% charge:
+* **Round 5:** X heals from 1733 LP to **2082 LP** (+349 net gain after accounting for incoming chip/drain).
+* **Round 6:** X heals from 2082 LP to **2470 LP**, completely erasing Nigo's early lead.
 
 
-3. **Consistent Match Tempo:**
-Across all difficulty tiers, average game length remains tightly bounded between **16.2 and 17.3 rounds**. This confirms the policy has eliminated long, non-productive stalling loops in favor of proactive win conditions.
+* **Rounds 7–12 (Flipping the Momentum):** With his health restored, X presses the initiative with `D+L` and `S+K` (X-Kick). In Round 8, `S+K` hits Nigo for heavy damage, dropping Nigo from 2278 LP down to 1403 LP.
+* **Round 14 (Finisher):** X locks in a 100% charged `S+K` against Nigo's low-charge `D+L`, closing out the match at 2072 LP remaining.
+
+---
+
+### Walkthrough 3: The Endless Health Engine (Easy Match #2 — 26 Rounds)
+
+*Demonstrates a high-round attrition victory where X repeatedly resets his health bar.*
+
+* **Rounds 1–6 (Heavy Trading):** Nigo lands high-damage attacks (`S+L`), driving X down to 1598 LP by Round 6.
+* **Round 7 (Force Stun Break):** Nigo hits 100 Faint, forcing Nigo into `DO_NOTHING` in Round 8. X uses Round 7–8 to reset his charge clock.
+* **Rounds 9–16 (The 8-Turn Sustain Loop):** X enters a continuous sustain sequence, firing off `W+L` (Kaizorg Vitality) across nearly 10 consecutive turns:
+* **Round 10:** LP rises to **1049 LP**
+* **Round 12:** LP rises to **1469 LP**
+* **Round 14:** LP rises to **1571 LP**
+* **Round 16:** LP peaks at **1912 LP**
 
 
+* **Rounds 17–26 (Final Surge):** Having absorbed Nigo's offensive push and built up a massive health cushion, X switches back to `D+I` pokes and closes the match with a 100% charged `S+K` in Round 26.
+
+Would you like me to analyze any specific matchup performance (e.g., Kamen Rider X vs. Amazon or V3) to compare how Kaizorg Vitality performs against rushdown archetypes?
 
 
 005_003:
