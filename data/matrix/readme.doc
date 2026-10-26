@@ -6,7 +6,7 @@ x\y	001	002	003	004	005	006	007	008
 002	 Y   Y   Y   Y   Y   Y						
 003	 Y   Y   Y   Y   Y   Y								
 004	 Y   Y   Y   Y   Y   Y								
-005	 ?   n   n   n   Y   n								
+005	 Y   Y   n   n   Y   n								
 006	 n   n   n   n   Y   Y		
 007								
 008								
@@ -2917,6 +2917,91 @@ R14: Learner [ S+J Riderman Kick     @ 100% ] (LP: 857 Chi: 0 Fnt: 0) vs Opponen
 
 
 005_001:
+
+## Merged Performance Summary
+
+This evaluation evaluates **Kamen Rider X** (`x`, Max LP: 3100) against **Kamen Rider Ichigo** (`ichigo`, Max LP: 3000) under the `v5-state256-action17` architecture and `charge1-reset1` patch. Across all difficulty tiers, the model demonstrates strong $Q$-value scaling ($\text{Master } 2.4878 \rightarrow \text{Balanced } 2.5466 \rightarrow \text{Easy } 2.6039$) and maintains a dominant win rate by leveraging X's sustain and CHI refund loop against Ichigo's high-damage special output.
+
+| Metric | vs. Master AI | vs. Soul AI (Partial) | vs. Balanced AI | vs. Easy AI |
+| --- | --- | --- | --- | --- |
+| **Win Rate** | **65.0%** (52W / 28L) | **64.7%** (11W / 6L) | **73.8%** (59W / 21L) | **84.9%** (62W / 11L) |
+| **Average Round Length** | 16.4 Rounds | 18.2 Rounds | 15.4 Rounds | 15.4 Rounds |
+| **Mean Selected $Q$-Value** | 2.4878 | 2.4966 | 2.5466 | 2.6039 |
+| **P1 / P2 Win Split** | 22W-18L / 30W-10L | 6W-3L / 5W-3L | 32W-8L / 27W-13L | 32W-5L / 30W-6L |
+| **Action Distribution** | D: 42.3%, S: 30.2%, W: 20.7% | D: 39.2%, S: 30.1%, W: 23.7% | D: 43.0%, S: 32.8%, W: 18.9% | D: 44.1%, S: 32.5%, W: 17.7% |
+
+---
+
+## Tactical & Strategy Breakdown
+
+The X vs. Ichigo matchup presents a clear asymmetry: Ichigo possesses high base-damage finishers (`S+I` Kirimomi Kick: 1100 dmg, `S+L` Rider Kick: 860 dmg), whereas X possesses elite sustain (`W+L` Kaizorg Vitality: +420 LP recovery) and high-accuracy CHI refund pokes (`D+I` Ridol Whip Lash / `D+L` Ridol Rod Strike: +3 CHI on hit).
+
+```
+   ┌─────────────────────────────────────────────────────────────┐
+   │                  1. CHI GENERATION & POKE                   │
+   │  D+I (Ridol Whip Lash) — 84% Hit, +3 CHI Refund, 25 Faint   │
+   │  • Over 68%–71% of all D-stance selections                   │
+   │  • Builds enemy stun while keeping CHI bank full            │
+   └──────────────────────────────┬──────────────────────────────┘
+                                  │
+                                  ▼
+   ┌─────────────────────────────────────────────────────────────┐
+   │                  2. LP & FAINT SUSTAIN                      │
+   │  W+L (Kaizorg Vitality) — +420 LP / -25 Faint               │
+   │  • Over 80%–88% of all W-stance selections                   │
+   │  • Out-heals Ichigo's mid-tier special trade damage         │
+   └──────────────────────────────┬──────────────────────────────┘
+                                  │
+                                  ▼
+   ┌─────────────────────────────────────────────────────────────┐
+   │                  3. PUNISH & EXECUTION                      │
+   │  S+J (Rider Kick - 440 Dmg) / S+K (X-Kick - 700 Dmg)       │
+   │  • S+J used for rapid counter-punishes (~60% of S-stance)    │
+   │  • S+K / S+I reserved for 100% charged opponent stuns        │
+   └─────────────────────────────────────────────────────────────┘
+
+```
+
+### Stance Allocation Insights
+
+* **D-Stance (`D+I` Focus):** Across all runs, `D+I` accounted for 351 to 382 inputs per 80-game set. The AI uses this high hit-rate move (84%) to earn net +2 CHI per cast, constantly refreshing its pool to finance heals or specials.
+* **W-Stance (`W+L` Battery):** The policy relies almost exclusively on `W+L` (`W+L` 220 / total W 271 in Master). `W+J` and `W+I` are used sparingly for air/speed buffs, prioritizing raw LP recovery to invalidate Ichigo's raw damage output.
+* **S-Stance (`S+J` & `S+K` Split):** `S+J` acts as the standard punish (237–243 uses per job), while `S+K` (90–108 uses per job) is queued when charge hits 98%–100% or when the opponent is in `DO_NOTHING`.
+
+---
+
+## Match Walkthroughs
+
+### Walkthrough 1: Master Match #11 (24 Rounds) — Out-Sustaining High Damage
+
+*Demonstrates how X uses `W+L` to absorb heavy damage and turn the tide in long attrition matches.*
+
+* **Rounds 1–4 (Early Trades):** X opens with `S+J` and `D+I` pokes, while Ichigo fires back with `S+L` (Rider Kick) and `S+J`. By Round 4, X's LP drops to 2097 while Ichigo sits at 2343.
+* **Rounds 5–8 (Triple Vitality & Stun Recovery):** Facing 93 Faint, X executes `W+L` (Kaizorg Vitality) three turns in a row (Rounds 5, 6, 7), restoring LP from 2097 back to 2412, then 2313, while absorbing Ichigo's incoming hits. In Round 8, X suffers a forced `DO_NOTHING` stun turn, but enters it at 1813 LP thanks to prior heals.
+* **Rounds 10–13 (Second Heal Engine):** After taking an `S+K` from Ichigo, X casts `W+L` in Rounds 10, 11, and 13, raising his health from 1286 LP up to 1585 LP while Ichigo stays locked at 2314 LP.
+* **Rounds 18–24 (Stun Lock & Finisher):** In Round 18, X's `D+I` pushes Ichigo to 100 Faint. X capitalizes in Round 19 with `S+J` against Ichigo's `DO_NOTHING` turn, dropping Ichigo to 120 LP. X closes the match in Round 24 with a final `S+J`.
+
+---
+
+### Walkthrough 2: Soul Match #5 (12 Rounds) — Perfect Stun Punish Execution
+
+*Demonstrates high-efficiency CHI management leading into a 100% charged special punish.*
+
+* **Rounds 1–4 (Setup & LP Cushion):** X trades `S+J` and `D+L` in Rounds 1–2, then immediately casts `W+L` in Rounds 3 and 4, building LP to a peak of 2971 while Ichigo remains at 2560 LP.
+* **Rounds 8–10 (Faint Buildup to Stun):** X lands `D+I` and `D+L` pokes, driving Ichigo's Faint meter to 100 in Round 10. X locks in a 100% charged `S+K` (X-Kick) in Round 10, dealing massive damage and dropping Ichigo to 870 LP.
+* **Rounds 11–12 (The Finish):** In Round 11, X uses Ichigo's forced `DO_NOTHING` recovery turn to land `D+L` @ 100% charge, followed by a final 100% charged `S+K` in Round 12 against Ichigo's guard attempt to secure the win at 2043 LP remaining.
+
+---
+
+### Walkthrough 3: Easy Match #5 (19 Rounds) — Punishing Defenses with Special Counter-Attacks
+
+*Demonstrates how X breaks defensive setups by timing `S+I` and `S+K` burst moves.*
+
+* **Rounds 1–3 (Opening Punish):** In Round 1 and 2, X lands consecutive `S+J` chops. In Round 3, X executes `S+I` (Vacuum Hell Wheel @ 100% charge) against Ichigo's `A+J` guard, breaking through defensive guard frames to reduce Ichigo from 3000 to 1612 LP instantly.
+* **Rounds 9–13 (Sustain Phase):** Ichigo hits back with `S+J` in Round 9, dropping X to 1560 LP. X responds with `W+L` in Round 10 to recover to 1924 LP, cleanly absorbing Ichigo's counter-attack.
+* **Rounds 14–19 (Closing Surge):** After Ichigo suffers a Faint lock, X controls neutral with `D+I` pokes (Rounds 16 & 18) and seals the match in Round 19 with a 98% charged `S+K` (X-Kick).
+
+Would you like to run an evaluation matchup of Kamen Rider X against Kamen Rider Amazon to test how Kaizorg Vitality handles Amazon's high-evasion rushdown and bleeding debuffs?
 
 
 005_002:
