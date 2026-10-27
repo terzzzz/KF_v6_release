@@ -7,7 +7,7 @@ x\y	001	002	003	004	005	006	007	008
 003	 Y   Y   Y   Y   Y   Y								
 004	 Y   Y   Y   Y   Y   Y								
 005	 Y   Y   Y   Y   Y   n								
-006	 Y   Y   Y   n   Y   Y		
+006	 Y   Y   Y   Y   Y   Y		
 007								
 008								
 								
@@ -3638,6 +3638,85 @@ Unlike Nigo (who relies purely on raw health tanking without active self-healing
 Would you like to run an evaluation comparing Amazon's performance against Kamen Rider Super-1 to see if Super-1's Five Hands stance switching presents similar sustain challenges?
 
 006_004:
+
+## Merged Performance Summary
+
+The re-training run successfully stabilized **Kamen Rider Amazon** (`amazon`, Max LP: 2700) against **Riderman** (`riderman`, Max LP: 2800) under checkpoint `3121107013`. Amazon now dominates the matchup, achieving a **65.9% win rate against Master AI** and scaling up to **90.9% against Easy AI**.
+
+| Metric | vs. Master AI | vs. Soul AI | vs. Balanced AI | vs. Easy / Novice AI |
+| --- | --- | --- | --- | --- |
+| **Win Rate** | **65.9%** (29W / 14L / 1D) | **68.2%** (30W / 13L / 1D) | **80.0%** (16W / 3L / 1D) | **90.9%** (20W / 2L) |
+| **Average Round Length** | 11.8 Rounds | 12.1 Rounds | 10.9 Rounds | 12.0 Rounds |
+| **Mean Selected $Q$-Value** | 1.7689 | 1.7677 | 1.8378 | 1.9589 |
+| **P1 / P2 Win Split** | 16W-6L / 13W-8L-1D | 16W-5L-1D / 14W-8L | 8W-2L / 8W-1L-1D | 10W-1L / 10W-1L |
+| **Action Allocation (D / S / W / A)** | 46.6% / 41.2% / 2.7% / 1.7% | 48.0% / 41.7% / 3.2% / 1.5% | 42.3% / 47.3% / 2.3% / 2.3% | 48.7% / 40.6% / 2.6% / 2.2% |
+| **Forced Recovery Rate (IDLE)** | **7.7%** (40 rounds) | **5.6%** (30 rounds) | **5.9%** (13 rounds) | **5.9%** (16 rounds) |
+
+---
+
+## Strategic Shift: Neutralizing Riderman's Reach
+
+The policy solved the high-variance reach problem by shifting from passive trading to **early S-stance heavy pressure** and **controlled D-stance poke chains**.
+
+```
+    RIDDERMAN (2800 LP) — REACH RANGE                 AMAZON (2700 LP) — FAST BURST / FAINT LOCK
+┌────────────────────────────────────────┐          ┌────────────────────────────────────────┐
+│ D+I (Rope Arm Hook) Range              │          │ Early S+K (Jaguar Shock) Opener        │
+│ • 130 Dmg + 28 Faint                   │ ◄─────── │ • Inflicts Bleed DOT immediately       │
+│ • Previously trapped Amazon in stuns   │          │ • Forces Riderman onto the defensive   │
+└───────────────────┬────────────────────┘          └───────────────────┬────────────────────┘
+                    │                                                   │
+                    ▼                                                   ▼
+┌────────────────────────────────────────┐          ┌────────────────────────────────────────┐
+│ FAINT OVERLOAD                         │          │ HIGH FAINT PUNISH EXECUTION            │
+│ • Pushed to 100 Faint in 5–8 rounds    │ ───────► │ • Exploits DO_NOTHING with S+L / S+J   │
+│ • Suffers forced DO_NOTHING recovery   │          │ • Closes matches in 5 to 9 rounds      │
+└────────────────────────────────────────┘          └────────────────────────────────────────┘
+
+```
+
+### Key Tactical Takeaways
+
+1. **Stun Rate Stabilization:** Forced recovery (`IDLE`) dropped to **7.7% in Master** and **5.6% in Soul** (down from >10% in un-converged runs). Amazon stays mobile and avoids getting trapped at long range.
+2. **Opening Bleed Advantage (`S+K` @ 90%–100%):** Amazon allocates **41.2%–47.3%** of actions to $S$-stance attacks. Opening with `S+K` (*Jaguar Shock*) applies Bleed DOT in Round 1, eroding Riderman's health before he can establish `D+I` range control.
+3. **Exploiting Stun Windows:** When Riderman's Faint meter hits 100, Amazon drops heavy 100% charged $S$-stance punishes (`S+L` *Wild Tackle* / `S+J` *Amazon Kick*), resulting in multiple 5-round knockout speedruns.
+
+---
+
+## Highlight Match Walkthroughs
+
+### Walkthrough 1: Master Match #2 (5 Rounds) — Flawless Blitz
+
+*Demonstrates Amazon's fastest recorded win against Master AI.*
+
+* **Round 1:** Amazon opens with `S+K` (@ 90% charge) against Riderman's `S+J`, applying early Bleed DOT (Amazon: 2619 LP, Riderman: 2252 LP).
+* **Round 2:** Amazon connects with `D+K` (@ 89% charge), cutting Riderman to **1940 LP** and building high Faint.
+* **Round 3:** Amazon lands a 90% charged `S+L` (*Wild Tackle*) against Riderman's `D+I`, dealing massive damage and pushing Riderman's Faint meter to **93** (Riderman: **713 LP**).
+* **Round 4:** Amazon follows with a fast `D+J` poke, driving Riderman's Faint meter over **100** (Riderman: **465 LP**).
+* **Round 5:** Riderman takes a forced `DO_NOTHING` turn. Amazon executes a 100% charged `S+J` (*Amazon Kick*) for an instant knockout, ending the fight with **2514 LP remaining**.
+
+---
+
+### Walkthrough 2: Soul Match #6 (9 Rounds) — Clean Faint Trap
+
+*Demonstrates Amazon leveraging D-stance pokes to set up an execution finish.*
+
+* **Rounds 1–2:** Amazon opens with `S+K` and `D+K`, trading into Riderman's pokes to drop him to 1921 LP.
+* **Rounds 3–4:** Amazon chains `S+J` and `D+K`. In Round 4, Amazon's `D+K` connects against Riderman's `A+I` block, driving Riderman's Faint meter to **100** (Riderman: **1065 LP**).
+* **Round 5:** Riderman takes `DO_NOTHING`. Amazon executes `S+L` (*Wild Tackle*), slashing Riderman down to **188 LP**.
+* **Rounds 6–9:** Amazon maintains pressure with `D+L` and closes out the match in Round 9 with a fast `S+J` chop.
+
+---
+
+### Walkthrough 3: Balanced Match #5 (5 Rounds) — Perfect Execution
+
+*Demonstrates Amazon capitalizing on defensive missteps.*
+
+* **Round 1:** Amazon opens with `S+K` (@ 100% charge), dealing 462 damage (Riderman: 2238 LP).
+* **Round 2:** Amazon lands `S+J` against Riderman's `A+K` guard, cutting him down to **1560 LP**.
+* **Rounds 3–4:** Amazon chains `D+I` and `D+K` pokes, pushing Riderman's Faint meter to **100** by Round 4 (Riderman: **1002 LP**).
+* **Round 5:** Riderman takes `DO_NOTHING`. Amazon drops a 100% charged `S+L` (*Wild Tackle*) to finish the match untouched at **2668 LP remaining**.
+
 
 
 
