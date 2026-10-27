@@ -358,6 +358,7 @@
 
       maxLp: rider.maxLp,
       lp: rider.maxLp,
+      evasionRate: Number(rider.evasionRate || 0),
 
       chi: R.STARTING_CHI,
       maxChi: R.MAX_CHI,
