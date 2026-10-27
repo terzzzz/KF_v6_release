@@ -484,8 +484,14 @@
       0.45
     );
 
-    const activeEvasion = C.modifiers(after[evaderSlot]).evasion;
-    const evasionMultiplier = activeEvasion > 0.05 ? 1.35 : 1.0;
+const totalEvasion = C.modifiers(after[evaderSlot]).evasion;
+    const innateEvasion = Number(after[evaderSlot].evasionRate || 0);
+    const buffEvasion = Math.max(0, totalEvasion - innateEvasion);
+    const evasionMultiplier = buffEvasion > 0.05
+      ? 1.35
+      : innateEvasion > 0.05
+        ? 1.15
+        : 1.0;
 
     return avoidedDamageRatio * evasionMultiplier;
   }
@@ -666,10 +672,12 @@
       }
     }
 
-    if (evadedScore > 0) {
-      const baseEvasion = Math.max(0.02, Number(ownBefore.baseEvasion || 0.06));
+   if (evadedScore > 0) {
+      const baseEvasion =
+        Math.max(0.02, Number(g.COMBAT_RULES?.BASE_EVASION_CHANCE ?? 0.02)) +
+        Math.max(0, Number(ownBefore.evasionRate || 0));
       let totalBuffEvasion = 0;
-
+     
       for (const entry of activeEntries) {
         totalBuffEvasion += Math.max(0, entry.buffMeta.evasionBoost);
       }
