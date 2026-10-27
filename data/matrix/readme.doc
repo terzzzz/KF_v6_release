@@ -3308,6 +3308,96 @@ Matchup `005_005` now contains **1,447 total candidate games** logged in the dat
 
 006_001:
 
+## Merged Performance Summary
+
+This evaluation tests **Kamen Rider Amazon** (`amazon`, Max LP: 2700) against **Kamen Rider Ichigo** (`ichigo`, Max LP: 3000) under the `v5-state256-action17` architecture and `charge1-reset1` patch. Across all difficulty benchmarks, Amazon demonstrates high-velocity rushdown capability, completing matches in an average of **9.9 to 11.7 rounds**.
+
+| Metric | vs. Master AI | vs. Soul AI | vs. Balanced AI | vs. Easy AI |
+| --- | --- | --- | --- | --- |
+| **Win Rate** | **63.0%** (29W / 16L / 1D) | **55.6%** (20W / 15L / 1D) | **63.0%** (29W / 15L / 2D) | **82.6%** (38W / 8L / 0D) |
+| **Average Round Length** | 10.8 Rounds | 11.7 Rounds | 11.1 Rounds | 9.9 Rounds |
+| **Mean Selected $Q$-Value** | 1.2946 | 1.2970 | 1.3322 | 1.3203 |
+| **P1 / P2 Win Split** | 14W-9L / 15W-7L | 9W-8L / 11W-7L | 13W-10L / 16W-5L | 19W-4L / 19W-4L |
+| **Action Allocation (D / S / W / A)** | 45.2% / 40.1% / 6.3% / 3.2% | 47.7% / 37.8% / 5.4% / 4.0% | 50.1% / 38.7% / 4.1% / 4.5% | 49.9% / 43.1% / 2.0% / 3.3% |
+| **Forced Recovery Rate (IDLE)** | 5.2% (26 rounds) | 5.2% (22 rounds) | 2.5% (13 rounds) | 1.8% (8 rounds) |
+
+---
+
+## Strategic Core & Action Distribution Analysis
+
+Amazon operates as a **Rushdown / Glass Cannon** archetype. Despite starting with a -300 LP disadvantage against Ichigo (2700 LP vs 3000 LP), Amazon's high base damage and CHI refund mechanics allow the policy to overwhelm opponents before attrition sets in.
+
+```
+       ┌───────────────────────────────────────────────────────────┐
+       │             1. CHI REFUND PHYSICAL POKES                  │
+       │  D+L (Claw Combo — 142 Dmg) & D+K (Claw Attack — 130 Dmg) │
+       │  • Generates net +2 CHI on hit (+3 refund - 1 cost)       │
+       │  • Accounts for over 80% of all D-stance selections        │
+       └─────────────────────────────┬─────────────────────────────┘
+                                     │
+                                     ▼
+       ┌───────────────────────────────────────────────────────────┐
+       │                2. BLEED DEBUFF INFLICT                    │
+       │  S+K (Jaguar Shock — 450 Dmg + Bleed DOT)                 │
+       │  • Inflicts 95 LP bleed/turn over 3 turns (285 total DOT) │
+       │  • Chosen 71–103 times per evaluation job                 │
+       └─────────────────────────────┬─────────────────────────────┘
+                                     │
+                                     ▼
+       ┌───────────────────────────────────────────────────────────┐
+       │               3. HIGH-BURST FINISHING BURST               │
+       │  S+L (Wild Tackle — 880 Dmg) / S+J (Amazon Kick — 420 Dmg)│
+       │  • Converts refunded CHI into raw execution damage        │
+       │  • Punishes opponent stun turns (DO_NOTHING)              │
+       └───────────────────────────────────────────────────────────┘
+
+```
+
+### Key Tactical Insights
+
+1. **Primary Physical Engines (`D+L` & `D+K`):** `D+L` (Claw Combo) is Amazon's single most utilized physical move (102–119 uses per run). Combined with `D+K` (54–78 uses), these two moves generate constant CHI refunds while dealing heavy base damage (130–142 LP).
+2. **Special Stance Preference (`S+K` Dominance):** `S+K` (*Jaguar Shock*) accounts for nearly 50% of all S-stance choices across all tiers. The policy prioritizes applying the 3-turn bleeding debuff early in matches to force incoming damage trades in Amazon's favor.
+3. **Suppressed Utility & Guarding (`W` < 6.3%, `A` < 4.5%):** The neural network almost completely skips defensive guard moves or healing utility, realizing that passive turns allow Ichigo's superior LP pool to win long trades.
+
+---
+
+## Match Walkthroughs
+
+### Walkthrough 1: Master Match #2 (6 Rounds) — High-Velocity Blitz
+
+*Demonstrates Amazon's ability to erase a full 3000 LP health bar in 6 turns.*
+
+* **Round 1:** Amazon opens with `S+K` (Jaguar Shock @ 90% charge) against Ichigo's `S+L`. Both hit, but Amazon applies the bleeding debuff. (Amazon: 2700 LP, Ichigo: 2452 LP).
+* **Round 2:** Amazon follows immediately with `S+J` (Amazon Kick @ 100% charge). Ichigo trades with `S+J`. Bleed ticking drops Ichigo to 2297 LP.
+* **Round 3:** Amazon lands another `S+K` @ 100% charge against Ichigo's `D+L` poke, driving Ichigo's health down to 1580 LP.
+* **Rounds 4–5:** Amazon chains `D+J` pokes into `S+J`, building Ichigo's Faint meter to 100 at the end of Round 5 (Ichigo: 1098 LP).
+* **Round 6 (Execution):** locked in `DO_NOTHING` due to Faint stun, Ichigo takes a 100% charged `S+L` (Wild Tackle), dealing 1098+ damage and ending the fight instantly.
+
+---
+
+### Walkthrough 2: Soul Match #1 (13 Rounds) — Comeback via Bleed Attrition
+
+*Demonstrates recovery from an early LP deficit using CHI-refunding pokes.*
+
+* **Rounds 1–3:** Ichigo lands heavy hits early, driving Amazon down to 787 LP by Round 3 while Ichigo sits comfortably at 2745 LP.
+* **Rounds 4–5:** Amazon uses `W+I` (Wild Leap) for evasion and `W+L` (Wild Instinct) to recover Faint meter, resetting neutral.
+* **Rounds 6–8:** Amazon loops `D+K` (+3 CHI refund) into `S+J`, dealing back-to-back hits to drop Ichigo from 2549 down to 1668 LP.
+* **Rounds 10–13:** Amazon lands `S+J` in Round 10, triggering a 100 Faint stun on Ichigo. In Round 11, Amazon executes `D+K` on Ichigo's `DO_NOTHING` turn, followed by `D+L` and `S+L` in Rounds 12–13 to complete the comeback at 300 LP remaining.
+
+---
+
+### Walkthrough 3: Easy Match #1 (9 Rounds) — Stun Exploitation & Execution
+
+*Demonstrates optimal punish timing against lower-tier AI decision delays.*
+
+* **Round 1:** Ichigo opens with `DO_NOTHING` (0% charge). Amazon immediately locks in `S+K` (Jaguar Shock @ 90% charge) to deal early damage and inflict bleed.
+* **Rounds 2–4:** Amazon trades `D+L` into `S+K`. By Round 4, Ichigo suffers another `DO_NOTHING` turn, allowing Amazon to land `D+J` for free.
+* **Rounds 5–9:** Amazon presses the attack with `D+L` and `S+K`. In Round 8, Ichigo hits 97 Faint. In Round 9, Ichigo is forced into `DO_NOTHING`, and Amazon closes the match with a final `D+K` poke.
+
+Would you like to run an evaluation matchup of Kamen Rider Amazon against Kamen Rider Stronger to test how Amazon's rushdown performs against a heavy electromagnetic brawler?
+
+
+
 006_002:
 
 
