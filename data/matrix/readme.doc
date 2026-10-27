@@ -6,7 +6,7 @@ x\y	001	002	003	004	005	006	007	008
 002	 Y   Y   Y   Y   Y   Y						
 003	 Y   Y   Y   Y   Y   Y								
 004	 Y   Y   Y   Y   Y   Y								
-005	 Y   Y   Y   n   Y   n								
+005	 Y   Y   Y   Y   Y   n								
 006	 Y   n   n   n   Y   Y		
 007								
 008								
@@ -3200,9 +3200,82 @@ V3 presents a unique challenge as a *High CHI / Fast Combo* archetype with acces
 * **Rounds 6–8 (Special Counter Punching):** In Round 6, X capitalizes on V3's second `DO_NOTHING` turn with a 100% charged `S+K` (X-Kick), dealing over 700 damage and dropping V3 to 1253 LP.
 * **Rounds 13–18 (Final Lockout):** V3 suffers a third stun break in Round 14 (`DO_NOTHING`). X lands `D+L` pokes in Rounds 14–15, then finishes the fight in Round 18 with a 98% charged `S+L` (Ridol Crown Split).
 
-Would you like to run an evaluation matchup against Kamen Rider Amazon to test how Kaizorg Vitality handles Amazon's high evasion (35%) and bleeding status debuffs?
  
 005_004:
+## Merged Performance Summary
+
+This evaluation tests **Kamen Rider X** (`x`, Max LP: 3100) as the Learner against **Riderman** (`riderman`, Max LP: 2800) as the Opponent under the `v5-state256-action17` architecture and `charge1-reset1` patch. Across all difficulty tiers, X maintains a winning record, scaling from **57.7% against Master AI** up to **77.8% against Balanced AI**.
+
+| Metric | vs. Master AI | vs. Soul AI | vs. Balanced AI | vs. Easy / Novice AI |
+| --- | --- | --- | --- | --- |
+| **Win Rate** | **57.7%** (30W / 22L) | **62.0%** (31W / 19L) | **77.8%** (21W / 6L) | **77.5%** (31W / 9L) |
+| **Average Round Length** | 18.2 Rounds | 19.1 Rounds | 15.3 Rounds | 16.9 Rounds |
+| **Mean Selected $Q$-Value** | 1.9075 | 1.9138 | 1.9557 | 1.9395 |
+| **P1 / P2 Win Split** | 14W-12L / 16W-10L | 16W-9L / 15W-10L | 12W-2L / 9W-4L | 16W-4L / 15W-5L |
+| **Stance Distribution (D / S / W / A)** | 38.3% / 31.5% / 19.0% / 2.5% | 38.1% / 30.3% / 20.7% / 2.4% | 38.9% / 37.2% / 15.9% / 1.1% | 38.2% / 33.9% / 18.5% / 2.0% |
+| **Forced Recovery Rate (IDLE)** | 8.6% (82 rounds) | 8.5% (82 rounds) | 6.9% (30 rounds) | 7.3% (50 rounds) |
+
+---
+
+## Strategic Core & Matchup Mechanics
+
+The X vs. Riderman matchup is defined by a high-attrition dynamic between **Riderman's REACH poke pressure** (`D+I` Rope Arm Hook: 28 Faint, +3 CHI refund) and **X's HP sustain engine** (`W+L` Kaizorg Vitality: +420 LP, -25 Faint).
+
+```
+    RIDDERMAN (REACH & FAINT PRESSURE)                 KAMEN RIDER X (SUSTAIN & BURST)
+┌────────────────────────────────────────┐          ┌────────────────────────────────────────┐
+│ D+I (Rope Arm Hook) — REACH Range      │          │ W+L (Kaizorg Vitality)                 │
+│ • 130 Dmg + 28 Faint per hit           │ ───────► │ • Restores +420 LP / clears 25 Faint   │
+│ • Causes 8.5%–8.6% IDLE stun on X      │          │ • Out-heals Riderman's poke throughput │
+└───────────────────┬────────────────────┘          └───────────────────┬────────────────────┘
+                    │                                                   │
+                    ▼                                                   ▼
+┌────────────────────────────────────────┐          ┌────────────────────────────────────────┐
+│ LOW LP CAP (2800 LP)                   │          │ S+K (X-Kick) / S+J (Rider Kick)        │
+│ • Vulnerable to burst specials         │ ◄─────── │ • S+K deals 700 Dmg @ 100% Charge     │
+│ • Weak against stun punishes           │          │ • S+J executes on low HP thresholds   │
+└────────────────────────────────────────┘          └────────────────────────────────────────┘
+
+```
+
+### Key Tactical Observations
+
+1. **Neutralizing REACH Faint Accumulation:** Riderman's `D+I` inflicts high Faint (28 points/hit), forcing X into `IDLE` stun recovery turns in **8.5%–8.6%** of all rounds in higher tiers. X counteracts this by allocating **18.5%–20.7%** of all actions to `W+L` (*Kaizorg Vitality*), continuously shedding Faint while accumulating HP.
+2. **CHI Refund Parity:** Both fighters generate net +3 CHI on their core D-stance pokes (`D+I` and `D+L`). X leverages his superior maximum health pool (3100 LP vs 2800 LP) to win even-value CHI trades.
+3. **Execution Offense (`S+J` & `S+K`):** `S+J` (*Rider Kick*, 125–143 uses) serves as X's primary punish, while `S+K` (*X-Kick*, 49–110 uses) is reserved for full-charge burst attacks when Riderman commits to defensive `A-stance` or suffers stun turns.
+
+---
+
+## Highlight Match Walkthroughs
+
+### Walkthrough 1: Master Match #2 (15 Rounds) — Dominant Stun Punish Execution
+
+*Demonstrates X controlling neutral with `W+L` before executing a 100% charged special.*
+
+* **Rounds 1–6 (Sustain Phase):** Riderman opens with `S+J` chops. X responds with three `W+L` heals across Rounds 2, 4, and 6, building his health bar back up to **2571 LP** while absorbing Riderman's pokes.
+* **Rounds 7–10 (Faint Accumulation):** X trades `D+I` and `D+K` pokes. In Round 10, X's `D+L` connects, driving Riderman's Faint meter to **100**.
+* **Rounds 11–15 (Lethal Finish):** Riderman suffers a forced `DO_NOTHING` turn in Round 11. X capitalizes with a 100% charged `S+I` (*Vacuum Hell Wheel*), dealing massive damage and dropping Riderman from 1900 to **512 LP**. X closes the fight in Round 15 with `D+I`.
+
+---
+
+### Walkthrough 2: Soul Match #3 (8 Rounds) — High-Velocity Blitz
+
+*Demonstrates X exploiting an early opponent error to complete a fast 8-round knockout.*
+
+* **Rounds 1–3 (Opening Special Trade):** X opens with `S+J`, then lands a 100% charged `S+K` in Round 3 against Riderman's `D+L`, slashing Riderman down to **1485 LP**.
+* **Rounds 4–6 (Neutral Pressure):** X chains `D+L` and `D+J` strikes. In Round 6, X's `D+J` poke pushes Riderman to **100 Faint**.
+* **Rounds 7–8 (Execution):** Riderman takes a forced `DO_NOTHING` turn in Round 7. X sets up with `W+J` (buff stance) in Round 7, then seals the victory in Round 8 with a 100% charged `S+L` (*Ridol Crown Split*).
+
+---
+
+### Walkthrough 3: Easy Match #4 (10 Rounds) — Perfect Multi-Turn Setup
+
+*Demonstrates clean punishment of lower-tier AI decision delays.*
+
+* **Rounds 1–5 (Early Lead):** Riderman opens with `DO_NOTHING` in Round 1. X takes full advantage with an opening `S+J` chop followed by an `S+K` in Round 3, dropping Riderman to **1485 LP**.
+* **Rounds 6–9 (Neutral Reset & Stun Lock):** X casts `W+L` in Round 6 to reset his own Faint meter to 0, then builds Riderman's Faint to **100** by Round 9 using `D+I` pokes.
+* **Round 10 (Finisher):** Locked in `DO_NOTHING`, Riderman takes a 100% charged `S+I` (*Vacuum Hell Wheel*) for an instant knockout.
+
 
 
 005_005:
