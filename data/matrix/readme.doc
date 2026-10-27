@@ -7,7 +7,7 @@ x\y	001	002	003	004	005	006	007	008
 003	 Y   Y   Y   Y   Y   Y								
 004	 Y   Y   Y   Y   Y   Y								
 005	 Y   Y   Y   Y   Y   n								
-006	 Y   Y   n   n   Y   Y		
+006	 Y   Y   Y   n   Y   Y		
 007								
 008								
 								
@@ -3560,6 +3560,82 @@ Nigo starts with a massive **+600 LP health advantage** over Amazon (3300 LP vs.
 
 006_003:
 
+## Merged Performance Summary
+
+This evaluation tests **Kamen Rider Amazon** (`amazon`, Max LP: 2700) as the Learner against **Kamen Rider V3** (`v3`, Max LP: 3150 / 2700) under the `v5-state256-action17` architecture and `charge1-reset1` patch. V3 represents Amazon’s toughest matchup in the dataset, pulling Amazon’s Master AI win rate down to **52.2%** due to V3's high health pool combined with active `W+L` health sustain.
+
+| Metric | vs. Master AI | vs. Soul AI | vs. Balanced AI | vs. Easy / Novice AI |
+| --- | --- | --- | --- | --- |
+| **Win Rate** | **52.2%** (24W / 22L) | **56.5%** (26W / 19L / 1D) | **71.7%** (33W / 12L / 1D) | **73.9%** (34W / 12L) |
+| **Average Round Length** | 12.2 Rounds | 12.1 Rounds | 11.5 Rounds | 11.9 Rounds |
+| **Mean Selected $Q$-Value** | 1.8253 | 1.7968 | 1.7979 | 1.8531 |
+| **P1 / P2 Win Split** | 11W-12L / 13W-10L | 14W-8L / 12W-11L | 18W-5L / 15W-7L | 19W-4L / 15W-8L |
+| **Action Allocation (D / S / W / A)** | 43.8% / 40.9% / 3.7% / 1.8% | 49.9% / 38.0% / 3.2% / 1.3% | 48.5% / 39.4% / 2.8% / 3.0% | 44.8% / 42.6% / 3.1% / 2.9% |
+| **Forced Recovery Rate (IDLE)** | **9.8%** (55 rounds) | **7.6%** (42 rounds) | 6.3% (33 rounds) | 6.6% (36 rounds) |
+
+---
+
+## Tactical Matchup Mechanics: The V3 Sustain Barrier
+
+Unlike Nigo (who relies purely on raw health tanking without active self-healing), V3 pairs a **3150 LP tank pool** with active recovery (`W+L`) and high-faint physical counters.
+
+```
+      AMAZON (2700 LP) — BURST / BLEED                   V3 (3150 LP) — SUSTAIN / FAINT COUNTER
+┌────────────────────────────────────────┐          ┌────────────────────────────────────────┐
+│ 1. EARLY BURST OPENING                 │          │ 1. HIGH BASE HEALTH POOL (3150 LP)     │
+│ • S+K (Jaguar Shock) & S+L (Tackle)    │ ───────► │ • Absorbs early Bleed DOT & pokes      │
+│ • Builds high initial CHI advantage    │          │ • Out-trades Amazon in extended rounds │
+└───────────────────┬────────────────────┘          └───────────────────┬────────────────────┘
+                    │                                                   │
+                    ▼                                                   ▼
+┌────────────────────────────────────────┐          ┌────────────────────────────────────────┐
+│ 2. STUN RISK ACCUMULATION              │          │ 2. RECOVERY & FAINT RESET              │
+│ • Forced into IDLE (9.8% in Master)    │ ◄─────── │ • W+L recovers LP and sheds Faint      │
+│ • Lower LP leaves no room for errors   │          │ • Neutralizes Amazon's poke pressure   │
+└────────────────────────────────────────┘          └────────────────────────────────────────┘
+
+```
+
+### Key Tactical Observations
+
+1. **Spike in Forced Recovery (9.8% IDLE vs Master):** V3’s counter-strikes inflict heavy Faint, resulting in Amazon suffering **55 IDLE stun rounds** against Master AI. Because Amazon cannot afford stun turns with only 2700 LP, matches where Amazon gets stunned early almost always turn into losses.
+2. **V3's `W+L` Sustain Engine:** In longer matches (e.g., Master Match #9), V3 casts `W+L` repeatedly (Rounds 4, 5, 7, 8, 10, 11, 17, 18), constantly resetting Faint and erasing Amazon's Bleed chip damage. This invalidates Amazon's mid-game pressure.
+3. **Heavy Reliance on `S+K` and `D+L`:** Amazon’s policy relies heavily on `S+K` (*Jaguar Shock*, 107–111 uses) and `D+L` (*Claw Combo*, 101–134 uses) to maintain maximum DPS, leaving almost zero allocation for `W`-stance evasion (2.8%–3.7%).
+
+---
+
+## Highlight Match Walkthroughs
+
+### Walkthrough 1: Master Match #9 (19 Rounds) — Attrition War Against V3 Healing
+
+*Demonstrates Amazon overcoming 6 separate V3 `W+L` heal cycles to force a late-game stun finish.*
+
+* **Rounds 1–3 (Aggressive Opening):** Amazon opens with `S+K` (@ 100% charge) and `S+J`, driving V3 down from 2588 to 1684 LP.
+* **Rounds 4–8 (V3 Healing Loop):** V3 executes `W+L` across Rounds 4, 5, 7, and 8, keeping his health pinned at 1529 LP while pushing Amazon's Faint meter to **100**. Amazon takes a forced `DO_NOTHING` turn in Round 6 (LP drops to 2209 LP).
+* **Rounds 9–14 (Second Healing Loop & Heavy Trading):** V3 heals again in Rounds 10 and 11. Amazon suffers a second `DO_NOTHING` stun in Round 12 (LP drops to 1141 LP).
+* **Rounds 15–19 (Stun Execution):** In Round 18, Amazon connects with `D+K`, pushing V3’s Faint meter to **100** (V3 left at 87 LP). In Round 19, Amazon executes an `S+J` chop against V3’s forced `DO_NOTHING` to secure the hard-fought win at 377 LP.
+
+---
+
+### Walkthrough 2: Soul Match #1 (15 Rounds) — Comeback from 322 LP
+
+*Demonstrates Amazon surviving mid-game stun to trap V3 in a low-LP lockdown.*
+
+* **Rounds 1–5 (Heavy Exchange):** Amazon trades `S+K` and `D+K` against V3's `S+J` heavy chops. By Round 5, V3 drops to 1402 LP while Amazon stays at 1736 LP.
+* **Rounds 6–10 (V3 Stuns Amazon):** Amazon builds V3's Faint to critical levels, but takes severe counter-damage in Round 11, reaching 100 Faint. Amazon undergoes `DO_NOTHING` in Round 12, dropping to a critical **322 LP**.
+* **Rounds 13–15 (Execution):** Amazon recovers from stun and lands back-to-back `S+J` strikes in Rounds 14 and 15 while V3 attempts to cast `W+L`, catching V3 before the heal resolves to finish the match.
+
+---
+
+### Walkthrough 3: Easy Match #1 (8 Rounds) — Clean Stun-Lock Speedrun
+
+*Demonstrates ideal 8-round execution when V3 fails to loop `W+L` heals.*
+
+* **Rounds 1–3 (Opening Rush):** Amazon opens with `S+K` (@ 100% charge) and `S+J`, cutting V3 down to 2427 LP while V3 takes a forced `DO_NOTHING` in Round 3.
+* **Rounds 4–5 (Heavy Special Break):** In Round 4, Amazon lands `D+K` to push V3 to **100 Faint**. In Round 5, Amazon launches a 100% charged `S+L` (*Wild Tackle*) against V3’s `DO_NOTHING`, slashing V3 from 2276 to **1176 LP**.
+* **Rounds 6–8 (Lethal Finish):** Amazon chains `D+K` and `D+L` pokes, closing out the match in Round 8 with a second `S+L` for a clean KO with 2661 LP remaining.
+
+Would you like to run an evaluation comparing Amazon's performance against Kamen Rider Super-1 to see if Super-1's Five Hands stance switching presents similar sustain challenges?
 
 006_004:
 
