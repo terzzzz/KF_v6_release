@@ -59,6 +59,7 @@
     "name": "Kamen Rider Amazon",
     "sourceFacing": "right",
     "maxLp": 2700,
+    "evasionRate": 0.2,
     "archetype": "Rushdown / Glass Cannon",
     "icon": "assets/images/icons/amazon.png",
     "videoFolder": "assets/videos/amazon/",
