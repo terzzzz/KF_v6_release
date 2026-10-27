@@ -7,7 +7,7 @@ x\y	001	002	003	004	005	006	007	008
 003	 Y   Y   Y   Y   Y   Y								
 004	 Y   Y   Y   Y   Y   Y								
 005	 Y   Y   Y   Y   Y   n								
-006	 Y   n   n   n   Y   Y		
+006	 Y   Y   n   n   Y   Y		
 007								
 008								
 								
@@ -3473,6 +3473,90 @@ Would you like to run an evaluation matchup of Kamen Rider Amazon against Kamen 
 
 006_002:
 
+## Merged Performance Summary
+
+This evaluation tests **Kamen Rider Amazon** (`amazon`, Max LP: 2700) as the Learner against **Kamen Rider Nigo** (`nigo`, Max LP: 3300) under the `v5-state256-action17` architecture and `charge1-reset1` patch. Across all difficulty tiers, Amazon achieves a positive win rate ranging from **57.7% against Master AI** to **70.0% against Soul AI**, maintaining high match velocity (**11.0 to 12.4 average rounds**).
+
+| Metric | vs. Master AI | vs. Soul AI | vs. Balanced AI | vs. Easy / Novice AI |
+| --- | --- | --- | --- | --- |
+| **Win Rate** | **57.7%** (30W / 22L) | **70.0%** (14W / 6L) | **67.4%** (31W / 15L) | **60.9%** (28W / 18L) |
+| **Average Round Length** | 12.2 Rounds | 11.0 Rounds | 11.0 Rounds | 12.4 Rounds |
+| **Mean Selected $Q$-Value** | 2.5389 | 2.5822 | 2.5861 | 2.5266 |
+| **P1 / P2 Win Split** | 12W-14L / 18W-8L | 7W-3L / 7W-3L | 13W-10L / 18W-5L | 16W-7L / 12W-11L |
+| **Action Allocation (D / S / W / A)** | 49.1% / 37.8% / 5.4% / 2.5% | 51.8% / 41.1% / 2.7% / 0.4% | 51.4% / 36.1% / 6.5% / 1.8% | 50.1% / 36.2% / 6.0% / 3.7% |
+| **Forced Recovery Rate (IDLE)** | 5.2% (33 rounds) | 4.0% (9 rounds) | 4.2% (21 rounds) | 4.0% (23 rounds) |
+
+---
+
+## Tactical Matchup Mechanics: Overcoming Nigo's LP Tanking
+
+Nigo starts with a massive **+600 LP health advantage** over Amazon (3300 LP vs. 2700 LP). To overcome this deficit, Amazon's policy adopts a hyper-aggressive rushdown strategy built around bleeding debuffs and raw execution burst.
+
+```
+      AMAZON (2700 LP) — RUSH / BLEED             NIGO (3300 LP) — TANK / COUNTER
+┌────────────────────────────────────────┐     ┌────────────────────────────────────────┐
+│ 1. HIGH-FREQUENCY POKING               │     │ 1. MASSIVE LP POOL                     │
+│ • D+L (Claw Combo) & D+I (Claw Strike) │ ──► │ • Absorbs early physical trades        │
+│ • Generated 49.1%–51.8% of all moves   │     │ • Relies on S+J / S+L heavy counters   │
+└───────────────────┬────────────────────┘     └───────────────────┬────────────────────┘
+                    │                                              │
+                    ▼                                              ▼
+┌────────────────────────────────────────┐     ┌────────────────────────────────────────┐
+│ 2. BLEED DEBUFF & FAINT SETUP          │     │ 2. HIGH STUN SUSCEPTIBILITY            │
+│ • S+K (Jaguar Shock) applies Bleed DOT │ ──► │ • Heavy attacks push Nigo Faint to 100 │
+│ • S+I / S+J stack Faint damage         │     │ • Trapped in DO_NOTHING recovery turns │
+└───────────────────┬────────────────────┘     └────────────────────────────────────────┘
+                    │
+                    ▼
+┌────────────────────────────────────────┐
+│ 3. LETHAL EXECUTION                    │
+│ • Punishes DO_NOTHING with S+L / S+J   │
+│ • Closes games in ~11–12 rounds        │
+└────────────────────────────────────────┘
+
+```
+
+### Strategic Key Findings
+
+1. **D-Stance Neutral Control (49.1%–51.8%):** Amazon's physical engine is dominated by `D+L` (Claw Combo, 122–136 uses) and `D+I` (Claw Strike, 71–94 uses). These pokes generate CHI refunds while continually pushing Nigo's Faint meter toward the 100-point threshold.
+2. **S-Stance Burst Escalation (36.1%–41.1%):** `S+K` (*Jaguar Shock*, 37–98 uses) serves as the primary opener to inflict bleed damage. Once Nigo is softened, Amazon rotates into `S+J` (*Amazon Kick*, 37–82 uses) and `S+L` (*Wild Tackle*, 16–40 uses) for lethal burst.
+3. **Evasion & Guard Skipping (`W` < 6.5%, `A` < 3.7%):** Defensive maneuvers are almost entirely bypassed. Passive turns against Nigo allow his 3300 LP pool to dictate the pace, so the neural network commits strictly to offensive damage racing.
+
+---
+
+## Highlight Match Walkthroughs
+
+### Walkthrough 1: Master Match #2 (11 Rounds) — Clutch Comeback & Execution
+
+*Demonstrates Amazon recovering from a 168 LP critical state to secure a 100% charged finisher.*
+
+* **Rounds 1–3 (Aggressive Opening):** Amazon opens with `S+K` (@ 90% charge) followed by `S+I` (@ 100% charge), dealing early burst damage to drop Nigo from 3300 down to 2025 LP.
+* **Rounds 4–7 (Heavy Trading):** Both fighters exchange pokes. Nigo's heavy `S+J` counters drop Amazon down to a precarious 441 LP in Round 8, while Nigo sits at 923 LP.
+* **Rounds 8–10 (Stun Survival):** Amazon takes a forced `DO_NOTHING` turn in Round 9, taking damage down to 279 LP. In Round 10, Amazon blocks Nigo's `S+J` counter with `A+J`, mitigating damage to survive at 168 LP with 7 stored CHI.
+* **Round 11 (Lethal Finish):** Amazon channels all 7 CHI into a 100% charged `S+L` (*Wild Tackle*), connecting cleanly against Nigo's `D+L` to deal over 923 damage and win the match.
+
+---
+
+### Walkthrough 2: Soul Match #5 (9 Rounds) — Flawless Stun Exploitation
+
+*Demonstrates optimal punish sequence on Nigo's forced recovery window.*
+
+* **Rounds 1–2 (Bleed Setup):** Amazon opens with `S+K` (@ 90% charge) and `S+J`, applying bleed DOT and cutting Nigo to 2072 LP.
+* **Rounds 3–4 (Faint Push):** Amazon lands `D+J` and `D+I` back-to-back. The cumulative Faint pressure drives Nigo's Faint meter to **100** at the end of Round 4.
+* **Round 5 (Execution Window):** With Nigo locked in `DO_NOTHING`, Amazon executes a 100% charged `S+L` (*Wild Tackle*), dropping Nigo's LP from 1604 to **504 LP**.
+* **Rounds 6–9 (Closing Out):** Amazon maintains pressure with `D+K` pokes and completes the match in Round 9 with an `S+J` chop before Nigo can recover.
+
+---
+
+### Walkthrough 3: Balanced Match #6 (7 Rounds) — 7-Turn High-Velocity Blitz
+
+*Demonstrates the fastest recorded match in the batch.*
+
+* **Rounds 1–2:** Amazon opens with `S+K` (@ 100% charge) and `D+L`, trading into Nigo's `S+L` special (Amazon: 1625 LP, Nigo: 2695 LP).
+* **Rounds 3–5:** Amazon chains `D+L`, `S+K`, and `D+K`. In Round 6, another `D+K` poke connects, pushing Nigo's Faint meter over **100**.
+* **Round 7:** Nigo is forced into `DO_NOTHING`. Amazon immediately launches a 100% charged `S+L` (*Wild Tackle*), wiping out Nigo's remaining 1166 LP in a single hit.
+
+ 
 
 006_003:
 
