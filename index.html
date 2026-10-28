@@ -43,6 +43,28 @@
 
     #start-prompt {
       cursor: pointer;
+      font-family: 'Orbitron', 'Chakra Petch', 'M PLUS 1p', 'Noto Sans JP', sans-serif;
+      font-size: clamp(0.85rem, 1.6vw, 1.05rem);
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      color: #060b16 !important;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+      background: linear-gradient(180deg, #e2f8ff 0%, #99e6ff 100%) !important;
+      border: 2px solid #00f0ff !important;
+      border-radius: 6px;
+      padding: 10px 26px;
+      margin-top: 14px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.75), 0 0 14px rgba(0, 240, 255, 0.45);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    #start-prompt:hover,
+    #start-prompt:focus-visible {
+      color: #4a0012 !important;
+      background: linear-gradient(180deg, #ffffff 0%, #7df9ff 100%) !important;
+      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.85), 0 0 20px rgba(0, 240, 255, 0.75);
+      transform: translateY(-1px);
+      outline: none;
     }
 
     a.action-btn,
@@ -77,7 +99,7 @@
               type="button"
               class="start-prompt"
               hidden>
-        TAP OR PRESS A KEY TO START
+        PRESS ANY KEY OR TAP TO FIGHT
       </button>
     </div>
   </main>
