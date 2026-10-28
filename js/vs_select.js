@@ -8,7 +8,7 @@
 
   window.selectionBGM = window.selectionBGM || null;
   window.battleBGM = window.battleBGM || null;
-  window.currentVolume = typeof window.currentVolume === 'number' ? window.currentVolume : 0.25;
+  window.currentVolume = 0.3;
 
   const SELECTION_BGM_TRACKS = [
     'assets/sounds/matchup.mp3',
@@ -846,11 +846,21 @@
         outline: none;
       }
 
-      /* --- How To Play Link (Directly Below Top-Left BGM Slider) --- */
+/* --- Hide Volume Bar --- */
+      #volume-control,
+      #bgm-volume-control,
+      #volume-slider,
+      .volume-control,
+      .bgm-control,
+      input[type="range"] {
+        display: none !important;
+      }
+
+      /* --- How To Play Link (Top-Left Corner) --- */
       #kf-howto-link,
       .kf-howto-link {
         position: fixed !important;
-        top: calc(max(8px, env(safe-area-inset-top, 0px)) + 32px) !important;
+        top: max(12px, env(safe-area-inset-top, 0px)) !important;
         left: max(12px, env(safe-area-inset-left, 0px)) !important;
         right: auto !important;
         bottom: auto !important;
@@ -1294,9 +1304,18 @@
   }
 
   /** Ensures the How To Play link (below BGM slider) and upper-layer modal exist inside #vs-select-screen. */
-  function ensureHowToPlayUI() {
+function ensureHowToPlayUI() {
     const selectScreen = document.getElementById('vs-select-screen');
     if (!selectScreen) return;
+
+    // Remove the volume bar and its label container from the DOM
+    document.querySelectorAll('input[type="range"], #volume-control, #bgm-volume-control, .volume-control, .bgm-control').forEach(el => {
+      if (el.tagName === 'INPUT' && el.parentElement && el.parentElement !== document.body && el.parentElement !== selectScreen && el.parentElement.children.length <= 3) {
+        el.parentElement.remove();
+      } else {
+        el.remove();
+      }
+    });
 
     let linkBtn =
       document.getElementById('kf-howto-link') ||
