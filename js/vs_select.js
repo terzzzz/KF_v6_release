@@ -251,8 +251,8 @@
         z-index: 0;
       }
 
-      #vs-select-screen > * {
-        position: relative;
+      /* Keep normal layout blocks above the grid without overriding fixed/absolute floating buttons or modals */
+      #vs-select-screen > :not(#kf-howto-link):not(#kf-credits-link):not(.kf-howto-link):not(.kf-credits-link):not(.kf-credits-modal-backdrop) {
         z-index: 1;
       }
 
@@ -260,13 +260,13 @@
       #select-step-title,
       #vs-header-text {
         font-family: var(--kf-font-display) !important;
-        font-size: clamp(1.1rem, 2.2vw, 1.65rem) !important;
+        font-size: clamp(1.05rem, 2.1vw, 1.55rem) !important;
         font-weight: 900 !important;
         letter-spacing: 0.14em !important;
         text-transform: uppercase;
         color: #ffffff !important;
         text-shadow: 0 0 18px rgba(0, 240, 255, 0.45), 0 2px 6px rgba(0, 0, 0, 0.9) !important;
-        margin-bottom: 4px !important;
+        margin-bottom: 2px !important;
       }
 
       .kf-step-tracker {
@@ -274,7 +274,7 @@
         align-items: center;
         justify-content: center;
         gap: 8px;
-        margin: 4px auto 12px;
+        margin: 2px auto 8px;
         z-index: 5;
       }
 
@@ -334,7 +334,7 @@
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         border-radius: 14px !important;
-        padding: 14px 16px !important;
+        padding: 12px 15px !important;
         transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
                     border-color 0.28s ease,
                     box-shadow 0.28s ease,
@@ -368,7 +368,7 @@
         box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65),
                     0 0 24px var(--kf-p1-glow),
                     inset 0 0 18px rgba(0, 240, 255, 0.08) !important;
-        transform: translateY(-3px);
+        transform: translateY(-2px);
         opacity: 1 !important;
         filter: none !important;
       }
@@ -378,7 +378,7 @@
         box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65),
                     0 0 24px var(--kf-p2-glow),
                     inset 0 0 18px rgba(255, 42, 109, 0.08) !important;
-        transform: translateY(-3px);
+        transform: translateY(-2px);
         opacity: 1 !important;
         filter: none !important;
       }
@@ -413,12 +413,12 @@
       #p1-name-display,
       #p2-name-display {
         font-family: var(--kf-font-display) !important;
-        font-size: clamp(0.95rem, 1.5vw, 1.2rem) !important;
+        font-size: clamp(0.92rem, 1.45vw, 1.15rem) !important;
         font-weight: 800 !important;
         letter-spacing: 0.06em !important;
         color: #ffffff !important;
         text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
-        margin-top: 8px !important;
+        margin-top: 6px !important;
         margin-bottom: 2px !important;
       }
 
@@ -435,8 +435,8 @@
         align-items: center;
         justify-content: center;
         gap: 8px;
-        margin: 4px 0 8px;
-        font-size: 0.72rem;
+        margin: 3px 0 6px;
+        font-size: 0.7rem;
         font-weight: 700;
         letter-spacing: 0.06em;
       }
@@ -613,8 +613,8 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        margin: 14px auto 8px;
-        padding: 10px 18px;
+        margin: 8px auto 6px;
+        padding: 8px 16px;
         max-width: min(760px, 94vw);
         background: rgba(11, 16, 28, 0.82);
         backdrop-filter: blur(12px);
@@ -627,12 +627,12 @@
 
       .kf-roster-dock-title {
         font-family: var(--kf-font-display);
-        font-size: 0.66rem;
+        font-size: 0.64rem;
         font-weight: 700;
         letter-spacing: 0.16em;
         text-transform: uppercase;
         color: rgba(255, 255, 255, 0.55);
-        margin-bottom: 8px;
+        margin-bottom: 6px;
       }
 
       .kf-roster-grid {
@@ -645,8 +645,8 @@
 
       .kf-roster-tile {
         position: relative;
-        width: clamp(64px, 8.5vw, 84px);
-        padding: 5px;
+        width: clamp(58px, 7.6vw, 76px);
+        padding: 4px;
         border-radius: 10px;
         background: rgba(20, 28, 46, 0.9);
         border: 1.5px solid rgba(255, 255, 255, 0.14);
@@ -691,7 +691,7 @@
       .kf-roster-tile-name {
         margin-top: 4px;
         font-family: var(--kf-font-display);
-        font-size: 0.6rem;
+        font-size: 0.58rem;
         font-weight: 700;
         letter-spacing: 0.05em;
         color: #e2e8f0;
@@ -801,91 +801,117 @@
         transform: translateY(-2px) scale(1.02);
       }
 
-      /* --- Credits Link (Bottom Right) --- */
+      /* --- Credits Link (Compact Pill in Bottom Right, Never Overlaps Action Buttons) --- */
+      #kf-credits-link,
       .kf-credits-link {
-        position: fixed;
-        bottom: 14px;
-        right: 18px;
-        z-index: 120;
-        background: rgba(15, 22, 36, 0.88);
+        position: fixed !important;
+        bottom: max(14px, env(safe-area-inset-bottom, 0px)) !important;
+        right: max(18px, env(safe-area-inset-right, 0px)) !important;
+        left: auto !important;
+        top: auto !important;
+        width: auto !important;
+        max-width: fit-content !important;
+        margin: 0 !important;
+        z-index: 150 !important;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        background: rgba(15, 22, 36, 0.9) !important;
         backdrop-filter: blur(8px);
-        color: #ffd166;
-        border: 1px solid rgba(255, 209, 102, 0.55);
-        border-radius: 999px;
-        padding: 6px 16px;
-        font-family: var(--kf-font-display);
-        font-size: 0.76rem;
-        font-weight: 800;
-        letter-spacing: 0.1em;
+        color: #ffd166 !important;
+        border: 1px solid rgba(255, 209, 102, 0.55) !important;
+        border-radius: 999px !important;
+        padding: 6px 16px !important;
+        font-family: var(--kf-font-display) !important;
+        font-size: 0.74rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.1em !important;
         text-transform: uppercase;
         text-decoration: none;
+        white-space: nowrap;
         cursor: pointer;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.65) !important;
         transition: all 0.16s ease;
       }
 
+      #kf-credits-link:hover,
+      #kf-credits-link:focus-visible,
       .kf-credits-link:hover,
       .kf-credits-link:focus-visible {
-        background: rgba(255, 209, 102, 0.18);
-        border-color: #ffffff;
-        color: #ffffff;
-        box-shadow: 0 0 16px rgba(255, 209, 102, 0.45);
+        background: rgba(255, 209, 102, 0.18) !important;
+        border-color: #ffffff !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 16px rgba(255, 209, 102, 0.45) !important;
         transform: translateY(-1px);
         outline: none;
       }
 
-      /* --- How To Play Link (Just Below BGM Tune-Bar at Top Right) --- */
+      /* --- How To Play Link (Directly Below Top-Left BGM Slider) --- */
+      #kf-howto-link,
       .kf-howto-link {
-        position: absolute;
-        top: calc(max(8px, env(safe-area-inset-top, 0px)) + 30px);
-        right: max(12px, env(safe-area-inset-right, 0px));
-        z-index: 120;
-        background: rgba(15, 22, 36, 0.9);
+        position: fixed !important;
+        top: calc(max(8px, env(safe-area-inset-top, 0px)) + 32px) !important;
+        left: max(12px, env(safe-area-inset-left, 0px)) !important;
+        right: auto !important;
+        bottom: auto !important;
+        width: auto !important;
+        max-width: fit-content !important;
+        margin: 0 !important;
+        z-index: 150 !important;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        background: rgba(15, 22, 36, 0.9) !important;
         backdrop-filter: blur(8px);
-        color: #00f0ff;
-        border: 1px solid rgba(0, 240, 255, 0.65);
-        border-radius: 999px;
-        padding: 5px 14px;
-        font-family: var(--kf-font-display);
-        font-size: 0.74rem;
-        font-weight: 800;
-        letter-spacing: 0.1em;
+        color: #00f0ff !important;
+        border: 1px solid rgba(0, 240, 255, 0.65) !important;
+        border-radius: 999px !important;
+        padding: 5px 14px !important;
+        font-family: var(--kf-font-display) !important;
+        font-size: 0.72rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.1em !important;
         text-transform: uppercase;
         text-decoration: none;
+        white-space: nowrap;
         cursor: pointer;
-        box-shadow: 0 0 12px rgba(0, 240, 255, 0.22), 0 2px 8px rgba(0, 0, 0, 0.6);
+        box-shadow: 0 0 12px rgba(0, 240, 255, 0.22), 0 2px 8px rgba(0, 0, 0, 0.6) !important;
         transition: all 0.16s ease;
       }
 
+      #kf-howto-link:hover,
+      #kf-howto-link:focus-visible,
       .kf-howto-link:hover,
       .kf-howto-link:focus-visible {
-        background: rgba(0, 240, 255, 0.2);
-        border-color: #ffffff;
-        color: #ffffff;
-        box-shadow: 0 0 16px rgba(0, 240, 255, 0.55);
+        background: rgba(0, 240, 255, 0.2) !important;
+        border-color: #ffffff !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 16px rgba(0, 240, 255, 0.55) !important;
         transform: translateY(-1px);
         outline: none;
       }
 
       @media (orientation: portrait), (max-height: 760px) {
         .kf-roster-dock {
-          margin: 6px auto 4px;
-          padding: 6px 12px;
+          margin: 4px auto 4px;
+          padding: 5px 10px;
         }
         .kf-roster-tile {
-          width: clamp(50px, 7vw, 66px);
-          padding: 4px;
+          width: clamp(48px, 6.8vw, 62px);
+          padding: 3px;
         }
         .kf-step-tracker {
-          margin: 2px auto 6px;
+          margin: 2px auto 4px;
         }
       }
 
       /* --- Upper Layer Modal Shared Styles --- */
+      #kf-credits-modal,
+      #kf-howto-modal,
       .kf-credits-modal-backdrop {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 9999 !important;
         background: rgba(5, 8, 15, 0.84);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
@@ -896,6 +922,8 @@
         box-sizing: border-box;
       }
 
+      #kf-credits-modal[hidden],
+      #kf-howto-modal[hidden],
       .kf-credits-modal-backdrop[hidden] {
         display: none !important;
       }
