@@ -1,7 +1,7 @@
 /* js/ui.js
  * Battle HUD and status presentation.
  *
- * Patch: numeric-status-hud-2 + cyber-tokusatsu-jp-hud
+ * Patch: numeric-status-hud-2 + cyber-tokusatsu-jp-hud + glass-shatter-dmg-fx
  */
 (function (g) {
   "use strict";
@@ -443,6 +443,86 @@
     renderTags(byId(`${slot}-buff-tray`), tags);
   }
 
+  /**
+   * Builds or retrieves the SVG glass-shatter overlay inside a player video box.
+   */
+  function ensureGlassCrackOverlay(box) {
+    let overlay = box.querySelector(".glass-crack-overlay");
+    if (overlay) return overlay;
+
+    overlay = document.createElement("div");
+    overlay.className = "glass-crack-overlay";
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.innerHTML = `
+      <svg viewBox="0 0 300 300" preserveAspectRatio="none">
+        <!-- Translucent fractured glass shards -->
+        <polygon points="150,150 112,88 172,74" fill="rgba(210,248,255,0.16)"/>
+        <polygon points="150,150 224,106 206,168" fill="rgba(210,248,255,0.12)"/>
+        <polygon points="150,150 92,190 136,228" fill="rgba(210,248,255,0.14)"/>
+        <polygon points="150,150 64,122 112,88" fill="rgba(255,255,255,0.09)"/>
+        <polygon points="150,150 202,220 140,208" fill="rgba(255,255,255,0.11)"/>
+
+        <!-- Primary radial fracture lines -->
+        <g stroke="rgba(255,255,255,0.96)" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path d="M150,150 L118,96 L92,42 L65,6" stroke-width="2.7"/>
+          <path d="M118,96 L74,78 L16,50" stroke-width="1.9"/>
+          <path d="M150,150 L168,82 L195,34 L216,4" stroke-width="2.5"/>
+          <path d="M168,82 L224,58 L280,22" stroke-width="1.8"/>
+          <path d="M150,150 L216,114 L268,95 L298,78" stroke-width="2.6"/>
+          <path d="M216,114 L254,142 L296,158" stroke-width="1.8"/>
+          <path d="M150,150 L204,172 L248,218 L294,268" stroke-width="2.5"/>
+          <path d="M204,172 L188,232 L205,296" stroke-width="1.9"/>
+          <path d="M150,150 L138,212 L114,264 L96,298" stroke-width="2.7"/>
+          <path d="M138,212 L82,248 L26,290" stroke-width="1.8"/>
+          <path d="M150,150 L88,182 L38,208 L4,228" stroke-width="2.5"/>
+          <path d="M88,182 L44,158 L4,144" stroke-width="1.7"/>
+          <path d="M150,150 L72,124 L26,98 L2,82" stroke-width="2.6"/>
+
+          <!-- Secondary concentric spiderweb rings -->
+          <path d="M132,120 L158,112 L184,132 L176,164 L144,178 L116,166 L112,136 Z" stroke-width="1.6" stroke-opacity="0.9"/>
+          <path d="M104,72 L174,64 L228,106 L218,186 L168,228 L102,216 L66,168 L74,108 Z" stroke-width="1.25" stroke-opacity="0.76"/>
+          <path d="M62,38 L192,28 L266,88 L256,222 L184,274 L74,258 L28,194 L32,84 Z" stroke-width="0.95" stroke-opacity="0.58"/>
+        </g>
+
+        <!-- Impact center starburst -->
+        <circle cx="150" cy="150" r="5.5" fill="rgba(255,255,255,0.98)"/>
+      </svg>
+    `;
+
+    box.appendChild(overlay);
+    return overlay;
+  }
+
+  /**
+   * Triggers the glass-shatter crack overlay and viewport impact shake on the victim's box.
+   */
+  function triggerGlassCrack(boxOrId, damageAmount = 0) {
+    const box = typeof boxOrId === "string" ? byId(boxOrId) : boxOrId;
+    if (!box) return;
+
+    const overlay = ensureGlassCrackOverlay(box);
+    const svg = overlay.querySelector("svg");
+
+    if (svg) {
+      const deg = Math.floor(Math.random() * 360);
+      const flipX = Math.random() > 0.5 ? -1 : 1;
+      svg.style.transform = `scale(${flipX}, 1) rotate(${deg}deg)`;
+    }
+
+    overlay.classList.remove("crack-active", "heavy-crack");
+    box.classList.remove("victim-hit-shake");
+
+    // Force reflow so rapid consecutive hits cleanly restart the animation
+    void overlay.offsetWidth;
+
+    if (number(damageAmount) >= 300) {
+      overlay.classList.add("heavy-crack");
+    }
+
+    overlay.classList.add("crack-active");
+    box.classList.add("victim-hit-shake");
+  }
+
   function showDamagePopup(boxId, text, type = "damage") {
     const box = byId(boxId);
     if (!box) return;
@@ -455,19 +535,37 @@
       "block"
     ]);
 
+    const rawText = String(text ?? "");
+    const resolvedType = supported.has(type) ? type : "scratch";
+
+    // Extract numeric value if present (e.g. "-400" -> 400)
+    const dmgMatch = rawText.replace(/,/g, "").match(/-\s*(\d+(?:\.\d+)?)/);
+    const dmgValue = dmgMatch ? number(dmgMatch[1], 0) : 0;
+
+    // Trigger glass-shatter crack effect on victim viewport when taking damage
+    if (resolvedType === "damage" || resolvedType === "scratch" || dmgValue > 0) {
+      triggerGlassCrack(box, dmgValue || (resolvedType === "damage" ? 200 : 80));
+    }
+
     const popup = document.createElement("div");
 
-    popup.classList.add(
-      "damage-popup",
-      supported.has(type) ? type : "scratch"
-    );
+    popup.classList.add("damage-popup", resolvedType);
+    if (dmgValue >= 300) {
+      popup.classList.add("heavy-dmg");
+    }
 
-    popup.textContent = String(text);
+    // Slightly stagger vertical position if multiple popups are simultaneously active
+    const activeCount = box.querySelectorAll(".damage-popup").length;
+    if (activeCount > 0) {
+      popup.style.top = `${Math.min(68, 42 + activeCount * 12)}%`;
+    }
+
+    popup.textContent = rawText;
     popup.style.whiteSpace = "pre-line";
 
     box.appendChild(popup);
 
-    setTimeout(() => popup.remove(), 2500);
+    setTimeout(() => popup.remove(), 1450);
   }
 
   function showBattleBanner(message) {
@@ -839,6 +937,7 @@
 
       /* --- Player Viewport Frame & Bottom READY / Charge Bar --- */
       .player-box {
+        position: relative !important;
         border-radius: 10px !important;
         border: 1px solid rgba(255, 255, 255, 0.14) !important;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65) !important;
@@ -928,16 +1027,174 @@
         background: rgba(68, 48, 10, 0.85) !important;
       }
 
-      /* --- Damage & Action Popups (Japanese & English Ready) --- */
+      /* --- Glass Shatter Crack Overlay & Victim Viewport Hit Shake --- */
+      .glass-crack-overlay {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 26;
+        opacity: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        mix-blend-mode: screen;
+      }
+
+      .glass-crack-overlay svg {
+        width: 116%;
+        height: 116%;
+        transform-origin: center center;
+        filter: drop-shadow(0 0 6px rgba(195, 245, 255, 0.92))
+                drop-shadow(0 2px 5px rgba(0, 0, 0, 0.95));
+      }
+
+      .glass-crack-overlay.heavy-crack svg {
+        filter: drop-shadow(0 0 9px rgba(255, 55, 55, 0.98))
+                drop-shadow(0 0 18px rgba(255, 190, 0, 0.8))
+                drop-shadow(0 2px 5px rgba(0, 0, 0, 0.95));
+      }
+
+      .glass-crack-overlay.crack-active {
+        animation: kfGlassShatter 1.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      .victim-hit-shake {
+        animation: kfVictimShake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+      }
+
+      @keyframes kfGlassShatter {
+        0% {
+          opacity: 1;
+          background: rgba(255, 255, 255, 0.42);
+          transform: scale(0.84);
+        }
+        12% {
+          opacity: 1;
+          background: rgba(255, 35, 35, 0.15);
+          transform: scale(1.02);
+        }
+        65% {
+          opacity: 0.9;
+          background: transparent;
+          transform: scale(1);
+        }
+        100% {
+          opacity: 0;
+          background: transparent;
+          transform: scale(1.03);
+        }
+      }
+
+      @keyframes kfVictimShake {
+        0%, 100% { transform: translate(0, 0) rotate(0deg); }
+        15% { transform: translate(-8px, -5px) rotate(-1.2deg); }
+        30% { transform: translate(8px, 4px) rotate(1.2deg); }
+        45% { transform: translate(-6px, 5px) rotate(-0.8deg); }
+        60% { transform: translate(6px, -4px) rotate(0.8deg); }
+        75% { transform: translate(-3px, 2px) rotate(-0.4deg); }
+      }
+
+      /* --- Big Stylish Arcade Damage & Action Popups (-400, BLOCK, HEAL, MISS) --- */
       .damage-popup {
+        position: absolute !important;
+        left: 50% !important;
+        top: 42%;
+        transform: translate(-50%, -50%);
+        z-index: 35 !important;
+        pointer-events: none !important;
+        text-align: center !important;
         font-family: var(--kf-hud-font-display) !important;
+        font-size: clamp(2.4rem, 5.8vw, 4.2rem) !important;
         font-weight: 900 !important;
+        font-style: italic !important;
         letter-spacing: 0.04em !important;
+        line-height: 1.05 !important;
+        background: linear-gradient(180deg, #ffffff 0%, #ffe66d 28%, #ff3b1f 68%, #9e0000 100%) !important;
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        -webkit-text-stroke: 2.5px #1a0000 !important;
+        filter: drop-shadow(0 4px 0 #000000)
+                drop-shadow(0 0 14px rgba(255, 35, 0, 0.95))
+                drop-shadow(0 0 28px rgba(255, 180, 0, 0.65)) !important;
+        animation: kfStylishDmgPop 1.35s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards !important;
+      }
+
+      .damage-popup.heavy-dmg {
+        font-size: clamp(2.9rem, 7vw, 4.9rem) !important;
+        background: linear-gradient(180deg, #ffffff 0%, #fff3a1 22%, #ff0044 62%, #6b001b 100%) !important;
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
+        filter: drop-shadow(0 5px 0 #000000)
+                drop-shadow(0 0 18px rgba(255, 0, 68, 1))
+                drop-shadow(0 0 34px rgba(255, 215, 0, 0.85)) !important;
+      }
+
+      .damage-popup.scratch {
+        font-size: clamp(1.95rem, 4.6vw, 3.3rem) !important;
+        background: linear-gradient(180deg, #ffffff 0%, #ffd166 38%, #ff7b00 85%, #993d00 100%) !important;
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
+        -webkit-text-stroke: 2px #1a0900 !important;
+        filter: drop-shadow(0 3px 0 #000000)
+                drop-shadow(0 0 12px rgba(255, 140, 0, 0.9)) !important;
+      }
+
+      .damage-popup.heal {
+        font-size: clamp(2rem, 4.8vw, 3.4rem) !important;
+        background: linear-gradient(180deg, #ffffff 0%, #a8ffdb 35%, #00e676 78%, #007a3d 100%) !important;
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
+        -webkit-text-stroke: 2px #001f0f !important;
+        filter: drop-shadow(0 3px 0 #000000)
+                drop-shadow(0 0 14px rgba(0, 230, 118, 0.9)) !important;
       }
 
       .damage-popup.block {
-        color: #ffd166;
-        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95), 0 0 10px rgba(255, 209, 102, 0.55);
+        font-size: clamp(1.85rem, 4.3vw, 3.1rem) !important;
+        background: linear-gradient(180deg, #ffffff 0%, #ffe89e 40%, #f59e0b 85%, #92400e 100%) !important;
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
+        -webkit-text-stroke: 2px #1c0d00 !important;
+        filter: drop-shadow(0 3px 0 #000000)
+                drop-shadow(0 0 14px rgba(255, 209, 102, 0.85)) !important;
+      }
+
+      .damage-popup.miss {
+        font-size: clamp(1.85rem, 4.3vw, 3.1rem) !important;
+        background: linear-gradient(180deg, #ffffff 0%, #bae6fd 45%, #38bdf8 88%, #0369a1 100%) !important;
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
+        -webkit-text-stroke: 2px #021824 !important;
+        filter: drop-shadow(0 3px 0 #000000)
+                drop-shadow(0 0 12px rgba(56, 189, 248, 0.85)) !important;
+      }
+
+      @keyframes kfStylishDmgPop {
+        0% {
+          opacity: 0;
+          transform: translate(-50%, -18%) scale(0.25) rotate(-8deg);
+        }
+        16% {
+          opacity: 1;
+          transform: translate(-50%, -55%) scale(1.28) rotate(3deg);
+        }
+        32% {
+          opacity: 1;
+          transform: translate(-50%, -48%) scale(0.96) rotate(-1deg);
+        }
+        48% {
+          opacity: 1;
+          transform: translate(-50%, -54%) scale(1.05) rotate(0deg);
+        }
+        78% {
+          opacity: 1;
+          transform: translate(-50%, -68%) scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(-50%, -95%) scale(0.88);
+        }
       }
 
       /* --- On-Screen Control Pad Typography --- */
@@ -959,6 +1216,7 @@
     PATCH: "numeric-status-hud-2",
     updatePlayerHUD,
     showDamagePopup,
+    triggerGlassCrack,
     showBattleBanner,
     showActionBanner,
     describeStatus,
@@ -968,6 +1226,7 @@
   // Existing compatibility entry points.
   g.updatePlayerHUD = updatePlayerHUD;
   g.showDamagePopup = showDamagePopup;
+  g.triggerGlassCrack = triggerGlassCrack;
   g.showBattleBanner = showBattleBanner;
   g.showActionBanner = showActionBanner;
 })(window);
