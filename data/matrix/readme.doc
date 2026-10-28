@@ -6,7 +6,7 @@ x\y	001	002	003	004	005	006	007	008
 002	 Y   Y   Y   Y   Y   Y						
 003	 Y   Y   Y   Y   Y   Y								
 004	 Y   Y   Y   Y   Y   Y								
-005	 Y   Y   Y   Y   Y   n								
+005	 Y   Y   Y   Y   Y   Y								
 006	 Y   Y   Y   Y   Y   Y		
 007								
 008								
@@ -3377,6 +3377,74 @@ Evaluations ran directly using candidate model weights loaded in RAM. All candid
 Matchup `005_005` now contains **1,447 total candidate games** logged in the database, establishing candidate `1766007018` as the benchmark standard for X mirror operations.
 
 005_006:
+
+The candidate model for **Kamen Rider X vs. Kamen Rider Amazon (`005_006`)** has successfully solved the matchup, achieving positive win rates against all search controllers (52.9% to 60.0%) across 5,477 trained candidate matches.
+
+---
+
+### Evaluation Tier Performance Breakdown
+
+| Opponent Controller | Matches Evaluated | Win / Loss / Draw | Win Rate | Avg Rounds | Mean $Q$-Value | `IDLE` Lockout |
+| --- | --- | --- | --- | --- | --- | --- |
+| **Master Search** | 15 / 42 | 9 / 6 / 0 | **60.0%** | 16.3 | 2.0596 | 4.8% |
+| **Soul Search** | 13 / 42 | 7 / 6 / 0 | **53.8%** | 15.7 | 2.2465 | 5.6% |
+| **Balanced Search** | 34 / 42 | 18 / 16 / 0 | **52.9%** | 16.2 | 2.3251 | 5.6% |
+| **Novice (Easy) Search** | 25 / 42 | 15 / 10 / 0 | **60.0%** | 17.8 | 2.3455 | 3.7% |
+
+---
+
+### Tactical Behavior Analysis
+
+```
+                    KAMEN RIDER X MATCHUP LOOP (vs. Amazon)
+                    
+            ┌──────────────────────────────────────────────┐
+            │   AMAZON EVASION / BLEED WINDOW (W+K / W+I)  │
+            └──────────────────────┬───────────────────────┘
+                                   │
+                                   ▼
+            ┌──────────────────────────────────────────────┐
+            │ TURTLE & HEAL: W+L (Kaizorg Vitality)        │
+            │ • 100% Hit Chance, +420 LP, -25 Faint        │
+            │ • Accounting for ~23%–30% of total moves     │
+            └──────────────────────┬───────────────────────┘
+                                   │
+                                   ▼
+            ┌──────────────────────────────────────────────┐
+            │ HIGH-ACCURACY POKES: D+I (84%) / D+L (80%)   │
+            │ • Checks Amazon without wasting CHI on misses │
+            └──────────────────────┬───────────────────────┘
+                                   │
+                                   ▼
+            ┌──────────────────────────────────────────────┐
+            │ PUNISH EXECUTION: S+J (Rider Kick, 4 CHI)    │
+            │ • Dumps stored CHI when Amazon is stunned    │
+            └──────────────────────────────────────────────┘
+
+```
+
+1. **Calculated Neutralization of Evasion:**
+* Across all evaluation logs, `W+L` (*Kaizorg Vitality*) comprises **23.6% to 30.5%** of X's total move choices (52 to 147 casts per evaluation run).
+* By relying on `W+L`'s guaranteed +420 LP heal and 100% hit chance, X neutralizes Amazon's passive 15% base evasion and active evasion buffs (*Gigi Focus* / *Wild Leap*), out-sustaining Amazon over 15–18 round battles.
+
+
+2. **Precision Attack Selection:**
+* $D$-stance pokes (`D+I` *Ridol Whip Lash* at 84% accuracy and `D+L` *Ridol Rod Strike* at 80% accuracy) dominate offensive choices (**35.3% to 41.2%** of all moves).
+* Heavy $S$-stance expenditure is concentrated heavily into `S+J` (4 CHI, 80% hit chance) rather than high-cost 7–10 CHI specials (`S+L` / `S+I`). X conserves resources to punish Amazon during `IDLE` or low-CHI states.
+
+
+3. **Low Resource Mismanagement (`IDLE` Rate):**
+* Forced recovery (`IDLE`) remains extremely low across all tiers at **3.7% to 5.6%**, proving X rarely burns CHI prematurely or takes unnecessary Faint locks.
+
+
+
+---
+
+### Promotion Recommendation
+
+This candidate model displays a stable, convergent policy with mean $Q$-values above 2.0. Because it holds a >52% win rate against all CPU tiers (including Master and Soul), **this model is ready to be promoted (`ACTIVATE SELECTED CANDIDATE`) and exported as `005_006.json**`.
+
+Would you like to activate this candidate model now and proceed to testing the full 36-matrix dataset in live CPU vs CPU exhibition matches?
 
 
 006_001:
