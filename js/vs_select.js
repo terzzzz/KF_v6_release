@@ -43,7 +43,7 @@
     '',
     'Dedicated to the heroes who taught us the meaning of Henshin!!',
     '',
-    '[ Kamen Fight]',
+    '[ Kamen Fight ]',
     'A Game By Terence Cheng',
     '',
     '----------------------------------------',
@@ -65,12 +65,11 @@
     '----------------------------------------',
     'Composer: Terence Cheng',
     '',
-    '',
     '----------------------------------------',
     'SPECIAL THANKS',
     '----------------------------------------',
     '    Friends of Terence Cheng',
-    '    All of my game testers ',
+    '    All of my game testers',
     '',
     '========================================',
     'Thank you for playing!',
@@ -84,7 +83,7 @@
 
       <div class="kf-howto-section">
         <h3>1. Select Your Rider &amp; Match Setup</h3>
-        <p>Pick your Kamen Rider (Ichigo, Nigo, V3, etc..) on the character selection screen. Choose whether to battle a friend (support in later version) or face off against CPU opponents ranging from rugrat (easy) to geek (red).</p>
+        <p>Pick your Kamen Rider on the character selection screen. Choose whether to battle a friend or face off against CPU opponents ranging from <strong>Rugrat</strong> (Easy) up to the 36-matrix neural <strong>Rider</strong> tier.</p>
       </div>
 
       <div class="kf-howto-section">
@@ -114,12 +113,12 @@
               <tr>
                 <td class="kf-key-cell">S Key</td>
                 <td class="kf-stance-cell">Special Moves</td>
-                <td>Heavy Finisher Attacks (e.g., Rider Kick, Rider Punch, etc..)</td>
+                <td>Heavy Finisher Attacks (e.g., Rider Kick, Rider Punch, etc.)</td>
               </tr>
               <tr>
                 <td class="kf-key-cell">A Key</td>
                 <td class="kf-stance-cell">Defensive Guard</td>
-                <td>Shields and Blocks to reduce incoming damage and absorb bonus CHI.</td>
+                <td>Shields and Blocks to reduce incoming damage and absorb bonus CHI</td>
               </tr>
             </tbody>
           </table>
@@ -140,14 +139,15 @@
   `;
 
   /*
-   * Add more IDs here when their RIDER models are ready.
-   * This controls selection availability, not checkpoint validation.
+   * All 6 Riders (6x6 = 36 Matrix) enabled for RIDER difficulty.
    */
   const RIDER_READY_IDS = new Set([
     'ichigo',
     'nigo',
     'v3',
-    'riderman'
+    'riderman',
+    'x',
+    'amazon'
   ]);
 
   function riderLevelAvailable(rider) {
@@ -194,28 +194,383 @@
   }
 
   /*
-   * Static rainbow text + Credits & How-To-Play links & upper-layer modal styles.
+   * Modern Cyber-Tokusatsu UI Theme & Component Styles
    */
   function installRiderBadgeStyles() {
     if (document.getElementById('kf-rider-badge-styles')) {
       return;
     }
 
+    // Load modern geometric display fonts (Chakra Petch & Orbitron)
+    if (!document.getElementById('kf-modern-fonts')) {
+      const fontLink = document.createElement('link');
+      fontLink.id = 'kf-modern-fonts';
+      fontLink.rel = 'stylesheet';
+      fontLink.href = 'https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,600;0,700;1,700&family=Orbitron:wght@600;700;800;900&display=swap';
+      (document.head || document.documentElement).appendChild(fontLink);
+    }
+
     const style = document.createElement('style');
     style.id = 'kf-rider-badge-styles';
 
     style.textContent = `
+      :root {
+        --kf-font-display: 'Orbitron', 'Chakra Petch', 'Segoe UI', system-ui, sans-serif;
+        --kf-font-ui: 'Chakra Petch', 'Segoe UI', Roboto, system-ui, sans-serif;
+        --kf-p1-accent: #00f0ff;
+        --kf-p1-glow: rgba(0, 240, 255, 0.38);
+        --kf-p2-accent: #ff2a6d;
+        --kf-p2-glow: rgba(255, 42, 109, 0.38);
+        --kf-gold: #ffd166;
+        --kf-bg-deep: #070a12;
+      }
+
+      /* --- Screen Atmosphere & Cyber Grid --- */
+      #vs-select-screen {
+        font-family: var(--kf-font-ui) !important;
+        background:
+          radial-gradient(circle at 22% 38%, rgba(0, 240, 255, 0.13) 0%, transparent 45%),
+          radial-gradient(circle at 78% 38%, rgba(255, 42, 109, 0.13) 0%, transparent 45%),
+          radial-gradient(circle at 50% 10%, rgba(255, 209, 102, 0.08) 0%, transparent 40%),
+          linear-gradient(180deg, #060911 0%, #0b101d 60%, #070a12 100%) !important;
+        position: relative;
+        overflow: hidden;
+      }
+
+      #vs-select-screen::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(0, 240, 255, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+        background-size: 44px 44px;
+        mask-image: radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0.85) 20%, transparent 80%);
+        -webkit-mask-image: radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0.85) 20%, transparent 80%);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      #vs-select-screen > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      /* --- Header & Step Tracker --- */
+      #select-step-title,
+      #vs-header-text {
+        font-family: var(--kf-font-display) !important;
+        font-size: clamp(1.1rem, 2.2vw, 1.65rem) !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.14em !important;
+        text-transform: uppercase;
+        color: #ffffff !important;
+        text-shadow: 0 0 18px rgba(0, 240, 255, 0.45), 0 2px 6px rgba(0, 0, 0, 0.9) !important;
+        margin-bottom: 4px !important;
+      }
+
+      .kf-step-tracker {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin: 4px auto 12px;
+        z-index: 5;
+      }
+
+      .kf-step-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-family: var(--kf-font-display);
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        color: rgba(255, 255, 255, 0.4);
+        background: rgba(15, 22, 36, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.25s ease;
+      }
+
+      .kf-step-pill.is-active {
+        color: #060911;
+        background: linear-gradient(90deg, #00f0ff, #5cfbff);
+        border-color: #ffffff;
+        box-shadow: 0 0 14px rgba(0, 240, 255, 0.55);
+        transform: scale(1.04);
+      }
+
+      .kf-step-pill.is-active.step-p2 {
+        color: #ffffff;
+        background: linear-gradient(90deg, #ff2a6d, #ff6b8b);
+        box-shadow: 0 0 14px rgba(255, 42, 109, 0.55);
+      }
+
+      .kf-step-pill.is-active.step-ready {
+        color: #060911;
+        background: linear-gradient(90deg, #ffd166, #ffae00);
+        box-shadow: 0 0 16px rgba(255, 209, 102, 0.65);
+      }
+
+      .kf-step-pill.is-done {
+        color: #78ff9c;
+        border-color: rgba(120, 255, 156, 0.4);
+        background: rgba(16, 40, 32, 0.65);
+      }
+
+      .kf-step-connector {
+        width: 18px;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.14);
+        border-radius: 2px;
+      }
+
+      /* --- Player Cards (#p1-card & #p2-card) --- */
+      #p1-card,
+      #p2-card {
+        background: linear-gradient(165deg, rgba(20, 28, 46, 0.88) 0%, rgba(9, 13, 24, 0.94) 100%) !important;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-radius: 14px !important;
+        padding: 14px 16px !important;
+        transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                    border-color 0.28s ease,
+                    box-shadow 0.28s ease,
+                    opacity 0.28s ease !important;
+        position: relative;
+        overflow: hidden;
+      }
+
+      #p1-card::before,
+      #p2-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        opacity: 0.85;
+        pointer-events: none;
+      }
+
+      #p1-card::before {
+        background: linear-gradient(90deg, transparent, var(--kf-p1-accent), transparent);
+      }
+
+      #p2-card::before {
+        background: linear-gradient(90deg, transparent, var(--kf-p2-accent), transparent);
+      }
+
+      #p1-card.active-slot {
+        border: 2px solid var(--kf-p1-accent) !important;
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65),
+                    0 0 24px var(--kf-p1-glow),
+                    inset 0 0 18px rgba(0, 240, 255, 0.08) !important;
+        transform: translateY(-3px);
+        opacity: 1 !important;
+        filter: none !important;
+      }
+
+      #p2-card.active-slot {
+        border: 2px solid var(--kf-p2-accent) !important;
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.65),
+                    0 0 24px var(--kf-p2-glow),
+                    inset 0 0 18px rgba(255, 42, 109, 0.08) !important;
+        transform: translateY(-3px);
+        opacity: 1 !important;
+        filter: none !important;
+      }
+
+      #p1-card.locked-slot,
+      #p2-card.locked-slot {
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
+        opacity: 0.52 !important;
+        transform: scale(0.985);
+      }
+
+      /* --- Portrait Image Styling --- */
+      #p1-img,
+      #p2-img {
+        border-radius: 10px !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+        background: radial-gradient(circle at 50% 35%, #1f2942 0%, #090d16 100%) !important;
+        box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+        transition: transform 0.35s ease, filter 0.35s ease !important;
+      }
+
+      #p1-card.active-slot #p1-img {
+        border-color: rgba(0, 240, 255, 0.45) !important;
+      }
+
+      #p2-card.active-slot #p2-img {
+        border-color: rgba(255, 42, 109, 0.45) !important;
+      }
+
+      /* --- Rider Name & Live Stat Strip --- */
+      #p1-name-display,
+      #p2-name-display {
+        font-family: var(--kf-font-display) !important;
+        font-size: clamp(0.95rem, 1.5vw, 1.2rem) !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.06em !important;
+        color: #ffffff !important;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+        margin-top: 8px !important;
+        margin-bottom: 2px !important;
+      }
+
+      #p1-card.active-slot #p1-name-display {
+        color: #7df9ff !important;
+      }
+
+      #p2-card.active-slot #p2-name-display {
+        color: #ff8da8 !important;
+      }
+
+      .kf-stat-strip {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin: 4px 0 8px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+      }
+
+      .kf-stat-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: #cbd5e1;
+      }
+
+      .kf-stat-chip strong {
+        color: #ffd166;
+        font-family: var(--kf-font-display);
+      }
+
+      .kf-stat-chip.ai-ready {
+        background: rgba(187, 100, 255, 0.14);
+        border-color: rgba(224, 166, 255, 0.45);
+        color: #f3d5ff;
+      }
+
+      /* --- Cycle Arrow Buttons & Control Type Selector --- */
+      #p1-left-btn,
+      #p1-right-btn,
+      #p2-left-btn,
+      #p2-right-btn {
+        border-radius: 8px !important;
+        background: rgba(255, 255, 255, 0.07) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: #ffffff !important;
+        font-family: var(--kf-font-display) !important;
+        font-weight: 800 !important;
+        transition: all 0.15s ease !important;
+      }
+
+      #p1-left-btn:hover:not(:disabled),
+      #p1-right-btn:hover:not(:disabled) {
+        background: rgba(0, 240, 255, 0.22) !important;
+        border-color: var(--kf-p1-accent) !important;
+        box-shadow: 0 0 12px var(--kf-p1-glow) !important;
+        transform: translateY(-1px);
+      }
+
+      #p2-left-btn:hover:not(:disabled),
+      #p2-right-btn:hover:not(:disabled) {
+        background: rgba(255, 42, 109, 0.22) !important;
+        border-color: var(--kf-p2-accent) !important;
+        box-shadow: 0 0 12px var(--kf-p2-glow) !important;
+        transform: translateY(-1px);
+      }
+
+      #p1-type-display,
+      #p2-type-display {
+        border-radius: 8px !important;
+        font-family: var(--kf-font-display) !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.1em !important;
+        background: rgba(13, 20, 34, 0.85) !important;
+        border: 1px solid rgba(255, 255, 255, 0.18) !important;
+        transition: all 0.15s ease !important;
+      }
+
+      #p1-card.active-slot #p1-type-display:hover {
+        border-color: var(--kf-p1-accent) !important;
+        background: rgba(0, 240, 255, 0.14) !important;
+      }
+
+      #p2-card.active-slot #p2-type-display:hover {
+        border-color: var(--kf-p2-accent) !important;
+        background: rgba(255, 42, 109, 0.14) !important;
+      }
+
+      /* --- Difficulty Badges --- */
+      #p1-diff-display,
+      #p2-diff-display {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px !important;
+        padding: 3px 10px !important;
+        font-family: var(--kf-font-display) !important;
+        font-size: 0.75rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.08em !important;
+        text-transform: uppercase;
+        transition: all 0.18s ease !important;
+      }
+
+      #p1-diff-display.easy,
+      #p2-diff-display.easy {
+        color: #78ff9c !important;
+        border-color: rgba(120, 255, 156, 0.55) !important;
+        background: rgba(20, 60, 40, 0.5) !important;
+      }
+
+      #p1-diff-display.balanced,
+      #p2-diff-display.balanced {
+        color: #6ee7ff !important;
+        border-color: rgba(110, 231, 255, 0.55) !important;
+        background: rgba(16, 48, 68, 0.5) !important;
+      }
+
+      #p1-diff-display.master,
+      #p2-diff-display.master {
+        color: #ff9e64 !important;
+        border-color: rgba(255, 158, 100, 0.65) !important;
+        background: rgba(70, 32, 18, 0.55) !important;
+      }
+
+      #p1-diff-display.soul,
+      #p2-diff-display.soul {
+        color: #ff6b8b !important;
+        border-color: rgba(255, 107, 139, 0.65) !important;
+        background: rgba(70, 18, 38, 0.55) !important;
+        box-shadow: 0 0 10px rgba(255, 107, 139, 0.25);
+      }
+
       #p1-diff-display.rider,
       #p2-diff-display.rider {
-        border-color: #e0a6ff;
-        box-shadow: 0 0 10px rgba(187, 100, 255, 0.3);
+        border-color: #e0a6ff !important;
+        background: rgba(42, 18, 68, 0.72) !important;
+        box-shadow: 0 0 14px rgba(187, 100, 255, 0.45) !important;
       }
 
       .kf-rider-rainbow {
         display: inline-block;
         color: #ffe17d;
         font-weight: 900;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.09em;
       }
 
       @supports ((background-clip: text) or (-webkit-background-clip: text)) {
@@ -230,12 +585,18 @@
             #a7a0ff 83%,
             #f58bff 100%
           );
-
+          background-size: 200% auto;
+          animation: kfRainbowShift 3.5s linear infinite;
           background-clip: text;
           -webkit-background-clip: text;
           color: transparent;
           -webkit-text-fill-color: transparent;
         }
+      }
+
+      @keyframes kfRainbowShift {
+        0% { background-position: 0% center; }
+        100% { background-position: 200% center; }
       }
 
       @media (forced-colors: active) {
@@ -246,33 +607,229 @@
         }
       }
 
+      /* --- Bottom Quick-Select Roster Dock --- */
+      .kf-roster-dock {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 14px auto 8px;
+        padding: 10px 18px;
+        max-width: min(760px, 94vw);
+        background: rgba(11, 16, 28, 0.82);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 14px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+        z-index: 10;
+      }
+
+      .kf-roster-dock-title {
+        font-family: var(--kf-font-display);
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.55);
+        margin-bottom: 8px;
+      }
+
+      .kf-roster-grid {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .kf-roster-tile {
+        position: relative;
+        width: clamp(64px, 8.5vw, 84px);
+        padding: 5px;
+        border-radius: 10px;
+        background: rgba(20, 28, 46, 0.9);
+        border: 1.5px solid rgba(255, 255, 255, 0.14);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: all 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+        user-select: none;
+      }
+
+      .kf-roster-tile:hover {
+        transform: translateY(-3px);
+        border-color: rgba(255, 255, 255, 0.5);
+        background: rgba(32, 44, 70, 0.95);
+      }
+
+      .kf-roster-tile.is-p1 {
+        border-color: var(--kf-p1-accent);
+        box-shadow: 0 0 14px var(--kf-p1-glow);
+      }
+
+      .kf-roster-tile.is-p2 {
+        border-color: var(--kf-p2-accent);
+        box-shadow: 0 0 14px var(--kf-p2-glow);
+      }
+
+      .kf-roster-tile.is-p1.is-p2 {
+        border-color: var(--kf-gold);
+        box-shadow: 0 0 16px rgba(255, 209, 102, 0.5);
+      }
+
+      .kf-roster-tile-img {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        border-radius: 6px;
+        background: #090d16;
+        display: block;
+      }
+
+      .kf-roster-tile-name {
+        margin-top: 4px;
+        font-family: var(--kf-font-display);
+        font-size: 0.6rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: #e2e8f0;
+        text-transform: uppercase;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+      }
+
+      .kf-roster-badges {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        right: 3px;
+        display: flex;
+        justify-content: space-between;
+        pointer-events: none;
+      }
+
+      .kf-roster-tag {
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-family: var(--kf-font-display);
+        font-size: 0.55rem;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        line-height: 1.2;
+      }
+
+      .kf-roster-tag.p1 {
+        background: var(--kf-p1-accent);
+        color: #050811;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
+      }
+
+      .kf-roster-tag.p2 {
+        background: var(--kf-p2-accent);
+        color: #ffffff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
+        margin-left: auto;
+      }
+
+      /* --- Bottom Action Buttons (BACK / CONFIRM / START) --- */
+      #back-btn,
+      .btn-back {
+        font-family: var(--kf-font-display) !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.1em !important;
+        border-radius: 8px !important;
+        background: rgba(20, 27, 42, 0.85) !important;
+        border: 1px solid rgba(255, 255, 255, 0.22) !important;
+        color: #cbd5e1 !important;
+        transition: all 0.18s ease !important;
+      }
+
+      #back-btn:hover:not(:disabled),
+      .btn-back:hover:not(:disabled) {
+        background: rgba(40, 52, 78, 0.95) !important;
+        border-color: #ffffff !important;
+        color: #ffffff !important;
+        transform: translateY(-1px);
+      }
+
+      #confirm-btn,
+      #confirm-p1-btn,
+      #confirm-p2-btn,
+      .btn-confirm,
+      .confirm-btn {
+        font-family: var(--kf-font-display) !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.12em !important;
+        border-radius: 8px !important;
+        background: linear-gradient(135deg, rgba(0, 240, 255, 0.22) 0%, rgba(0, 140, 255, 0.35) 100%) !important;
+        border: 1.5px solid var(--kf-p1-accent) !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 18px rgba(0, 240, 255, 0.3) !important;
+        transition: all 0.18s ease !important;
+      }
+
+      #confirm-btn:hover:not(:disabled),
+      .btn-confirm:hover:not(:disabled),
+      .confirm-btn:hover:not(:disabled) {
+        background: linear-gradient(135deg, #00f0ff 0%, #00a8ff 100%) !important;
+        color: #050811 !important;
+        box-shadow: 0 0 24px rgba(0, 240, 255, 0.65) !important;
+        transform: translateY(-1px);
+      }
+
+      #start-game-btn,
+      .btn-start {
+        font-family: var(--kf-font-display) !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.14em !important;
+        border-radius: 8px !important;
+        background: linear-gradient(135deg, #ffd166 0%, #ff9f1c 100%) !important;
+        border: 2px solid #fff3c4 !important;
+        color: #0b0e17 !important;
+        box-shadow: 0 0 24px rgba(255, 209, 102, 0.55) !important;
+        transition: all 0.18s ease !important;
+      }
+
+      #start-game-btn:hover:not(:disabled),
+      .btn-start:hover:not(:disabled) {
+        filter: brightness(1.08);
+        box-shadow: 0 0 32px rgba(255, 209, 102, 0.85) !important;
+        transform: translateY(-2px) scale(1.02);
+      }
+
       /* --- Credits Link (Bottom Right) --- */
       .kf-credits-link {
         position: fixed;
         bottom: 14px;
         right: 18px;
         z-index: 120;
-        background: rgba(15, 18, 28, 0.88);
-        color: #ffe17d;
-        border: 1px solid rgba(255, 225, 125, 0.55);
-        border-radius: 6px;
-        padding: 6px 14px;
-        font-family: inherit;
-        font-size: 0.82rem;
+        background: rgba(15, 22, 36, 0.88);
+        backdrop-filter: blur(8px);
+        color: #ffd166;
+        border: 1px solid rgba(255, 209, 102, 0.55);
+        border-radius: 999px;
+        padding: 6px 16px;
+        font-family: var(--kf-font-display);
+        font-size: 0.76rem;
         font-weight: 800;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
-        text-decoration: underline;
+        text-decoration: none;
         cursor: pointer;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
-        transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+        transition: all 0.16s ease;
       }
 
       .kf-credits-link:hover,
       .kf-credits-link:focus-visible {
-        background: rgba(35, 42, 64, 0.96);
+        background: rgba(255, 209, 102, 0.18);
         border-color: #ffffff;
         color: #ffffff;
+        box-shadow: 0 0 16px rgba(255, 209, 102, 0.45);
         transform: translateY(-1px);
         outline: none;
       }
@@ -280,41 +837,47 @@
       /* --- How To Play Link (Just Below BGM Tune-Bar at Top Right) --- */
       .kf-howto-link {
         position: absolute;
-        top: calc(max(8px, env(safe-area-inset-top, 0px)) + 28px);
+        top: calc(max(8px, env(safe-area-inset-top, 0px)) + 30px);
         right: max(12px, env(safe-area-inset-right, 0px));
         z-index: 120;
-        background: rgba(15, 18, 28, 0.92);
-        color: #00ffcc;
-        border: 1px solid rgba(0, 255, 204, 0.7);
-        border-radius: 6px;
-        padding: 5px 12px;
-        font-family: inherit;
-        font-size: 0.8rem;
+        background: rgba(15, 22, 36, 0.9);
+        backdrop-filter: blur(8px);
+        color: #00f0ff;
+        border: 1px solid rgba(0, 240, 255, 0.65);
+        border-radius: 999px;
+        padding: 5px 14px;
+        font-family: var(--kf-font-display);
+        font-size: 0.74rem;
         font-weight: 800;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
-        text-decoration: underline;
+        text-decoration: none;
         cursor: pointer;
-        box-shadow: 0 0 10px rgba(0, 255, 204, 0.25), 0 2px 8px rgba(0, 0, 0, 0.6);
-        transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        box-shadow: 0 0 12px rgba(0, 240, 255, 0.22), 0 2px 8px rgba(0, 0, 0, 0.6);
+        transition: all 0.16s ease;
       }
 
       .kf-howto-link:hover,
       .kf-howto-link:focus-visible {
-        background: rgba(0, 255, 204, 0.18);
+        background: rgba(0, 240, 255, 0.2);
         border-color: #ffffff;
         color: #ffffff;
-        box-shadow: 0 0 14px rgba(0, 255, 204, 0.55);
+        box-shadow: 0 0 16px rgba(0, 240, 255, 0.55);
         transform: translateY(-1px);
         outline: none;
       }
 
-      @media (orientation: portrait) {
-        .kf-howto-link {
-          top: calc(max(6px, env(safe-area-inset-top, 0px)) + 22px);
-          right: max(8px, env(safe-area-inset-right, 0px));
-          font-size: 0.7rem;
-          padding: 4px 9px;
+      @media (orientation: portrait), (max-height: 760px) {
+        .kf-roster-dock {
+          margin: 6px auto 4px;
+          padding: 6px 12px;
+        }
+        .kf-roster-tile {
+          width: clamp(50px, 7vw, 66px);
+          padding: 4px;
+        }
+        .kf-step-tracker {
+          margin: 2px auto 6px;
         }
       }
 
@@ -323,9 +886,9 @@
         position: fixed;
         inset: 0;
         z-index: 9999;
-        background: rgba(5, 7, 12, 0.86);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
+        background: rgba(5, 8, 15, 0.84);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -340,10 +903,10 @@
       .kf-credits-modal-card {
         width: min(680px, 94vw);
         max-height: 86vh;
-        background: linear-gradient(180deg, #141926 0%, #0b0e17 100%);
-        border: 2px solid #ffe17d;
-        border-radius: 12px;
-        box-shadow: 0 0 28px rgba(0, 0, 0, 0.9), 0 0 16px rgba(255, 225, 125, 0.25);
+        background: linear-gradient(180deg, rgba(20, 28, 46, 0.96) 0%, rgba(10, 14, 24, 0.98) 100%);
+        border: 1.5px solid rgba(255, 209, 102, 0.75);
+        border-radius: 16px;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.9), 0 0 24px rgba(255, 209, 102, 0.2);
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -351,12 +914,12 @@
       }
 
       .kf-howto-modal-card {
-        border-color: #00ffcc;
-        box-shadow: 0 0 28px rgba(0, 0, 0, 0.9), 0 0 16px rgba(0, 255, 204, 0.25);
+        border-color: rgba(0, 240, 255, 0.75);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.9), 0 0 24px rgba(0, 240, 255, 0.2);
       }
 
       .kf-credits-modal-body {
-        padding: 20px 24px;
+        padding: 22px 26px;
         overflow-y: auto;
         flex: 1 1 auto;
         display: flex;
@@ -379,7 +942,7 @@
         background: #ffffff;
         padding: 8px;
         border-radius: 12px;
-        border: 2px solid #ffe17d;
+        border: 2px solid #ffd166;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.65);
         display: block;
       }
@@ -387,9 +950,9 @@
       .kf-credits-pre {
         width: 100%;
         margin: 0;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        font-size: clamp(0.78rem, 1.8vw, 0.95rem);
-        line-height: 1.55;
+        font-family: var(--kf-font-ui);
+        font-size: clamp(0.82rem, 1.8vw, 0.96rem);
+        line-height: 1.6;
         white-space: pre-wrap;
         word-break: break-word;
         text-align: center;
@@ -400,21 +963,22 @@
       .kf-howto-content {
         width: 100%;
         text-align: left;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-        font-size: clamp(0.78rem, 1.8vw, 0.92rem);
+        font-family: var(--kf-font-ui);
+        font-size: clamp(0.82rem, 1.8vw, 0.95rem);
         line-height: 1.55;
         color: #e2e8f0;
       }
 
       .kf-howto-main-title {
+        font-family: var(--kf-font-display);
         text-align: center;
-        color: #ffcc00;
-        font-size: clamp(1.1rem, 2.8vw, 1.4rem);
-        letter-spacing: 0.1em;
+        color: #ffd166;
+        font-size: clamp(1.15rem, 2.8vw, 1.45rem);
+        letter-spacing: 0.12em;
         margin: 0 0 16px 0;
-        padding-bottom: 8px;
-        border-bottom: 1px solid rgba(0, 255, 204, 0.35);
-        text-shadow: 0 0 8px rgba(255, 204, 0, 0.45);
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(0, 240, 255, 0.3);
+        text-shadow: 0 0 12px rgba(255, 209, 102, 0.4);
       }
 
       .kf-howto-section {
@@ -422,9 +986,11 @@
       }
 
       .kf-howto-section h3 {
-        color: #00ffcc;
-        font-size: clamp(0.88rem, 2vw, 1.02rem);
+        font-family: var(--kf-font-display);
+        color: #00f0ff;
+        font-size: clamp(0.9rem, 2vw, 1.04rem);
         margin: 0 0 6px 0;
+        letter-spacing: 0.04em;
       }
 
       .kf-howto-section p {
@@ -441,33 +1007,38 @@
       .kf-howto-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: clamp(0.72rem, 1.7vw, 0.86rem);
-        background: rgba(10, 14, 23, 0.75);
-        border: 1px solid rgba(0, 255, 204, 0.4);
+        font-size: clamp(0.76rem, 1.7vw, 0.88rem);
+        background: rgba(10, 14, 23, 0.78);
+        border: 1px solid rgba(0, 240, 255, 0.35);
+        border-radius: 8px;
+        overflow: hidden;
       }
 
       .kf-howto-table th,
       .kf-howto-table td {
-        border: 1px solid rgba(0, 255, 204, 0.28);
-        padding: 8px 10px;
+        border: 1px solid rgba(0, 240, 255, 0.22);
+        padding: 9px 12px;
         text-align: left;
         vertical-align: top;
       }
 
       .kf-howto-table th {
-        background: rgba(0, 255, 204, 0.14);
-        color: #ffcc00;
+        font-family: var(--kf-font-display);
+        background: rgba(0, 240, 255, 0.14);
+        color: #ffd166;
         font-weight: 800;
+        letter-spacing: 0.05em;
       }
 
       .kf-howto-table .kf-key-cell {
-        color: #00ffcc;
+        font-family: var(--kf-font-display);
+        color: #00f0ff;
         font-weight: 800;
         white-space: nowrap;
       }
 
       .kf-howto-table .kf-stance-cell {
-        color: #ffe17d;
+        color: #ffd166;
         font-weight: 700;
         white-space: nowrap;
       }
@@ -482,31 +1053,31 @@
       }
 
       .kf-howto-list strong {
-        color: #ffe17d;
+        color: #ffd166;
       }
 
       .kf-credits-modal-footer {
         padding: 12px 20px 16px;
-        border-top: 1px solid rgba(255, 225, 125, 0.22);
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
         display: flex;
         justify-content: center;
-        background: rgba(8, 10, 16, 0.9);
+        background: rgba(8, 11, 19, 0.92);
       }
 
       .kf-credits-ok-btn {
-        min-width: 130px;
+        min-width: 140px;
         padding: 9px 28px;
-        font-family: inherit;
-        font-size: 0.95rem;
+        font-family: var(--kf-font-display);
+        font-size: 0.9rem;
         font-weight: 900;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: #111520;
+        color: #0b0e17;
         background: linear-gradient(180deg, #ffe793 0%, #f5b935 100%);
         border: 2px solid #fff3c4;
-        border-radius: 8px;
+        border-radius: 999px;
         cursor: pointer;
-        box-shadow: 0 3px 12px rgba(245, 185, 53, 0.35);
+        box-shadow: 0 4px 14px rgba(245, 185, 53, 0.4);
         transition: transform 0.12s ease, filter 0.15s ease;
       }
 
@@ -604,7 +1175,6 @@
     const selectScreen = document.getElementById('vs-select-screen');
     if (!selectScreen) return;
 
-    // 1. Ensure Credits trigger link exists
     let linkBtn =
       document.getElementById('kf-credits-link') ||
       document.getElementById('credits-btn');
@@ -614,7 +1184,7 @@
       linkBtn.id = 'kf-credits-link';
       linkBtn.type = 'button';
       linkBtn.className = 'kf-credits-link';
-      linkBtn.textContent = 'CREDITS';
+      linkBtn.textContent = '★ CREDITS';
       selectScreen.appendChild(linkBtn);
     }
 
@@ -623,7 +1193,6 @@
       linkBtn.dataset.kfCreditsBound = '1';
     }
 
-    // 2. Ensure upper-layer Credits modal exists
     let modal = document.getElementById('kf-credits-modal');
 
     if (!modal) {
@@ -642,7 +1211,6 @@
       const body = document.createElement('div');
       body.className = 'kf-credits-modal-body';
 
-      // QR Code at the start of the Credits prompt
       const qrWrap = document.createElement('div');
       qrWrap.className = 'kf-credits-qr-wrap';
 
@@ -653,7 +1221,6 @@
       qrImg.dataset.pathIndex = '0';
       qrImg.src = CREDITS_QR_PATHS[0];
 
-      // Automatic fallback through candidate paths if named differently
       qrImg.addEventListener('error', function () {
         const nextIdx = (parseInt(qrImg.dataset.pathIndex, 10) || 0) + 1;
         if (nextIdx < CREDITS_QR_PATHS.length) {
@@ -688,7 +1255,6 @@
       card.appendChild(footer);
       modal.appendChild(card);
 
-      // Clicking outside the card closes the modal
       modal.addEventListener('click', function (event) {
         if (event.target === modal) {
           window.closeCreditsModal(event);
@@ -704,7 +1270,6 @@
     const selectScreen = document.getElementById('vs-select-screen');
     if (!selectScreen) return;
 
-    // 1. Ensure How To Play trigger link exists just below BGM tune-bar
     let linkBtn =
       document.getElementById('kf-howto-link') ||
       document.getElementById('how-to-play-btn');
@@ -714,7 +1279,7 @@
       linkBtn.id = 'kf-howto-link';
       linkBtn.type = 'button';
       linkBtn.className = 'kf-howto-link';
-      linkBtn.textContent = 'HOW TO PLAY';
+      linkBtn.textContent = '? HOW TO PLAY';
       selectScreen.appendChild(linkBtn);
     }
 
@@ -723,7 +1288,6 @@
       linkBtn.dataset.kfHowtoBound = '1';
     }
 
-    // 2. Ensure upper-layer How To Play modal exists
     let modal = document.getElementById('kf-howto-modal');
 
     if (!modal) {
@@ -750,7 +1314,7 @@
       okBtn.id = 'kf-howto-ok-btn';
       okBtn.type = 'button';
       okBtn.className = 'kf-credits-ok-btn';
-      okBtn.textContent = 'OK';
+      okBtn.textContent = 'GOT IT';
       okBtn.addEventListener('click', window.closeHowToPlayModal);
 
       footer.appendChild(okBtn);
@@ -758,7 +1322,6 @@
       card.appendChild(footer);
       modal.appendChild(card);
 
-      // Clicking outside the card closes the modal
       modal.addEventListener('click', function (event) {
         if (event.target === modal) {
           window.closeHowToPlayModal(event);
@@ -767,6 +1330,128 @@
 
       selectScreen.appendChild(modal);
     }
+  }
+
+  /** Injects and updates the 3-step progress tracker pill bar under the header. */
+  function updateStepTrackerUI(currentStep) {
+    const headerText = document.getElementById('select-step-title') || document.getElementById('vs-header-text');
+    if (!headerText || !headerText.parentNode) return;
+
+    let tracker = document.getElementById('kf-step-tracker');
+    if (!tracker) {
+      tracker = document.createElement('div');
+      tracker.id = 'kf-step-tracker';
+      tracker.className = 'kf-step-tracker';
+      tracker.innerHTML = `
+        <span class="kf-step-pill step-p1" data-step="1">01 P1 SELECT</span>
+        <span class="kf-step-connector"></span>
+        <span class="kf-step-pill step-p2" data-step="2">02 P2 SELECT</span>
+        <span class="kf-step-connector"></span>
+        <span class="kf-step-pill step-ready" data-step="3">03 VS READY</span>
+      `;
+      headerText.insertAdjacentElement('afterend', tracker);
+    }
+
+    const pills = tracker.querySelectorAll('.kf-step-pill');
+    pills.forEach(pill => {
+      const stepNum = parseInt(pill.getAttribute('data-step'), 10);
+      pill.classList.toggle('is-active', stepNum === currentStep);
+      pill.classList.toggle('is-done', stepNum < currentStep);
+    });
+  }
+
+  /** Injects or updates the LP & AI Matrix Ready stat strip below each Rider's name. */
+  function updateRiderStatStrip(playerKey, rider) {
+    const nameEl = document.getElementById(playerKey + '-name-display');
+    if (!nameEl || !rider) return;
+
+    let strip = document.getElementById(playerKey + '-stat-strip');
+    if (!strip) {
+      strip = document.createElement('div');
+      strip.id = playerKey + '-stat-strip';
+      strip.className = 'kf-stat-strip';
+      nameEl.insertAdjacentElement('afterend', strip);
+    }
+
+    const lp = rider.maxLp || 3000;
+    const hasRiderAI = riderLevelAvailable(rider);
+
+    strip.innerHTML = `
+      <span class="kf-stat-chip">LP <strong>${lp}</strong></span>
+      ${hasRiderAI ? '<span class="kf-stat-chip ai-ready">★ RIDER AI</span>' : ''}
+    `;
+  }
+
+  /** Renders and updates the bottom Quick-Select Roster Dock. */
+  function updateRosterDockUI() {
+    const selectScreen = document.getElementById('vs-select-screen');
+    const p1Card = document.getElementById('p1-card');
+    if (!selectScreen || !p1Card) return;
+
+    const riders = window.AVAILABLE_RIDERS || [];
+    const state = window.vsSelectionState;
+    const currentStep = parseInt(state.step, 10) || 1;
+
+    let dock = document.getElementById('kf-roster-dock');
+    if (!dock) {
+      dock = document.createElement('div');
+      dock.id = 'kf-roster-dock';
+      dock.className = 'kf-roster-dock';
+
+      const cardsContainer = p1Card.parentElement;
+      if (cardsContainer && cardsContainer !== selectScreen) {
+        cardsContainer.insertAdjacentElement('afterend', dock);
+      } else {
+        selectScreen.appendChild(dock);
+      }
+    }
+
+    const promptLabel =
+      currentStep === 1
+        ? 'QUICK SELECT — CLICK TO ASSIGN PLAYER 1'
+        : currentStep === 2
+        ? 'QUICK SELECT — CLICK TO ASSIGN PLAYER 2'
+        : 'MATCHUP LOCKED — READY FOR BATTLE';
+
+    dock.innerHTML = `
+      <div class="kf-roster-dock-title">${promptLabel}</div>
+      <div class="kf-roster-grid" id="kf-roster-grid"></div>
+    `;
+
+    const grid = dock.querySelector('#kf-roster-grid');
+    riders.forEach((rider, idx) => {
+      const isP1 = idx === state.p1Index;
+      const isP2 = idx === state.p2Index;
+
+      const tile = document.createElement('button');
+      tile.type = 'button';
+      tile.className = 'kf-roster-tile' + (isP1 ? ' is-p1' : '') + (isP2 ? ' is-p2' : '');
+      tile.title = rider.name;
+
+      const shortName = String(rider.name || rider.id).replace(/^Kamen Rider\s+/i, '');
+
+      tile.innerHTML = `
+        <div class="kf-roster-badges">
+          ${isP1 ? '<span class="kf-roster-tag p1">P1</span>' : ''}
+          ${isP2 ? '<span class="kf-roster-tag p2">P2</span>' : ''}
+        </div>
+        <img class="kf-roster-tile-img" src="${rider.icon}" alt="${shortName}">
+        <span class="kf-roster-tile-name">${shortName}</span>
+      `;
+
+      tile.addEventListener('click', () => {
+        const stepNow = parseInt(window.vsSelectionState.step, 10) || 1;
+        if (stepNow === 1) {
+          window.vsSelectionState.p1Index = idx;
+          window.updateSelectionUI();
+        } else if (stepNow === 2) {
+          window.vsSelectionState.p2Index = idx;
+          window.updateSelectionUI();
+        }
+      });
+
+      grid.appendChild(tile);
+    });
   }
 
   // Close Credits or How To Play modal on Escape or Enter key
@@ -784,13 +1469,14 @@
     }
   });
 
-  // Default fallback roster definitions
+  // Default fallback roster definitions (all 6 Riders)
   window.AVAILABLE_RIDERS = window.AVAILABLE_RIDERS || [
     { id: 'ichigo', name: 'Kamen Rider Ichigo', icon: 'assets/images/icons/ichigo.png', maxLp: 3000 },
     { id: 'nigo', name: 'Kamen Rider Nigo', icon: 'assets/images/icons/nigo.png', maxLp: 3300 },
     { id: 'v3', name: 'Kamen Rider V3', icon: 'assets/images/icons/v3.png', maxLp: 3150 },
     { id: 'riderman', name: 'Riderman', icon: 'assets/images/icons/riderman.png', maxLp: 2800 },
-    { id: 'x', name: 'Kamen Rider X', icon: 'assets/images/icons/x.png', maxLp: 3100 }
+    { id: 'x', name: 'Kamen Rider X', icon: 'assets/images/icons/x.png', maxLp: 3100 },
+    { id: 'amazon', name: 'Kamen Rider Amazon', icon: 'assets/images/icons/amazon.png', maxLp: 2900 }
   ];
 
   // Global VS Selection state controller
@@ -1055,6 +1741,7 @@
 
     const p1NameEl = document.getElementById('p1-name-display');
     if (p1NameEl) p1NameEl.textContent = p1.name;
+    updateRiderStatStrip('p1', p1);
 
     const p1TypeEl = document.getElementById('p1-type-display');
     if (p1TypeEl) p1TypeEl.textContent = state.p1IsCPU ? 'CPU' : 'HUMAN';
@@ -1064,7 +1751,7 @@
       if (!state.p1IsCPU) {
         p1DiffDisplay.textContent = 'N/A';
       } else {
-        p1DiffDisplay.textContent = DIFF_LABELS[state.p1Difficulty] || 'Zoomer';
+        p1DiffDisplay.textContent = DIFF_LABELS[state.p1Difficulty] || 'All-rounder';
       }
       setDiffBadgeClasses(p1DiffDisplay, state.p1Difficulty, state.p1IsCPU);
     }
@@ -1078,6 +1765,7 @@
 
     const p2NameEl = document.getElementById('p2-name-display');
     if (p2NameEl) p2NameEl.textContent = p2.name;
+    updateRiderStatStrip('p2', p2);
 
     const p2TypeEl = document.getElementById('p2-type-display');
     if (p2TypeEl) p2TypeEl.textContent = state.p2IsCPU ? 'CPU' : 'HUMAN';
@@ -1087,7 +1775,7 @@
       if (!state.p2IsCPU) {
         p2DiffDisplay.textContent = 'N/A';
       } else {
-        p2DiffDisplay.textContent = DIFF_LABELS[state.p2Difficulty] || 'Zoomer';
+        p2DiffDisplay.textContent = DIFF_LABELS[state.p2Difficulty] || 'All-rounder';
       }
       setDiffBadgeClasses(p2DiffDisplay, state.p2Difficulty, state.p2IsCPU);
     }
@@ -1173,6 +1861,9 @@
       }
       if (backBtn) backBtn.disabled = false;
     }
+
+    updateStepTrackerUI(currentStep);
+    updateRosterDockUI();
   };
 
   /** Validates selection state and transitions to live battle mode via startBattle(). */
