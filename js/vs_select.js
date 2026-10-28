@@ -8,7 +8,7 @@
 
   window.selectionBGM = window.selectionBGM || null;
   window.battleBGM = window.battleBGM || null;
-  window.currentVolume = typeof window.currentVolume === 'number' ? window.currentVolume : 0.5;
+  window.currentVolume = typeof window.currentVolume === 'number' ? window.currentVolume : 0.25;
 
   const SELECTION_BGM_TRACKS = [
     'assets/sounds/matchup.mp3',
