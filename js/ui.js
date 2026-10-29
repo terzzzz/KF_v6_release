@@ -896,50 +896,48 @@
     box.classList.add("victim-hit-shake");
   }
 
-  function showDamagePopup(boxId, text, type = "damage") {
-    const box = byId(boxId);
-    if (!box) return;
+ function showDamagePopup(boxId, text, type = "damage") {
+  const box = byId(boxId);
+  if (!box) return;
 
-    const supported = new Set([
-      "damage",
-      "heal",
-      "miss",
-      "scratch",
-      "block"
-    ]);
+  const rawText = String(text ?? "");
 
-    const rawText = String(text ?? "");
-    const resolvedType = supported.has(type) ? type : "scratch";
+  // Extract numeric value (supports negative or positive numbers)
+  const dmgMatch = rawText.replace(/,/g, "").match(/(-?\d+(?:\.\d+)?)/);
+  const dmgValue = dmgMatch ? Math.abs(number(dmgMatch[1], 0)) : 0;
 
-    // Extract numeric value if present (e.g. "-400" -> 400)
-    const dmgMatch = rawText.replace(/,/g, "").match(/-\s*(\d+(?:\.\d+)?)/);
-    const dmgValue = dmgMatch ? number(dmgMatch[1], 0) : 0;
+  // Recognized popup visual styles
+  const validTypes = new Set(["damage", "heal", "miss", "scratch", "block", "info"]);
+  const resolvedType = validTypes.has(type) ? type : "info";
 
-    // Trigger glass-shatter crack effect on victim viewport when taking damage
-    if (resolvedType === "damage" || resolvedType === "scratch" || dmgValue > 0) {
-      triggerGlassCrack(box, dmgValue || (resolvedType === "damage" ? 200 : 80));
-    }
-
-    const popup = document.createElement("div");
-
-    popup.classList.add("damage-popup", resolvedType);
-    if (dmgValue >= 300) {
-      popup.classList.add("heavy-dmg");
-    }
-
-    // Slightly stagger vertical position if multiple popups are simultaneously active
-    const activeCount = box.querySelectorAll(".damage-popup").length;
-    if (activeCount > 0) {
-      popup.style.top = `${Math.min(68, 42 + activeCount * 12)}%`;
-    }
-
-    popup.textContent = localizeBattleText(rawText);
-    popup.style.whiteSpace = "pre-line";
-
-    box.appendChild(popup);
-
-    setTimeout(() => popup.remove(), 1450);
+  // Trigger glass-shatter ONLY if the popup type is explicitly damage/scratch AND damage > 0
+  if ((resolvedType === "damage" || resolvedType === "scratch") && dmgValue > 0) {
+    triggerGlassCrack(box, dmgValue);
   }
+
+  const popup = document.createElement("div");
+
+  popup.classList.add("damage-popup", resolvedType);
+  if (dmgValue >= 300 && resolvedType === "damage") {
+    popup.classList.add("heavy-dmg");
+  }
+
+  // Stagger vertical placement if multiple popups overlap
+  const activeCount = box.querySelectorAll(".damage-popup").length;
+  if (activeCount > 0) {
+    popup.style.top = `${Math.min(68, 42 + activeCount * 12)}%`;
+  }
+
+  popup.textContent = localizeBattleText(rawText);
+  popup.style.whiteSpace = "pre-line";
+
+  box.appendChild(popup);
+
+  setTimeout(() => popup.remove(), 1450);
+}
+
+
+  
 
   function showBattleBanner(message) {
     const banner = byId("battle-message");
