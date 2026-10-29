@@ -251,7 +251,7 @@
     "D+J": { "name": "Standard Punch", "type": "PHYSICAL", "chiCost": 0, "baseDamage": 55, "hitChance": 82, "video": "punch.mp4" },
     "D+K": { "name": "Standard Kick", "type": "PHYSICAL", "chiCost": 0, "baseDamage": 58, "hitChance": 80, "video": "kick.mp4" },
     "D+L": { "name": "Cassette Combo", "type": "PHYSICAL", "chiCost": 1, "baseDamage": 125, "hitChance": 80, "video": "combo_attack.mp4" },
-    "D+I": { "name": "Rope Arm Hook", "type": "PHYSICAL", "rangeType": "REACH", "chiCost": 1, "baseDamage": 130, "baseFaintDamage": 28, "hitChance": 72, "video": "hook_arm.mp4" },
+    "D+I": { "name": "Rope Arm Hook", "type": "PHYSICAL", "rangeType": "REACH", "chiCost": 2, "baseDamage": 100, "baseFaintDamage": 28, "hitChance": 65, "video": "hook_arm.mp4" },
     "S+J": { "name": "Riderman Kick", "type": "SPECIAL", "chiCost": 4, "baseDamage": 420, "hitChance": 77, "video": "rider_kick.mp4" },
     "S+K": { "name": "Drill Arm Break", "type": "SPECIAL", "rangeType": "REACH", "chiCost": 6, "baseDamage": 608, "baseFaintDamage": 35, "hitChance": 75, "video": "drill_arm.mp4" },
     "S+L": { "name": "Power Arm Strike", "type": "SPECIAL", "rangeType": "REACH", "chiCost": 7, "baseDamage": 688, "hitChance": 73, "video": "power_arm.mp4" },
