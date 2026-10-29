@@ -1,5 +1,5 @@
 /**
- * Character Selection Screen, BGM Manager & Match Preparation
+ * Character Selection Screen, BGM Manager, Bilingual (EN/JA) UI & Match Preparation
  * Path: js/vs_select.js
  */
 
@@ -9,20 +9,13 @@
   window.selectionBGM = window.selectionBGM || null;
   window.battleBGM = window.battleBGM || null;
   window.currentVolume = 0.3;
+  window.gameLang = window.gameLang || 'en';
 
   const SELECTION_BGM_TRACKS = [
     'assets/sounds/matchup.mp3',
     'assets/sounds/matchup1.mp3',
     'assets/sounds/matchup2.mp3'
   ];
-
-  const DIFF_LABELS = {
-    easy: 'Rugrat',
-    balanced: 'All-rounder',
-    master: 'Geek',
-    soul: 'Monomaniac',
-    rider: 'Rider'
-  };
 
   // Candidate paths for the Credits QR code image (tries in order)
   const CREDITS_QR_PATHS = [
@@ -34,261 +27,770 @@
     'qr.png'
   ];
 
-  const CREDITS_CONTENT = [
-    'Thank you for playing!! I sincerely wish you a joyful game experience and able to beat all Riders in rider mode!!',
-    '',
-    '========================================',
-    'GAME CREDITS',
-    '========================================',
-    '',
-    'Dedicated to the heroes who taught us the meaning of Henshin!!',
-    '',
-    '[ Kamen Fight ]',
-    'A Game By Terence Cheng',
-    '',
-    '----------------------------------------',
-    'CREATED & DEVELOPED BY',
-    '----------------------------------------',
-    'Lead Developer: Terence Cheng',
-    'Game Designer: Terence Cheng',
-    'Programming: Terence Cheng',
-    '',
-    '----------------------------------------',
-    'ART & ANIMATION',
-    '----------------------------------------',
-    'Lead Artist: Terence Cheng',
-    'UI / UX Design: Terence Cheng',
-    'Asset Packs: Terence Cheng',
-    '',
-    '----------------------------------------',
-    'AUDIO & MUSIC',
-    '----------------------------------------',
-    'Composer: Terence Cheng',
-    '',
-    '----------------------------------------',
-    'SPECIAL THANKS',
-    '----------------------------------------',
-    '    Friends of Terence Cheng',
-    '    All of my game testers',
-    '',
-    '========================================',
-    'Thank you for playing!',
-    '© 2026',
-    '========================================'
-  ].join('\n');
-
-  const HOW_TO_PLAY_HTML = `
-    <div class="kf-howto-content">
-      <h2 class="kf-howto-main-title">HOW TO PLAY</h2>
-
-      <div class="kf-howto-section">
-        <h3>1. Select Your Rider &amp; Match Setup</h3>
-        <p>Pick your Kamen Rider on the character selection screen. Choose whether to battle a friend or face off against CPU opponents ranging from <strong>Rugrat</strong> (Easy) up to the 36-matrix neural <strong>Rider</strong> tier.</p>
-      </div>
-
-      <div class="kf-howto-section">
-        <h3>2. Learn the Combat Controls</h3>
-        <p>Every action requires combining a <strong>Direction Key</strong> (to choose move type and build charge) with an <strong>Action Key</strong> (to execute the move).</p>
-
-        <div class="kf-howto-table-wrap">
-          <table class="kf-howto-table">
-            <thead>
-              <tr>
-                <th>Direction Key</th>
-                <th>Stance Type</th>
-                <th>Action Buttons (I, J, K, L) Outcome</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="kf-key-cell">W Key</td>
-                <td class="kf-stance-cell">Utility &amp; Buffs</td>
-                <td>High Jumps, Speed Enhancements, Attack Focus, and Stun Recovery</td>
-              </tr>
-              <tr>
-                <td class="kf-key-cell">D Key</td>
-                <td class="kf-stance-cell">Physical Attacks</td>
-                <td>Quick Punches, Kicks, and Combos that generate extra CHI</td>
-              </tr>
-              <tr>
-                <td class="kf-key-cell">S Key</td>
-                <td class="kf-stance-cell">Special Moves</td>
-                <td>Heavy Finisher Attacks (e.g., Rider Kick, Rider Punch, etc.)</td>
-              </tr>
-              <tr>
-                <td class="kf-key-cell">A Key</td>
-                <td class="kf-stance-cell">Defensive Guard</td>
-                <td>Shields and Blocks to reduce incoming damage and absorb bonus CHI</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="kf-howto-section">
-        <h3>3. General Strategy</h3>
-        <ul class="kf-howto-list">
-          <li><strong>Hold a Direction Key:</strong> Hold W, A, S, or D to charge your power up to 100%.</li>
-          <li><strong>Lock in Your Move:</strong> Press I, J, K, or L before the decision timer expires to confirm your action.</li>
-          <li><strong>Build CHI with Basic Strikes:</strong> Use D-Stance physical attacks to hit your opponent and quickly fill your CHI meter.</li>
-          <li><strong>Guard Incoming Threats:</strong> Use A-Stance blocks to reduce damage when you suspect your opponent is preparing a large attack.</li>
-          <li><strong>Unleash Finishers:</strong> Once your CHI meter is high, use S-Stance to deal big damage to KO your opponent.</li>
-        </ul>
-      </div>
-    </div>
-  `;
-
   /*
-   * Complete Tabulated Movelist Database for all 6 Riders
+   * Bilingual UI Dictionary (English & Japanese)
    */
-  const RIDER_MOVELISTS = {
-    ichigo: {
-      name: 'Kamen Rider Ichigo',
-      basic: [
-        { name: 'Standard Punch', cmd: 'D+J', chi: 0, dmg: 52, remarks: 'Gain 2 CHI if hit' },
-        { name: 'Standard Kick', cmd: 'D+K', chi: 0, dmg: 52, remarks: 'Gain 2 CHI if hit' },
-        { name: 'Punch Combo', cmd: 'D+L', chi: 1, dmg: 90, remarks: 'Gain 3 CHI if hit' },
-        { name: 'Kick Combo', cmd: 'D+I', chi: 1, dmg: 87, remarks: 'Gain 3 CHI if hit' }
-      ],
-      special: [
-        { name: 'Rider Power Chop', cmd: 'S+J', chi: 3, dmg: 400, remarks: '' },
-        { name: 'Rider Head Crusher', cmd: 'S+K', chi: 4, dmg: 480, remarks: '' },
-        { name: 'Rider Kick', cmd: 'S+L', chi: 6, dmg: 860, remarks: '' },
-        { name: 'Kirimomi Kick', cmd: 'S+I', chi: 9, dmg: 1100, remarks: '' }
-      ],
-      utilities: [
-        { name: 'Rider High Jump', cmd: 'W+I', chi: 0, effect: 'Buff attack and evasion', remarks: 'Last 3 rounds' },
-        { name: 'Typhoon Charge', cmd: 'W+J', chi: 1, effect: 'Buff charge speed', remarks: 'Last 3 rounds' },
-        { name: 'Typhoon Focus', cmd: 'W+K', chi: 1, effect: 'Buff special attack', remarks: 'Last 3 rounds' },
-        { name: 'Typhoon Bless', cmd: 'W+L', chi: 1, effect: 'Decrease faint', remarks: '' }
-      ],
-      defense: [
-        { name: 'Windmill Guard', cmd: 'A+I', chi: 4, effect: 'Defense against all attacks', remarks: '' },
-        { name: 'Standard Guard', cmd: 'A+J, A+K, A+L', chi: 0, effect: 'Defense against J, K & L attacks respectively', remarks: '' }
-      ]
+  const I18N = {
+    en: {
+      rotateTitle: 'PLEASE ROTATE DEVICE',
+      rotateSub: 'Use portrait orientation.',
+      step1Header: 'STEP 1: SELECT PLAYER 1 RIDER',
+      step2Header: 'STEP 2: SELECT PLAYER 2 RIDER',
+      step3Header: 'READY FOR BATTLE!',
+      trackerStep1: '01 P1 SELECT',
+      trackerStep2: '02 P2 SELECT',
+      trackerStep3: '03 VS READY',
+      player1Heading: 'PLAYER 1',
+      player2Heading: 'PLAYER 2',
+      humanLabel: 'HUMAN',
+      cpuLabel: 'CPU',
+      naLabel: 'N/A',
+      difficultyLabel: 'DIFFICULTY:',
+      movelistBtn: '📋 MOVELIST',
+      dockStep1: 'QUICK SELECT — CLICK TO ASSIGN PLAYER 1',
+      dockStep2: 'QUICK SELECT — CLICK TO ASSIGN PLAYER 2',
+      dockStep3: 'MATCHUP LOCKED — READY FOR BATTLE',
+      backBtn: 'BACK',
+      confirmP1Btn: 'CONFIRM P1',
+      confirmP2Btn: 'CONFIRM P2',
+      startGameBtn: 'START GAME',
+      errorCpuBanner: 'AT LEAST ONE PLAYER MUST BE CPU.',
+      howtoLink: '? HOW TO PLAY',
+      creditsLink: '★ CREDITS',
+      howtoCloseBtn: 'GOT IT',
+      creditsCloseBtn: 'OK',
+      movelistCloseBtn: 'CLOSE',
+      diffLabels: {
+        easy: 'Rugrat',
+        balanced: 'All-rounder',
+        master: 'Geek',
+        soul: 'Monomaniac',
+        rider: 'Rider'
+      },
+      riderNames: {
+        ichigo: 'Kamen Rider Ichigo',
+        nigo: 'Kamen Rider Nigo',
+        v3: 'Kamen Rider V3',
+        riderman: 'Riderman',
+        x: 'Kamen Rider X',
+        amazon: 'Kamen Rider Amazon'
+      },
+      riderShortNames: {
+        ichigo: 'Ichigo',
+        nigo: 'Nigo',
+        v3: 'V3',
+        riderman: 'Riderman',
+        x: 'X',
+        amazon: 'Amazon'
+      },
+      movelistSheetSub: (lp) => `MAX LP: ${lp} • COMMAND & COMBAT DATA SHEET`,
+      catBasicTitle: 'Basic Attack (D-Stance)',
+      catBasicSub: 'Physical Strikes',
+      catSpecialTitle: 'Special Attack (S-Stance)',
+      catSpecialSub: 'Signature Finishers',
+      catUtilityTitle: 'Utilities (W-Stance)',
+      catUtilitySub: 'Buffs & Tech',
+      catDefenseTitle: 'Defense (A-Stance)',
+      catDefenseSub: 'Guard & Counter',
+      colName: 'Name',
+      colCmd: 'Command',
+      colChi: 'CHI',
+      colDmg: 'Damage',
+      colEffect: 'Effect',
+      colRemarks: 'Remarks',
+      creditsContent: [
+        'Thank you for playing!! I sincerely wish you a joyful game experience and able to beat all Riders in rider mode!!',
+        '',
+        '========================================',
+        'GAME CREDITS',
+        '========================================',
+        '',
+        'Dedicated to the heroes who taught us the meaning of Henshin!!',
+        '',
+        '[ Kamen Fight ]',
+        'A Game By Terence Cheng',
+        '',
+        '----------------------------------------',
+        'CREATED & DEVELOPED BY',
+        '----------------------------------------',
+        'Lead Developer: Terence Cheng',
+        'Game Designer: Terence Cheng',
+        'Programming: Terence Cheng',
+        '',
+        '----------------------------------------',
+        'ART & ANIMATION',
+        '----------------------------------------',
+        'Lead Artist: Terence Cheng',
+        'UI / UX Design: Terence Cheng',
+        'Asset Packs: Terence Cheng',
+        '',
+        '----------------------------------------',
+        'AUDIO & MUSIC',
+        '----------------------------------------',
+        'Composer: Terence Cheng',
+        '',
+        '----------------------------------------',
+        'SPECIAL THANKS',
+        '----------------------------------------',
+        '    Friends of Terence Cheng',
+        '    All of my game testers',
+        '',
+        '========================================',
+        'Thank you for playing!',
+        '© 2026',
+        '========================================'
+      ].join('\n'),
+      howtoHtml: `
+        <div class="kf-howto-content">
+          <h2 class="kf-howto-main-title">HOW TO PLAY</h2>
+
+          <div class="kf-howto-section">
+            <h3>1. Select Your Rider &amp; Match Setup</h3>
+            <p>Pick your Kamen Rider on the character selection screen. Choose whether to battle a friend or face off against CPU opponents ranging from <strong>Rugrat</strong> (Easy) up to the 36-matrix neural <strong>Rider</strong> tier.</p>
+          </div>
+
+          <div class="kf-howto-section">
+            <h3>2. Learn the Combat Controls</h3>
+            <p>Every action requires combining a <strong>Direction Key</strong> (to choose move type and build charge) with an <strong>Action Key</strong> (to execute the move).</p>
+
+            <div class="kf-howto-table-wrap">
+              <table class="kf-howto-table">
+                <thead>
+                  <tr>
+                    <th>Direction Key</th>
+                    <th>Stance Type</th>
+                    <th>Action Buttons (I, J, K, L) Outcome</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="kf-key-cell">W Key</td>
+                    <td class="kf-stance-cell">Utility &amp; Buffs</td>
+                    <td>High Jumps, Speed Enhancements, Attack Focus, and Stun Recovery</td>
+                  </tr>
+                  <tr>
+                    <td class="kf-key-cell">D Key</td>
+                    <td class="kf-stance-cell">Physical Attacks</td>
+                    <td>Quick Punches, Kicks, and Combos that generate extra CHI</td>
+                  </tr>
+                  <tr>
+                    <td class="kf-key-cell">S Key</td>
+                    <td class="kf-stance-cell">Special Moves</td>
+                    <td>Heavy Finisher Attacks (e.g., Rider Kick, Rider Punch, etc.)</td>
+                  </tr>
+                  <tr>
+                    <td class="kf-key-cell">A Key</td>
+                    <td class="kf-stance-cell">Defensive Guard</td>
+                    <td>Shields and Blocks to reduce incoming damage and absorb bonus CHI</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="kf-howto-section">
+            <h3>3. General Strategy</h3>
+            <ul class="kf-howto-list">
+              <li><strong>Hold a Direction Key:</strong> Hold W, A, S, or D to charge your power up to 100%.</li>
+              <li><strong>Lock in Your Move:</strong> Press I, J, K, or L before the decision timer expires to confirm your action.</li>
+              <li><strong>Build CHI with Basic Strikes:</strong> Use D-Stance physical attacks to hit your opponent and quickly fill your CHI meter.</li>
+              <li><strong>Guard Incoming Threats:</strong> Use A-Stance blocks to reduce damage when you suspect your opponent is preparing a large attack.</li>
+              <li><strong>Unleash Finishers:</strong> Once your CHI meter is high, use S-Stance to deal big damage to KO your opponent.</li>
+            </ul>
+          </div>
+        </div>
+      `
     },
-    nigo: {
-      name: 'Kamen Rider Nigo',
-      basic: [
-        { name: 'Standard Punch', cmd: 'D+J', chi: 0, dmg: 75, remarks: 'Gain 2 CHI if hit' },
-        { name: 'Standing Kick', cmd: 'D+K', chi: 0, dmg: 80, remarks: 'Gain 2 CHI if hit' },
-        { name: 'Punches', cmd: 'D+L', chi: 1, dmg: 140, remarks: 'Gain 3 CHI if hit' },
-        { name: 'Mixed Combo', cmd: 'D+I', chi: 1, dmg: 130, remarks: 'Gain 3 CHI if hit' }
-      ],
-      special: [
-        { name: 'Rider Punch', cmd: 'S+J', chi: 3, dmg: 370, remarks: '' },
-        { name: 'Rider Flying Knee', cmd: 'S+K', chi: 5, dmg: 480, remarks: '' },
-        { name: 'Rider Power Kick', cmd: 'S+L', chi: 7, dmg: 860, remarks: '' },
-        { name: 'Typhoon Power Break', cmd: 'S+I', chi: 10, dmg: 1065, remarks: '' }
-      ],
-      utilities: [
-        { name: 'Rider Power Jump', cmd: 'W+I', chi: 0, effect: 'Buff attack and accuracy', remarks: 'Last 3 rounds' },
-        { name: 'Typhoon Red Shutter', cmd: 'W+J', chi: 0, effect: 'Buff charge speed and armor', remarks: 'Last 2 rounds' },
-        { name: 'Power Focus', cmd: 'W+K', chi: 1, effect: 'Buff basic attack', remarks: 'Last 2 rounds' },
-        { name: 'Battle Cry', cmd: 'W+L', chi: 2, effect: 'Decrease faint', remarks: '' }
-      ],
-      defense: [
-        { name: 'Windmill Guard', cmd: 'A+I', chi: 4, effect: 'Defense against all attacks', remarks: '' },
-        { name: 'Standard Guard', cmd: 'A+J, A+K, A+L', chi: 0, effect: 'Defense against J, K & L attacks respectively', remarks: '' }
-      ]
-    },
-    v3: {
-      name: 'Kamen Rider V3',
-      basic: [
-        { name: 'Chop', cmd: 'D+J', chi: 0, dmg: 60, remarks: 'Gain 2 CHI if hit' },
-        { name: 'High Kick', cmd: 'D+K', chi: 0, dmg: 63, remarks: 'Gain 2 CHI if hit' },
-        { name: 'Chop Combo', cmd: 'D+L', chi: 1, dmg: 116, remarks: 'Gain 3 CHI if hit' },
-        { name: 'Mixed Hits', cmd: 'D+I', chi: 1, dmg: 106, remarks: 'Gain 3 CHI if hit' }
-      ],
-      special: [
-        { name: 'V3 Kick', cmd: 'S+J', chi: 4, dmg: 430, remarks: '' },
-        { name: 'V3 Return Kick', cmd: 'S+K', chi: 5, dmg: 560, remarks: '' },
-        { name: 'V3 Screw Kick', cmd: 'S+L', chi: 8, dmg: 940, remarks: '' },
-        { name: 'V3 Triple Kick', cmd: 'S+I', chi: 11, dmg: 1160, remarks: '' }
-      ],
-      utilities: [
-        { name: 'Leap', cmd: 'W+I', chi: 0, effect: 'Buff basic attack and evasion', remarks: 'Last 3 rounds' },
-        { name: 'Accelerator', cmd: 'W+J', chi: 0, effect: 'Buff charging speed', remarks: 'Last 3 rounds' },
-        { name: 'Red Lamp Focus', cmd: 'W+K', chi: 1, effect: 'Buff attack', remarks: 'Last 3 rounds' },
-        { name: 'Double Typhoon Blow', cmd: 'W+L', chi: 2, effect: 'Deal damage and build faint', remarks: 'Long reach' }
-      ],
-      defense: [
-        { name: 'Standard Guard', cmd: 'A+I, A+J, A+K, A+L', chi: 0, effect: 'Defense against I, J, K & L attacks respectively', remarks: '' }
-      ]
-    },
-    riderman: {
-      name: 'Riderman',
-      basic: [
-        { name: 'Standard Punch', cmd: 'D+J', chi: 0, dmg: 55, remarks: 'Gain 2 CHI if hit' },
-        { name: 'Standard Kick', cmd: 'D+K', chi: 0, dmg: 58, remarks: 'Gain 2 CHI if hit' },
-        { name: 'Cassette Combo', cmd: 'D+L', chi: 1, dmg: 125, remarks: 'Gain 3 CHI if hit' },
-        { name: 'Rope Arm Hook', cmd: 'D+I', chi: 1, dmg: 130, remarks: 'Gain 3 CHI if hit, Long reach' }
-      ],
-      special: [
-        { name: 'Riderman Kick', cmd: 'S+J', chi: 4, dmg: 420, remarks: '' },
-        { name: 'Drill Arm Break', cmd: 'S+K', chi: 6, dmg: 608, remarks: 'Long reach' },
-        { name: 'Power Arm Strike', cmd: 'S+L', chi: 7, dmg: 688, remarks: 'Long reach' },
-        { name: 'Hook Finisher', cmd: 'S+I', chi: 10, dmg: 999, remarks: 'Long reach' }
-      ],
-      utilities: [
-        { name: 'High Leap', cmd: 'W+I', chi: 1, effect: 'Buff evasion', remarks: 'Last 3 rounds' },
-        { name: 'Target Lock', cmd: 'W+J', chi: 1, effect: 'Buff accuracy', remarks: 'Last 3 rounds' },
-        { name: 'Battle Cry', cmd: 'W+K', chi: 0, effect: 'Decrease faint', remarks: '' },
-        { name: 'Rope Arm Tie-Up', cmd: 'W+L', chi: 2, effect: 'Slows opponent charge speed for 3 rounds', remarks: 'Deals damage' }
-      ],
-      defense: [
-        { name: 'Standard Guard', cmd: 'A+I, A+J, A+K, A+L', chi: 0, effect: 'Defense against I, J, K & L attacks respectively', remarks: '' }
-      ]
-    },
-    x: {
-      name: 'Kamen Rider X',
-      basic: [
-        { name: 'Standard Punch', cmd: 'D+J', chi: 0, dmg: 60, remarks: 'Gain 2 CHI if hit' },
-        { name: 'Standard Kick', cmd: 'D+K', chi: 0, dmg: 70, remarks: 'Gain 2 CHI if hit' },
-        { name: 'Ridol Rod Strike', cmd: 'D+L', chi: 1, dmg: 122, remarks: 'Gain 3 CHI if hit' },
-        { name: 'Ridol Whip Lash', cmd: 'D+I', chi: 1, dmg: 100, remarks: 'Gain 3 CHI if hit' }
-      ],
-      special: [
-        { name: 'Rider Kick', cmd: 'S+J', chi: 4, dmg: 440, remarks: '' },
-        { name: 'X-Kick', cmd: 'S+K', chi: 6, dmg: 700, remarks: '' },
-        { name: 'Ridol Crown Split', cmd: 'S+L', chi: 7, dmg: 740, remarks: 'Long reach, build faint' },
-        { name: 'Vacuum Hell Wheel', cmd: 'S+I', chi: 10, dmg: 1111, remarks: '' }
-      ],
-      utilities: [
-        { name: 'Jump', cmd: 'W+I', chi: 0, effect: 'Buff basic attack and evasion', remarks: 'Last 3 rounds' },
-        { name: 'Mercury Overdrive', cmd: 'W+J', chi: 0, effect: 'Buff attack', remarks: 'Last 2 rounds' },
-        { name: 'Mercury Fortification', cmd: 'W+K', chi: 1, effect: 'Buff armor', remarks: 'Last 3 rounds' },
-        { name: 'Kaizorg Vitality', cmd: 'W+L', chi: 2, effect: 'Recover LP and decrease faint', remarks: '' }
-      ],
-      defense: [
-        { name: 'Standard Guard', cmd: 'A+I, A+J, A+K, A+L', chi: 0, effect: 'Defense against I, J, K & L attacks respectively', remarks: '' }
-      ]
-    },
-    amazon: {
-      name: 'Kamen Rider Amazon',
-      basic: [
-        { name: 'Mystic Kick', cmd: 'D+J', chi: 0, dmg: 77, remarks: 'Gain 2 CHI if hit' },
-        { name: 'Claw Attack', cmd: 'D+K', chi: 1, dmg: 130, remarks: 'Gain 3 CHI if hit' },
-        { name: 'Claw Combo', cmd: 'D+L', chi: 1, dmg: 142, remarks: 'Gain 3 CHI if hit' },
-        { name: 'Standard Kick', cmd: 'D+I', chi: 0, dmg: 74, remarks: 'Gain 2 CHI if hit' }
-      ],
-      special: [
-        { name: 'Amazon Kick', cmd: 'S+J', chi: 4, dmg: 420, remarks: '' },
-        { name: 'Jaguar Shock', cmd: 'S+K', chi: 5, dmg: 450, remarks: 'Inflict Bleed for 3 rounds' },
-        { name: 'Wild Tackle', cmd: 'S+L', chi: 7, dmg: 880, remarks: '' },
-        { name: 'Daisetsudan', cmd: 'S+I', chi: 9, dmg: 1020, remarks: '' }
-      ],
-      utilities: [
-        { name: 'Wild Leap', cmd: 'W+I', chi: 2, effect: 'Buff attack and evasion', remarks: 'Last 4 rounds' },
-        { name: 'Inca Blessing', cmd: 'W+J', chi: 2, effect: 'Regenerate LP', remarks: 'Last 3 rounds, stops if took damage' },
-        { name: 'Gigi Focus', cmd: 'W+K', chi: 0, effect: 'Buff evasion', remarks: 'Last 3 rounds' },
-        { name: 'Wild Instinct', cmd: 'W+L', chi: 1, effect: 'Decrease faint', remarks: '' }
-      ],
-      defense: [
-        { name: 'Standard Guard', cmd: 'A+I, A+J, A+K, A+L', chi: 0, effect: 'Defense against I, J, K & L attacks respectively', remarks: '' }
-      ]
+
+    ja: {
+      rotateTitle: '画面を回転させてください',
+      rotateSub: '縦向き（ポートレート）にしてプレイしてください。',
+      step1Header: 'STEP 1: プレイヤー1のライダーを選択',
+      step2Header: 'STEP 2: プレイヤー2のライダーを選択',
+      step3Header: 'バトル準備完了！',
+      trackerStep1: '01 P1選択',
+      trackerStep2: '02 P2選択',
+      trackerStep3: '03 準備完了',
+      player1Heading: 'プレイヤー 1',
+      player2Heading: 'プレイヤー 2',
+      humanLabel: 'プレイヤー',
+      cpuLabel: 'CPU',
+      naLabel: '―',
+      difficultyLabel: '難易度:',
+      movelistBtn: '📋 技表',
+      dockStep1: 'クイック選択 ― クリックしてプレイヤー1を決定',
+      dockStep2: 'クイック選択 ― クリックしてプレイヤー2を決定',
+      dockStep3: '対戦カード決定 ― バトル開始可能',
+      backBtn: '戻る',
+      confirmP1Btn: 'P1 決定',
+      confirmP2Btn: 'P2 決定',
+      startGameBtn: 'バトル開始',
+      errorCpuBanner: '少なくとも1人はCPUにする必要があります。',
+      howtoLink: '? 遊び方',
+      creditsLink: '★ クレジット',
+      howtoCloseBtn: '了解',
+      creditsCloseBtn: '閉じる',
+      movelistCloseBtn: '閉じる',
+      diffLabels: {
+        easy: 'ちびっこ',
+        balanced: 'オールラウンダー',
+        master: 'マニア',
+        soul: '特撮の鬼',
+        rider: 'ライダー'
+      },
+      riderNames: {
+        ichigo: '仮面ライダー1号',
+        nigo: '仮面ライダー2号',
+        v3: '仮面ライダーV3',
+        riderman: 'ライダーマン',
+        x: '仮面ライダーX',
+        amazon: '仮面ライダーアマゾン'
+      },
+      riderShortNames: {
+        ichigo: '1号',
+        nigo: '2号',
+        v3: 'V3',
+        riderman: 'ライダーマン',
+        x: 'X',
+        amazon: 'アマゾン'
+      },
+      movelistSheetSub: (lp) => `最大LP: ${lp} • コマンド＆技データ一覧`,
+      catBasicTitle: '通常攻撃 (Dスタンス)',
+      catBasicSub: '打撃・コンボ',
+      catSpecialTitle: '必殺技 (Sスタンス)',
+      catSpecialSub: 'フィニッシャー',
+      catUtilityTitle: '補助・強化 (Wスタンス)',
+      catUtilitySub: 'バフ＆特殊行動',
+      catDefenseTitle: '防御 (Aスタンス)',
+      catDefenseSub: 'ガード',
+      colName: '技名',
+      colCmd: 'コマンド',
+      colChi: '氣コスト',
+      colDmg: 'ダメージ',
+      colEffect: '効果',
+      colRemarks: '備考',
+      creditsContent: [
+        'プレイしていただきありがとうございます！！',
+        '「ライダー」難易度の全制覇を目指して、熱い戦いをお楽しみください！！',
+        '',
+        '========================================',
+        'ゲームクレジット',
+        '========================================',
+        '',
+        '「変身」の意味を教えてくれた全てのヒーローたちに捧ぐ！！',
+        '',
+        '[ Kamen Fight ]',
+        '制作：Terence Cheng',
+        '',
+        '----------------------------------------',
+        '企画・開発・プログラミング',
+        '----------------------------------------',
+        'リード開発者: Terence Cheng',
+        'ゲームデザイン: Terence Cheng',
+        'プログラミング: Terence Cheng',
+        '',
+        '----------------------------------------',
+        'アート＆アニメーション',
+        '----------------------------------------',
+        'リードアーティスト: Terence Cheng',
+        'UI / UX デザイン: Terence Cheng',
+        'アセット制作: Terence Cheng',
+        '',
+        '----------------------------------------',
+        'オーディオ＆ミュージック',
+        '----------------------------------------',
+        '作曲・音響: Terence Cheng',
+        '',
+        '----------------------------------------',
+        'スペシャルサンクス',
+        '----------------------------------------',
+        '    Terence Cheng の友人一同',
+        '    すべてのテストプレイヤーの皆様',
+        '',
+        '========================================',
+        'Thank you for playing!',
+        '© 2026',
+        '========================================'
+      ].join('\n'),
+      howtoHtml: `
+        <div class="kf-howto-content">
+          <h2 class="kf-howto-main-title">遊び方（HOW TO PLAY）</h2>
+
+          <div class="kf-howto-section">
+            <h3>1. ライダーと対戦モードの選択</h3>
+            <p>キャラクター選択画面で仮面ライダーを選択します。対人戦またはCPU戦（入門向けの<strong>「ちびっこ」</strong>から、36マトリクスAI搭載の最高峰<strong>「ライダー」</strong>まで選択可能）を設定してバトルに挑みましょう。</p>
+          </div>
+
+          <div class="kf-howto-section">
+            <h3>2. 基本操作とスタンス</h3>
+            <p>すべての行動は<strong>方向キー（スタンス選択＆パワーチャージ）</strong>と<strong>アクションキー（技の発動）</strong>を組み合わせて入力します。</p>
+
+            <div class="kf-howto-table-wrap">
+              <table class="kf-howto-table">
+                <thead>
+                  <tr>
+                    <th>方向キー</th>
+                    <th>スタンス種別</th>
+                    <th>アクションボタン (I, J, K, L) の効果</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="kf-key-cell">W キー</td>
+                    <td class="kf-stance-cell">補助・バフ</td>
+                    <td>大ジャンプ、チャージ加速、攻撃集中、気絶値の回復など</td>
+                  </tr>
+                  <tr>
+                    <td class="kf-key-cell">D キー</td>
+                    <td class="kf-stance-cell">通常攻撃</td>
+                    <td>素早いパンチ・キック・コンボ攻撃（ヒット時に「氣」を獲得）</td>
+                  </tr>
+                  <tr>
+                    <td class="kf-key-cell">S キー</td>
+                    <td class="kf-stance-cell">必殺技</td>
+                    <td>ライダーキックやライダーパンチなどの強力なフィニッシャー</td>
+                  </tr>
+                  <tr>
+                    <td class="kf-key-cell">A キー</td>
+                    <td class="kf-stance-cell">防御ガード</td>
+                    <td>相手の攻撃を防いでダメージを軽減し、ボーナスの「氣」を吸収</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="kf-howto-section">
+            <h3>3. バトルの戦略ガイド</h3>
+            <ul class="kf-howto-list">
+              <li><strong>方向キーを長押し：</strong> W・A・S・Dのいずれかを押し続けてパワーを最大100%までチャージします。</li>
+              <li><strong>技の確定（ロックイン）：</strong> 制限時間が切れる前に I・J・K・L を押して行動を確定させます。</li>
+              <li><strong>通常攻撃で「氣」を溜める：</strong> Dスタンスの打撃を当てて、素早く氣ゲージを溜めましょう。</li>
+              <li><strong>危険な大技をガード：</strong> 相手が大技を狙っていると感じたら、Aスタンスで確実に防御しましょう。</li>
+              <li><strong>必殺技でトドメ：</strong> 氣ゲージが十分に溜まったら、Sスタンスの必殺技を叩き込んでKOを狙いましょう！</li>
+            </ul>
+          </div>
+        </div>
+      `
     }
   };
+
+  /*
+   * Complete Tabulated Movelist Database for all 6 Riders (EN & JA)
+   */
+  const RIDER_MOVELISTS = {
+    en: {
+      ichigo: {
+        name: 'Kamen Rider Ichigo',
+        basic: [
+          { name: 'Standard Punch', cmd: 'D+J', chi: 0, dmg: 52, remarks: 'Gain 2 CHI if hit' },
+          { name: 'Standard Kick', cmd: 'D+K', chi: 0, dmg: 52, remarks: 'Gain 2 CHI if hit' },
+          { name: 'Punch Combo', cmd: 'D+L', chi: 1, dmg: 90, remarks: 'Gain 3 CHI if hit' },
+          { name: 'Kick Combo', cmd: 'D+I', chi: 1, dmg: 87, remarks: 'Gain 3 CHI if hit' }
+        ],
+        special: [
+          { name: 'Rider Power Chop', cmd: 'S+J', chi: 3, dmg: 400, remarks: '' },
+          { name: 'Rider Head Crusher', cmd: 'S+K', chi: 4, dmg: 480, remarks: '' },
+          { name: 'Rider Kick', cmd: 'S+L', chi: 6, dmg: 860, remarks: '' },
+          { name: 'Kirimomi Kick', cmd: 'S+I', chi: 9, dmg: 1100, remarks: '' }
+        ],
+        utilities: [
+          { name: 'Rider High Jump', cmd: 'W+I', chi: 0, effect: 'Buff attack and evasion', remarks: 'Last 3 rounds' },
+          { name: 'Typhoon Charge', cmd: 'W+J', chi: 1, effect: 'Buff charge speed', remarks: 'Last 3 rounds' },
+          { name: 'Typhoon Focus', cmd: 'W+K', chi: 1, effect: 'Buff special attack', remarks: 'Last 3 rounds' },
+          { name: 'Typhoon Bless', cmd: 'W+L', chi: 1, effect: 'Decrease faint', remarks: '' }
+        ],
+        defense: [
+          { name: 'Windmill Guard', cmd: 'A+I', chi: 4, effect: 'Defense against all attacks', remarks: '' },
+          { name: 'Standard Guard', cmd: 'A+J, A+K, A+L', chi: 0, effect: 'Defense against J, K & L attacks respectively', remarks: '' }
+        ]
+      },
+      nigo: {
+        name: 'Kamen Rider Nigo',
+        basic: [
+          { name: 'Standard Punch', cmd: 'D+J', chi: 0, dmg: 75, remarks: 'Gain 2 CHI if hit' },
+          { name: 'Standing Kick', cmd: 'D+K', chi: 0, dmg: 80, remarks: 'Gain 2 CHI if hit' },
+          { name: 'Punches', cmd: 'D+L', chi: 1, dmg: 140, remarks: 'Gain 3 CHI if hit' },
+          { name: 'Mixed Combo', cmd: 'D+I', chi: 1, dmg: 130, remarks: 'Gain 3 CHI if hit' }
+        ],
+        special: [
+          { name: 'Rider Punch', cmd: 'S+J', chi: 3, dmg: 370, remarks: '' },
+          { name: 'Rider Flying Knee', cmd: 'S+K', chi: 5, dmg: 480, remarks: '' },
+          { name: 'Rider Power Kick', cmd: 'S+L', chi: 7, dmg: 860, remarks: '' },
+          { name: 'Typhoon Power Break', cmd: 'S+I', chi: 10, dmg: 1065, remarks: '' }
+        ],
+        utilities: [
+          { name: 'Rider Power Jump', cmd: 'W+I', chi: 0, effect: 'Buff attack and accuracy', remarks: 'Last 3 rounds' },
+          { name: 'Typhoon Red Shutter', cmd: 'W+J', chi: 0, effect: 'Buff charge speed and armor', remarks: 'Last 2 rounds' },
+          { name: 'Power Focus', cmd: 'W+K', chi: 1, effect: 'Buff basic attack', remarks: 'Last 2 rounds' },
+          { name: 'Battle Cry', cmd: 'W+L', chi: 2, effect: 'Decrease faint', remarks: '' }
+        ],
+        defense: [
+          { name: 'Windmill Guard', cmd: 'A+I', chi: 4, effect: 'Defense against all attacks', remarks: '' },
+          { name: 'Standard Guard', cmd: 'A+J, A+K, A+L', chi: 0, effect: 'Defense against J, K & L attacks respectively', remarks: '' }
+        ]
+      },
+      v3: {
+        name: 'Kamen Rider V3',
+        basic: [
+          { name: 'Chop', cmd: 'D+J', chi: 0, dmg: 60, remarks: 'Gain 2 CHI if hit' },
+          { name: 'High Kick', cmd: 'D+K', chi: 0, dmg: 63, remarks: 'Gain 2 CHI if hit' },
+          { name: 'Chop Combo', cmd: 'D+L', chi: 1, dmg: 116, remarks: 'Gain 3 CHI if hit' },
+          { name: 'Mixed Hits', cmd: 'D+I', chi: 1, dmg: 106, remarks: 'Gain 3 CHI if hit' }
+        ],
+        special: [
+          { name: 'V3 Kick', cmd: 'S+J', chi: 4, dmg: 430, remarks: '' },
+          { name: 'V3 Return Kick', cmd: 'S+K', chi: 5, dmg: 560, remarks: '' },
+          { name: 'V3 Screw Kick', cmd: 'S+L', chi: 8, dmg: 940, remarks: '' },
+          { name: 'V3 Triple Kick', cmd: 'S+I', chi: 11, dmg: 1160, remarks: '' }
+        ],
+        utilities: [
+          { name: 'Leap', cmd: 'W+I', chi: 0, effect: 'Buff basic attack and evasion', remarks: 'Last 3 rounds' },
+          { name: 'Accelerator', cmd: 'W+J', chi: 0, effect: 'Buff charging speed', remarks: 'Last 3 rounds' },
+          { name: 'Red Lamp Focus', cmd: 'W+K', chi: 1, effect: 'Buff attack', remarks: 'Last 3 rounds' },
+          { name: 'Double Typhoon Blow', cmd: 'W+L', chi: 2, effect: 'Deal damage and build faint', remarks: 'Long reach' }
+        ],
+        defense: [
+          { name: 'Standard Guard', cmd: 'A+I, A+J, A+K, A+L', chi: 0, effect: 'Defense against I, J, K & L attacks respectively', remarks: '' }
+        ]
+      },
+      riderman: {
+        name: 'Riderman',
+        basic: [
+          { name: 'Standard Punch', cmd: 'D+J', chi: 0, dmg: 55, remarks: 'Gain 2 CHI if hit' },
+          { name: 'Standard Kick', cmd: 'D+K', chi: 0, dmg: 58, remarks: 'Gain 2 CHI if hit' },
+          { name: 'Cassette Combo', cmd: 'D+L', chi: 1, dmg: 125, remarks: 'Gain 3 CHI if hit' },
+          { name: 'Rope Arm Hook', cmd: 'D+I', chi: 1, dmg: 130, remarks: 'Gain 3 CHI if hit, Long reach' }
+        ],
+        special: [
+          { name: 'Riderman Kick', cmd: 'S+J', chi: 4, dmg: 420, remarks: '' },
+          { name: 'Drill Arm Break', cmd: 'S+K', chi: 6, dmg: 608, remarks: 'Long reach' },
+          { name: 'Power Arm Strike', cmd: 'S+L', chi: 7, dmg: 688, remarks: 'Long reach' },
+          { name: 'Hook Finisher', cmd: 'S+I', chi: 10, dmg: 999, remarks: 'Long reach' }
+        ],
+        utilities: [
+          { name: 'High Leap', cmd: 'W+I', chi: 1, effect: 'Buff evasion', remarks: 'Last 3 rounds' },
+          { name: 'Target Lock', cmd: 'W+J', chi: 1, effect: 'Buff accuracy', remarks: 'Last 3 rounds' },
+          { name: 'Battle Cry', cmd: 'W+K', chi: 0, effect: 'Decrease faint', remarks: '' },
+          { name: 'Rope Arm Tie-Up', cmd: 'W+L', chi: 2, effect: 'Slows opponent charge speed for 3 rounds', remarks: 'Deals damage' }
+        ],
+        defense: [
+          { name: 'Standard Guard', cmd: 'A+I, A+J, A+K, A+L', chi: 0, effect: 'Defense against I, J, K & L attacks respectively', remarks: '' }
+        ]
+      },
+      x: {
+        name: 'Kamen Rider X',
+        basic: [
+          { name: 'Standard Punch', cmd: 'D+J', chi: 0, dmg: 60, remarks: 'Gain 2 CHI if hit' },
+          { name: 'Standard Kick', cmd: 'D+K', chi: 0, dmg: 70, remarks: 'Gain 2 CHI if hit' },
+          { name: 'Ridol Rod Strike', cmd: 'D+L', chi: 1, dmg: 122, remarks: 'Gain 3 CHI if hit' },
+          { name: 'Ridol Whip Lash', cmd: 'D+I', chi: 1, dmg: 100, remarks: 'Gain 3 CHI if hit' }
+        ],
+        special: [
+          { name: 'Rider Kick', cmd: 'S+J', chi: 4, dmg: 440, remarks: '' },
+          { name: 'X-Kick', cmd: 'S+K', chi: 6, dmg: 700, remarks: '' },
+          { name: 'Ridol Crown Split', cmd: 'S+L', chi: 7, dmg: 740, remarks: 'Long reach, build faint' },
+          { name: 'Vacuum Hell Wheel', cmd: 'S+I', chi: 10, dmg: 1111, remarks: '' }
+        ],
+        utilities: [
+          { name: 'Jump', cmd: 'W+I', chi: 0, effect: 'Buff basic attack and evasion', remarks: 'Last 3 rounds' },
+          { name: 'Mercury Overdrive', cmd: 'W+J', chi: 0, effect: 'Buff attack', remarks: 'Last 2 rounds' },
+          { name: 'Mercury Fortification', cmd: 'W+K', chi: 1, effect: 'Buff armor', remarks: 'Last 3 rounds' },
+          { name: 'Kaizorg Vitality', cmd: 'W+L', chi: 2, effect: 'Recover LP and decrease faint', remarks: '' }
+        ],
+        defense: [
+          { name: 'Standard Guard', cmd: 'A+I, A+J, A+K, A+L', chi: 0, effect: 'Defense against I, J, K & L attacks respectively', remarks: '' }
+        ]
+      },
+      amazon: {
+        name: 'Kamen Rider Amazon',
+        basic: [
+          { name: 'Mystic Kick', cmd: 'D+J', chi: 0, dmg: 77, remarks: 'Gain 2 CHI if hit' },
+          { name: 'Claw Attack', cmd: 'D+K', chi: 1, dmg: 130, remarks: 'Gain 3 CHI if hit' },
+          { name: 'Claw Combo', cmd: 'D+L', chi: 1, dmg: 142, remarks: 'Gain 3 CHI if hit' },
+          { name: 'Standard Kick', cmd: 'D+I', chi: 0, dmg: 74, remarks: 'Gain 2 CHI if hit' }
+        ],
+        special: [
+          { name: 'Amazon Kick', cmd: 'S+J', chi: 4, dmg: 420, remarks: '' },
+          { name: 'Jaguar Shock', cmd: 'S+K', chi: 5, dmg: 450, remarks: 'Inflict Bleed for 3 rounds' },
+          { name: 'Wild Tackle', cmd: 'S+L', chi: 7, dmg: 880, remarks: '' },
+          { name: 'Daisetsudan', cmd: 'S+I', chi: 9, dmg: 1020, remarks: '' }
+        ],
+        utilities: [
+          { name: 'Wild Leap', cmd: 'W+I', chi: 2, effect: 'Buff attack and evasion', remarks: 'Last 4 rounds' },
+          { name: 'Inca Blessing', cmd: 'W+J', chi: 2, effect: 'Regenerate LP', remarks: 'Last 3 rounds, stops if took damage' },
+          { name: 'Gigi Focus', cmd: 'W+K', chi: 0, effect: 'Buff evasion', remarks: 'Last 3 rounds' },
+          { name: 'Wild Instinct', cmd: 'W+L', chi: 1, effect: 'Decrease faint', remarks: '' }
+        ],
+        defense: [
+          { name: 'Standard Guard', cmd: 'A+I, A+J, A+K, A+L', chi: 0, effect: 'Defense against I, J, K & L attacks respectively', remarks: '' }
+        ]
+      }
+    },
+
+    ja: {
+      ichigo: {
+        name: '仮面ライダー1号',
+        basic: [
+          { name: '通常パンチ', cmd: 'D+J', chi: 0, dmg: 52, remarks: 'ヒット時、氣+2' },
+          { name: '通常キック', cmd: 'D+K', chi: 0, dmg: 52, remarks: 'ヒット時、氣+2' },
+          { name: '連続パンチ', cmd: 'D+L', chi: 1, dmg: 90, remarks: 'ヒット時、氣+3' },
+          { name: '連続キック', cmd: 'D+I', chi: 1, dmg: 87, remarks: 'ヒット時、氣+3' }
+        ],
+        special: [
+          { name: 'ライダーチョップ', cmd: 'S+J', chi: 3, dmg: 400, remarks: '' },
+          { name: 'ライダー頭突き', cmd: 'S+K', chi: 4, dmg: 480, remarks: '' },
+          { name: 'ライダーキック', cmd: 'S+L', chi: 6, dmg: 860, remarks: '' },
+          { name: 'ライダーきりもみキック', cmd: 'S+I', chi: 9, dmg: 1100, remarks: '' }
+        ],
+        utilities: [
+          { name: 'ライダー大ジャンプ', cmd: 'W+I', chi: 0, effect: '攻撃力・回避率アップ', remarks: '3ラウンド持続' },
+          { name: 'タイフーンチャージ', cmd: 'W+J', chi: 1, effect: 'チャージ速度アップ', remarks: '3ラウンド持続' },
+          { name: 'タイフーン集中', cmd: 'W+K', chi: 1, effect: '必殺技の威力アップ', remarks: '3ラウンド持続' },
+          { name: 'タイフーンの加護', cmd: 'W+L', chi: 1, effect: '気絶値を減少', remarks: '' }
+        ],
+        defense: [
+          { name: '風車ガード', cmd: 'A+I', chi: 4, effect: 'すべての攻撃を防御', remarks: '' },
+          { name: '通常ガード', cmd: 'A+J, A+K, A+L', chi: 0, effect: 'J・K・L攻撃をそれぞれ防御', remarks: '' }
+        ]
+      },
+      nigo: {
+        name: '仮面ライダー2号',
+        basic: [
+          { name: '通常パンチ', cmd: 'D+J', chi: 0, dmg: 75, remarks: 'ヒット時、氣+2' },
+          { name: '立ちキック', cmd: 'D+K', chi: 0, dmg: 80, remarks: 'ヒット時、氣+2' },
+          { name: '連続パンチ', cmd: 'D+L', chi: 1, dmg: 140, remarks: 'ヒット時、氣+3' },
+          { name: 'コンビネーション攻撃', cmd: 'D+I', chi: 1, dmg: 130, remarks: 'ヒット時、氣+3' }
+        ],
+        special: [
+          { name: 'ライダーパンチ', cmd: 'S+J', chi: 3, dmg: 370, remarks: '' },
+          { name: 'ライダー飛び膝蹴り', cmd: 'S+K', chi: 5, dmg: 480, remarks: '' },
+          { name: 'ライダーパワーキック', cmd: 'S+L', chi: 7, dmg: 860, remarks: '' },
+          { name: 'タイフーン・パワーブレイク', cmd: 'S+I', chi: 10, dmg: 1065, remarks: '' }
+        ],
+        utilities: [
+          { name: 'ライダーパワージャンプ', cmd: 'W+I', chi: 0, effect: '攻撃力・命中率アップ', remarks: '3ラウンド持続' },
+          { name: 'タイフーン・レッドシャッター', cmd: 'W+J', chi: 0, effect: 'チャージ速度・防御力アップ', remarks: '2ラウンド持続' },
+          { name: 'パワー集中', cmd: 'W+K', chi: 1, effect: '通常攻撃の威力アップ', remarks: '2ラウンド持続' },
+          { name: '気合の咆哮', cmd: 'W+L', chi: 2, effect: '気絶値を減少', remarks: '' }
+        ],
+        defense: [
+          { name: '風車ガード', cmd: 'A+I', chi: 4, effect: 'すべての攻撃を防御', remarks: '' },
+          { name: '通常ガード', cmd: 'A+J, A+K, A+L', chi: 0, effect: 'J・K・L攻撃をそれぞれ防御', remarks: '' }
+        ]
+      },
+      v3: {
+        name: '仮面ライダーV3',
+        basic: [
+          { name: 'V3チョップ', cmd: 'D+J', chi: 0, dmg: 60, remarks: 'ヒット時、氣+2' },
+          { name: 'ハイキック', cmd: 'D+K', chi: 0, dmg: 63, remarks: 'ヒット時、氣+2' },
+          { name: '連続チョップ', cmd: 'D+L', chi: 1, dmg: 116, remarks: 'ヒット時、氣+3' },
+          { name: '連続コンビネーション', cmd: 'D+I', chi: 1, dmg: 106, remarks: 'ヒット時、氣+3' }
+        ],
+        special: [
+          { name: 'V3キック', cmd: 'S+J', chi: 4, dmg: 430, remarks: '' },
+          { name: 'V3反転キック', cmd: 'S+K', chi: 5, dmg: 560, remarks: '' },
+          { name: 'V3きりもみキック', cmd: 'S+L', chi: 8, dmg: 940, remarks: '' },
+          { name: 'V3トリプルキック', cmd: 'S+I', chi: 11, dmg: 1160, remarks: '' }
+        ],
+        utilities: [
+          { name: 'V3大ジャンプ', cmd: 'W+I', chi: 0, effect: '通常攻撃・回避率アップ', remarks: '3ラウンド持続' },
+          { name: 'アクセラレーター', cmd: 'W+J', chi: 0, effect: 'チャージ速度アップ', remarks: '3ラウンド持続' },
+          { name: 'レッドランプ集中', cmd: 'W+K', chi: 1, effect: '攻撃力アップ', remarks: '3ラウンド持続' },
+          { name: 'ダブルタイフーン・ブロー', cmd: 'W+L', chi: 2, effect: 'ダメージを与え気絶値を蓄積', remarks: '遠距離リーチ' }
+        ],
+        defense: [
+          { name: '通常ガード', cmd: 'A+I, A+J, A+K, A+L', chi: 0, effect: 'I・J・K・L攻撃をそれぞれ防御', remarks: '' }
+        ]
+      },
+      riderman: {
+        name: 'ライダーマン',
+        basic: [
+          { name: '通常パンチ', cmd: 'D+J', chi: 0, dmg: 55, remarks: 'ヒット時、氣+2' },
+          { name: '通常キック', cmd: 'D+K', chi: 0, dmg: 58, remarks: 'ヒット時、氣+2' },
+          { name: 'カセットアーム連撃', cmd: 'D+L', chi: 1, dmg: 125, remarks: 'ヒット時、氣+3' },
+          { name: 'ロープアーム・フック', cmd: 'D+I', chi: 1, dmg: 130, remarks: 'ヒット時、氣+3・遠距離リーチ' }
+        ],
+        special: [
+          { name: 'ライダーマンキック', cmd: 'S+J', chi: 4, dmg: 420, remarks: '' },
+          { name: 'ドリルアーム・ブレイク', cmd: 'S+K', chi: 6, dmg: 608, remarks: '遠距離リーチ' },
+          { name: 'パワーアーム・ストライク', cmd: 'S+L', chi: 7, dmg: 688, remarks: '遠距離リーチ' },
+          { name: 'スイングアーム・フィニッシャー', cmd: 'S+I', chi: 10, dmg: 999, remarks: '遠距離リーチ' }
+        ],
+        utilities: [
+          { name: 'ハイジャンプ', cmd: 'W+I', chi: 1, effect: '回避率アップ', remarks: '3ラウンド持続' },
+          { name: 'ターゲットロック', cmd: 'W+J', chi: 1, effect: '命中率アップ', remarks: '3ラウンド持続' },
+          { name: '闘志の咆哮', cmd: 'W+K', chi: 0, effect: '気絶値を減少', remarks: '' },
+          { name: 'ロープアーム拘束', cmd: 'W+L', chi: 2, effect: '3ラウンドの間、相手のチャージ速度を低下', remarks: 'ダメージを与える' }
+        ],
+        defense: [
+          { name: '通常ガード', cmd: 'A+I, A+J, A+K, A+L', chi: 0, effect: 'I・J・K・L攻撃をそれぞれ防御', remarks: '' }
+        ]
+      },
+      x: {
+        name: '仮面ライダーX',
+        basic: [
+          { name: '通常パンチ', cmd: 'D+J', chi: 0, dmg: 60, remarks: 'ヒット時、氣+2' },
+          { name: '通常キック', cmd: 'D+K', chi: 0, dmg: 70, remarks: 'ヒット時、氣+2' },
+          { name: 'ライドルスティック連撃', cmd: 'D+L', chi: 1, dmg: 122, remarks: 'ヒット時、氣+3' },
+          { name: 'ライドルホイップ斬り', cmd: 'D+I', chi: 1, dmg: 100, remarks: 'ヒット時、氣+3' }
+        ],
+        special: [
+          { name: 'ライダーキック', cmd: 'S+J', chi: 4, dmg: 440, remarks: '' },
+          { name: 'Xキック', cmd: 'S+K', chi: 6, dmg: 700, remarks: '' },
+          { name: 'ライドル脳天割り', cmd: 'S+L', chi: 7, dmg: 740, remarks: '遠距離リーチ・気絶値蓄積' },
+          { name: '真空地獄車', cmd: 'S+I', chi: 10, dmg: 1111, remarks: '' }
+        ],
+        utilities: [
+          { name: 'Xジャンプ', cmd: 'W+I', chi: 0, effect: '通常攻撃・回避率アップ', remarks: '3ラウンド持続' },
+          { name: 'マーキュリー・オーバードライブ', cmd: 'W+J', chi: 0, effect: '攻撃力アップ', remarks: '2ラウンド持続' },
+          { name: 'マーキュリー装甲強化', cmd: 'W+K', chi: 1, effect: '防御力アップ', remarks: '3ラウンド持続' },
+          { name: 'カイゾーグ活性', cmd: 'W+L', chi: 2, effect: 'LPを回復し気絶値を減少', remarks: '' }
+        ],
+        defense: [
+          { name: '通常ガード', cmd: 'A+I, A+J, A+K, A+L', chi: 0, effect: 'I・J・K・L攻撃をそれぞれ防御', remarks: '' }
+        ]
+      },
+      amazon: {
+        name: '仮面ライダーアマゾン',
+        basic: [
+          { name: 'ミスティックキック', cmd: 'D+J', chi: 0, dmg: 77, remarks: 'ヒット時、氣+2' },
+          { name: 'コンドルクローひっかき', cmd: 'D+K', chi: 1, dmg: 130, remarks: 'ヒット時、氣+3' },
+          { name: 'ワイルドクロー連撃', cmd: 'D+L', chi: 1, dmg: 142, remarks: 'ヒット時、氣+3' },
+          { name: '通常キック', cmd: 'D+I', chi: 0, dmg: 74, remarks: 'ヒット時、氣+2' }
+        ],
+        special: [
+          { name: 'アマゾンキック', cmd: 'S+J', chi: 4, dmg: 420, remarks: '' },
+          { name: 'ジャガーショック', cmd: 'S+K', chi: 5, dmg: 450, remarks: '3ラウンドの間、出血状態を付与' },
+          { name: 'ワイルドタックル', cmd: 'S+L', chi: 7, dmg: 880, remarks: '' },
+          { name: '大切断', cmd: 'S+I', chi: 9, dmg: 1020, remarks: '' }
+        ],
+        utilities: [
+          { name: '野生の大跳躍', cmd: 'W+I', chi: 2, effect: '攻撃力・回避率アップ', remarks: '4ラウンド持続' },
+          { name: 'インカの秘術', cmd: 'W+J', chi: 2, effect: 'LPを継続回復', remarks: '3ラウンド持続（被ダメージで解除）' },
+          { name: 'ギギの腕輪・集中', cmd: 'W+K', chi: 0, effect: '回避率アップ', remarks: '3ラウンド持続' },
+          { name: '野生の本能', cmd: 'W+L', chi: 1, effect: '気絶値を減少', remarks: '' }
+        ],
+        defense: [
+          { name: '通常ガード', cmd: 'A+I, A+J, A+K, A+L', chi: 0, effect: 'I・J・K・L攻撃をそれぞれ防御', remarks: '' }
+        ]
+      }
+    }
+  };
+
+  /** Returns active language dictionary ('en' or 'ja'). */
+  function t() {
+    return I18N[window.gameLang === 'ja' ? 'ja' : 'en'];
+  }
+
+  /** Returns localized full name for a Rider object. */
+  function getLocalizedRiderName(rider) {
+    if (!rider) return '';
+    const dict = t();
+    const id = String(rider.id || '').toLowerCase();
+    return dict.riderNames[id] || rider.name || id;
+  }
+
+  /** Returns localized short name for a Rider object. */
+  function getLocalizedRiderShortName(rider) {
+    if (!rider) return '';
+    const dict = t();
+    const id = String(rider.id || '').toLowerCase();
+    if (dict.riderShortNames[id]) {
+      return dict.riderShortNames[id];
+    }
+    return String(rider.name || rider.id).replace(/^Kamen Rider\s+/i, '');
+  }
+
+  /** Sets the active game language ('en' or 'ja') and refreshes all VS Select UI & Modals. */
+  window.setGameLanguage = function (lang) {
+    window.gameLang = lang === 'ja' ? 'ja' : 'en';
+    document.documentElement.lang = window.gameLang;
+
+    // Refresh static labels in orientation overlay if present
+    const dict = t();
+    const rotateOverlay = document.getElementById('portrait-orientation-overlay');
+    if (rotateOverlay) {
+      const h2 = rotateOverlay.querySelector('h2');
+      const p = rotateOverlay.querySelector('p');
+      if (h2) h2.textContent = dict.rotateTitle;
+      if (p) p.textContent = dict.rotateSub;
+    }
+
+    // Refresh How To Play & Credits modal contents if already created
+    const howtoModal = document.getElementById('kf-howto-modal');
+    if (howtoModal) {
+      const body = howtoModal.querySelector('.kf-credits-modal-body');
+      if (body) body.innerHTML = dict.howtoHtml;
+      const okBtn = document.getElementById('kf-howto-ok-btn');
+      if (okBtn) okBtn.textContent = dict.howtoCloseBtn;
+    }
+
+    const creditsModal = document.getElementById('kf-credits-modal');
+    if (creditsModal) {
+      const pre = creditsModal.querySelector('.kf-credits-pre');
+      if (pre) pre.textContent = dict.creditsContent;
+      const okBtn = document.getElementById('kf-credits-ok-btn');
+      if (okBtn) okBtn.textContent = dict.creditsCloseBtn;
+    }
+
+    const movelistCloseBtn = document.getElementById('kf-movelist-close-btn');
+    if (movelistCloseBtn) {
+      movelistCloseBtn.textContent = dict.movelistCloseBtn;
+    }
+
+    window.updateSelectionUI();
+
+    // Ensure transition from loading screen to vs-select-screen happens smoothly
+    const loadingScreen = document.getElementById('loading-screen');
+    const selectScreen = document.getElementById('vs-select-screen');
+    if (loadingScreen && !loadingScreen.hidden && selectScreen) {
+      setTimeout(() => {
+        if (!loadingScreen.hidden) {
+          loadingScreen.hidden = true;
+          selectScreen.hidden = false;
+          window.playSelectionBGM();
+          window.updateSelectionUI();
+        }
+      }, 30);
+    }
+  };
+
+  /** Protects the 2-button language selector inside #start-prompt from being overwritten by game.js. */
+  function protectStartPromptButtons() {
+    const startPrompt = document.getElementById('start-prompt');
+    if (!startPrompt || startPrompt.dataset.kfLangProtected) return;
+    startPrompt.dataset.kfLangProtected = '1';
+
+    const BUTTONS_MARKUP = `
+      <div class="start-lang-caption">SELECT LANGUAGE / 言語を選択</div>
+      <div class="start-lang-btn-row">
+        <button id="start-btn-en"
+                type="button"
+                class="start-lang-btn lang-en"
+                onclick="if(window.setGameLanguage) window.setGameLanguage('en');">
+          ENGLISH
+        </button>
+        <button id="start-btn-ja"
+                type="button"
+                class="start-lang-btn lang-ja"
+                onclick="if(window.setGameLanguage) window.setGameLanguage('ja');">
+          日本語
+        </button>
+      </div>
+    `;
+
+    if (!startPrompt.querySelector('.start-lang-btn')) {
+      startPrompt.innerHTML = BUTTONS_MARKUP;
+    }
+
+    const observer = new MutationObserver(() => {
+      if (!startPrompt.querySelector('.start-lang-btn')) {
+        startPrompt.innerHTML = BUTTONS_MARKUP;
+      }
+    });
+    observer.observe(startPrompt, { childList: true, characterData: true, subtree: true });
+  }
 
   /*
    * All 6 Riders (6x6 = 36 Matrix) enabled for RIDER difficulty.
@@ -329,7 +831,7 @@
     }
 
     if (!Object.prototype.hasOwnProperty.call(
-      DIFF_LABELS,
+      I18N.en.diffLabels,
       difficulty
     )) {
       difficulty = 'balanced';
@@ -353,12 +855,12 @@
       return;
     }
 
-    // Load modern geometric display fonts (Chakra Petch & Orbitron)
+    // Load modern geometric display fonts + Noto Sans JP for Japanese UI
     if (!document.getElementById('kf-modern-fonts')) {
       const fontLink = document.createElement('link');
       fontLink.id = 'kf-modern-fonts';
       fontLink.rel = 'stylesheet';
-      fontLink.href = 'https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,600;0,700;1,700&family=Orbitron:wght@600;700;800;900&display=swap';
+      fontLink.href = 'https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,600;0,700;1,700&family=Noto+Sans+JP:wght@500;700;900&family=Orbitron:wght@600;700;800;900&display=swap';
       (document.head || document.documentElement).appendChild(fontLink);
     }
 
@@ -367,8 +869,8 @@
 
     style.textContent = `
       :root {
-        --kf-font-display: 'Orbitron', 'Chakra Petch', 'Segoe UI', system-ui, sans-serif;
-        --kf-font-ui: 'Chakra Petch', 'Segoe UI', Roboto, system-ui, sans-serif;
+        --kf-font-display: 'Orbitron', 'Chakra Petch', 'Noto Sans JP', 'Segoe UI', system-ui, sans-serif;
+        --kf-font-ui: 'Chakra Petch', 'Noto Sans JP', 'Segoe UI', Roboto, system-ui, sans-serif;
         --kf-p1-accent: #00f0ff;
         --kf-p1-glow: rgba(0, 240, 255, 0.38);
         --kf-p2-accent: #ff2a6d;
@@ -414,7 +916,7 @@
         font-family: var(--kf-font-display) !important;
         font-size: clamp(1.05rem, 2.1vw, 1.55rem) !important;
         font-weight: 900 !important;
-        letter-spacing: 0.14em !important;
+        letter-spacing: 0.12em !important;
         text-transform: uppercase;
         color: #ffffff !important;
         text-shadow: 0 0 18px rgba(0, 240, 255, 0.45), 0 2px 6px rgba(0, 0, 0, 0.9) !important;
@@ -439,7 +941,7 @@
         font-family: var(--kf-font-display);
         font-size: 0.68rem;
         font-weight: 700;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.08em;
         color: rgba(255, 255, 255, 0.4);
         background: rgba(15, 22, 36, 0.75);
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -567,7 +1069,7 @@
         font-family: var(--kf-font-display) !important;
         font-size: clamp(0.92rem, 1.45vw, 1.15rem) !important;
         font-weight: 800 !important;
-        letter-spacing: 0.06em !important;
+        letter-spacing: 0.05em !important;
         color: #ffffff !important;
         text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
         margin-top: 6px !important;
@@ -609,13 +1111,13 @@
         font-family: var(--kf-font-display);
       }
 
-      /* Interactive Movelist Button replacing RIDER AI badge */
+      /* Interactive Movelist Button */
       .kf-movelist-btn {
         cursor: pointer;
         font-family: var(--kf-font-display);
         font-size: 0.66rem;
         font-weight: 800;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.06em;
         padding: 3px 10px;
         background: linear-gradient(135deg, rgba(187, 100, 255, 0.24) 0%, rgba(0, 240, 255, 0.2) 100%);
         border: 1px solid rgba(224, 166, 255, 0.65);
@@ -674,7 +1176,7 @@
         border-radius: 8px !important;
         font-family: var(--kf-font-display) !important;
         font-weight: 700 !important;
-        letter-spacing: 0.1em !important;
+        letter-spacing: 0.08em !important;
         background: rgba(13, 20, 34, 0.85) !important;
         border: 1px solid rgba(255, 255, 255, 0.18) !important;
         transition: all 0.15s ease !important;
@@ -701,7 +1203,7 @@
         font-family: var(--kf-font-display) !important;
         font-size: 0.75rem !important;
         font-weight: 700 !important;
-        letter-spacing: 0.08em !important;
+        letter-spacing: 0.06em !important;
         text-transform: uppercase;
         transition: all 0.18s ease !important;
       }
@@ -746,7 +1248,7 @@
         display: inline-block;
         color: #ffe17d;
         font-weight: 900;
-        letter-spacing: 0.09em;
+        letter-spacing: 0.08em;
       }
 
       @supports ((background-clip: text) or (-webkit-background-clip: text)) {
@@ -805,7 +1307,7 @@
         font-family: var(--kf-font-display);
         font-size: 0.64rem;
         font-weight: 700;
-        letter-spacing: 0.16em;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
         color: rgba(255, 255, 255, 0.55);
         margin-bottom: 6px;
@@ -869,7 +1371,7 @@
         font-family: var(--kf-font-display);
         font-size: 0.58rem;
         font-weight: 700;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.03em;
         color: #e2e8f0;
         text-transform: uppercase;
         white-space: nowrap;
@@ -916,7 +1418,7 @@
       .btn-back {
         font-family: var(--kf-font-display) !important;
         font-weight: 700 !important;
-        letter-spacing: 0.1em !important;
+        letter-spacing: 0.08em !important;
         border-radius: 8px !important;
         background: rgba(20, 27, 42, 0.85) !important;
         border: 1px solid rgba(255, 255, 255, 0.22) !important;
@@ -939,7 +1441,7 @@
       .confirm-btn {
         font-family: var(--kf-font-display) !important;
         font-weight: 800 !important;
-        letter-spacing: 0.12em !important;
+        letter-spacing: 0.1em !important;
         border-radius: 8px !important;
         background: linear-gradient(135deg, rgba(0, 240, 255, 0.22) 0%, rgba(0, 140, 255, 0.35) 100%) !important;
         border: 1.5px solid var(--kf-p1-accent) !important;
@@ -961,7 +1463,7 @@
       .btn-start {
         font-family: var(--kf-font-display) !important;
         font-weight: 900 !important;
-        letter-spacing: 0.14em !important;
+        letter-spacing: 0.12em !important;
         border-radius: 8px !important;
         background: linear-gradient(135deg, #ffd166 0%, #ff9f1c 100%) !important;
         border: 2px solid #fff3c4 !important;
@@ -977,7 +1479,7 @@
         transform: translateY(-2px) scale(1.02);
       }
 
-      /* --- Credits Link (Compact Pill in Bottom Right, Never Overlaps Action Buttons) --- */
+      /* --- Credits Link (Compact Pill in Bottom Right) --- */
       #kf-credits-link,
       .kf-credits-link {
         position: fixed !important;
@@ -1001,7 +1503,7 @@
         font-family: var(--kf-font-display) !important;
         font-size: 0.74rem !important;
         font-weight: 800 !important;
-        letter-spacing: 0.1em !important;
+        letter-spacing: 0.08em !important;
         text-transform: uppercase;
         text-decoration: none;
         white-space: nowrap;
@@ -1056,7 +1558,7 @@
         font-family: var(--kf-font-display) !important;
         font-size: 0.72rem !important;
         font-weight: 800 !important;
-        letter-spacing: 0.1em !important;
+        letter-spacing: 0.08em !important;
         text-transform: uppercase;
         text-decoration: none;
         white-space: nowrap;
@@ -1178,7 +1680,7 @@
         font-family: var(--kf-font-display);
         font-size: 0.68rem;
         font-weight: 700;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.04em;
         text-transform: uppercase;
         color: #cbd5e1;
         background: rgba(255, 255, 255, 0.06);
@@ -1242,7 +1744,7 @@
         font-family: var(--kf-font-display);
         font-size: clamp(1.05rem, 2.3vw, 1.38rem);
         font-weight: 900;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
         color: #ffffff;
         text-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
@@ -1252,7 +1754,7 @@
         font-family: var(--kf-font-display);
         font-size: 0.7rem;
         font-weight: 700;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.08em;
         color: #ffd166;
         text-transform: uppercase;
       }
@@ -1285,7 +1787,7 @@
         font-family: var(--kf-font-display);
         font-size: 0.76rem;
         font-weight: 800;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
         display: flex;
         align-items: center;
@@ -1335,7 +1837,7 @@
         font-family: var(--kf-font-display);
         font-size: 0.64rem;
         font-weight: 700;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.04em;
         text-transform: uppercase;
         color: rgba(255, 255, 255, 0.52);
         background: rgba(255, 255, 255, 0.03);
@@ -1444,7 +1946,7 @@
         text-align: center;
         color: #ffd166;
         font-size: clamp(1.15rem, 2.8vw, 1.45rem);
-        letter-spacing: 0.12em;
+        letter-spacing: 0.1em;
         margin: 0 0 16px 0;
         padding-bottom: 10px;
         border-bottom: 1px solid rgba(0, 240, 255, 0.3);
@@ -1541,7 +2043,7 @@
         font-family: var(--kf-font-display);
         font-size: 0.9rem;
         font-weight: 900;
-        letter-spacing: 0.12em;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
         color: #0b0e17;
         background: linear-gradient(180deg, #ffe793 0%, #f5b935 100%);
@@ -1569,22 +2071,27 @@
 
   installRiderBadgeStyles();
 
-  /** Renders the HTML content for a specific Rider's movelist inside #kf-movelist-modal. */
+  /** Renders the HTML content for a specific Rider's movelist inside #kf-movelist-modal in the active language. */
   function renderMovelistModalContent(riderId) {
+    const dict = t();
+    const langKey = window.gameLang === 'ja' ? 'ja' : 'en';
     const riders = window.AVAILABLE_RIDERS || [];
     const normalizedId = String(riderId || 'ichigo').toLowerCase();
+
+    const moveSetLang = RIDER_MOVELISTS[langKey] || RIDER_MOVELISTS.en;
+    const moveData = moveSetLang[normalizedId] || moveSetLang.ichigo;
+
     const riderObj = riders.find(r => r.id === normalizedId) || riders[0] || {
       id: normalizedId,
-      name: RIDER_MOVELISTS[normalizedId]?.name || 'Kamen Rider',
+      name: moveData.name,
       icon: `assets/images/icons/${normalizedId}.png`,
       maxLp: 3000
     };
-    const moveData = RIDER_MOVELISTS[normalizedId] || RIDER_MOVELISTS.ichigo;
 
     const switcherEl = document.getElementById('kf-movelist-switcher');
     if (switcherEl) {
       switcherEl.innerHTML = riders.map(r => {
-        const shortName = String(r.name || r.id).replace(/^Kamen Rider\s+/i, '');
+        const shortName = getLocalizedRiderShortName(r);
         const activeClass = r.id === normalizedId ? ' is-active' : '';
         return `
           <button type="button" class="kf-movelist-tab-btn${activeClass}" data-rider-id="${r.id}">
@@ -1605,6 +2112,11 @@
     if (watermarkEl) {
       watermarkEl.src = riderObj.icon;
       watermarkEl.alt = '';
+    }
+
+    const closeBtn = document.getElementById('kf-movelist-close-btn');
+    if (closeBtn) {
+      closeBtn.textContent = dict.movelistCloseBtn;
     }
 
     const bodyEl = document.getElementById('kf-movelist-body');
@@ -1635,7 +2147,7 @@
         <img class="kf-movelist-avatar" src="${riderObj.icon}" alt="${moveData.name}">
         <div class="kf-movelist-title-group">
           <h2 class="kf-movelist-rider-title">${moveData.name}</h2>
-          <span class="kf-movelist-subtitle">MAX LP: ${riderObj.maxLp || 3000} &bull; COMMAND &amp; COMBAT DATA SHEET</span>
+          <span class="kf-movelist-subtitle">${dict.movelistSheetSub(riderObj.maxLp || 3000)}</span>
         </div>
       </div>
 
@@ -1643,17 +2155,17 @@
         <!-- Basic Attack -->
         <div class="kf-movelist-cat-card kf-cat-basic">
           <div class="kf-movelist-cat-header">
-            <span>Basic Attack (D-Stance)</span>
-            <span>Physical Strikes</span>
+            <span>${dict.catBasicTitle}</span>
+            <span>${dict.catBasicSub}</span>
           </div>
           <table class="kf-movelist-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Command</th>
-                <th>CHI</th>
-                <th>Damage</th>
-                <th>Remarks</th>
+                <th>${dict.colName}</th>
+                <th>${dict.colCmd}</th>
+                <th>${dict.colChi}</th>
+                <th>${dict.colDmg}</th>
+                <th>${dict.colRemarks}</th>
               </tr>
             </thead>
             <tbody>
@@ -1665,17 +2177,17 @@
         <!-- Special Attack -->
         <div class="kf-movelist-cat-card kf-cat-special">
           <div class="kf-movelist-cat-header">
-            <span>Special Attack (S-Stance)</span>
-            <span>Signature Finishers</span>
+            <span>${dict.catSpecialTitle}</span>
+            <span>${dict.catSpecialSub}</span>
           </div>
           <table class="kf-movelist-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Command</th>
-                <th>CHI</th>
-                <th>Damage</th>
-                <th>Remarks</th>
+                <th>${dict.colName}</th>
+                <th>${dict.colCmd}</th>
+                <th>${dict.colChi}</th>
+                <th>${dict.colDmg}</th>
+                <th>${dict.colRemarks}</th>
               </tr>
             </thead>
             <tbody>
@@ -1687,17 +2199,17 @@
         <!-- Utilities -->
         <div class="kf-movelist-cat-card kf-cat-utility">
           <div class="kf-movelist-cat-header">
-            <span>Utilities (W-Stance)</span>
-            <span>Buffs &amp; Tech</span>
+            <span>${dict.catUtilityTitle}</span>
+            <span>${dict.catUtilitySub}</span>
           </div>
           <table class="kf-movelist-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Command</th>
-                <th>CHI</th>
-                <th>Effect</th>
-                <th>Remarks</th>
+                <th>${dict.colName}</th>
+                <th>${dict.colCmd}</th>
+                <th>${dict.colChi}</th>
+                <th>${dict.colEffect}</th>
+                <th>${dict.colRemarks}</th>
               </tr>
             </thead>
             <tbody>
@@ -1709,17 +2221,17 @@
         <!-- Defense -->
         <div class="kf-movelist-cat-card kf-cat-defense">
           <div class="kf-movelist-cat-header">
-            <span>Defense (A-Stance)</span>
-            <span>Guard &amp; Counter</span>
+            <span>${dict.catDefenseTitle}</span>
+            <span>${dict.catDefenseSub}</span>
           </div>
           <table class="kf-movelist-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Command</th>
-                <th>CHI</th>
-                <th>Effect</th>
-                <th>Remarks</th>
+                <th>${dict.colName}</th>
+                <th>${dict.colCmd}</th>
+                <th>${dict.colChi}</th>
+                <th>${dict.colEffect}</th>
+                <th>${dict.colRemarks}</th>
               </tr>
             </thead>
             <tbody>
@@ -1736,6 +2248,7 @@
     const selectScreen = document.getElementById('vs-select-screen');
     if (!selectScreen) return;
 
+    const dict = t();
     let modal = document.getElementById('kf-movelist-modal');
     if (!modal) {
       modal = document.createElement('div');
@@ -1770,7 +2283,7 @@
       closeBtn.id = 'kf-movelist-close-btn';
       closeBtn.type = 'button';
       closeBtn.className = 'kf-credits-ok-btn';
-      closeBtn.textContent = 'CLOSE';
+      closeBtn.textContent = dict.movelistCloseBtn;
       closeBtn.addEventListener('click', window.closeMovelistModal);
 
       footer.appendChild(closeBtn);
@@ -1787,6 +2300,9 @@
       });
 
       selectScreen.appendChild(modal);
+    } else {
+      const closeBtn = document.getElementById('kf-movelist-close-btn');
+      if (closeBtn) closeBtn.textContent = dict.movelistCloseBtn;
     }
   }
 
@@ -1847,13 +2363,18 @@
     const modal = document.getElementById('kf-credits-modal');
     if (!modal) return;
 
+    const dict = t();
+    const pre = modal.querySelector('.kf-credits-pre');
+    if (pre) pre.textContent = dict.creditsContent;
+    const okBtn = document.getElementById('kf-credits-ok-btn');
+    if (okBtn) okBtn.textContent = dict.creditsCloseBtn;
+
     modal.hidden = false;
     modal.style.display = 'flex';
 
     const body = modal.querySelector('.kf-credits-modal-body');
     if (body) body.scrollTop = 0;
 
-    const okBtn = document.getElementById('kf-credits-ok-btn');
     if (okBtn) okBtn.focus();
   };
 
@@ -1886,13 +2407,21 @@
     const modal = document.getElementById('kf-howto-modal');
     if (!modal) return;
 
+    const dict = t();
+    const body = modal.querySelector('.kf-credits-modal-body');
+    if (body) {
+      body.innerHTML = dict.howtoHtml;
+      body.scrollTop = 0;
+    }
+
+    const okBtn = document.getElementById('kf-howto-ok-btn');
+    if (okBtn) {
+      okBtn.textContent = dict.howtoCloseBtn;
+    }
+
     modal.hidden = false;
     modal.style.display = 'flex';
 
-    const body = modal.querySelector('.kf-credits-modal-body');
-    if (body) body.scrollTop = 0;
-
-    const okBtn = document.getElementById('kf-howto-ok-btn');
     if (okBtn) okBtn.focus();
   };
 
@@ -1913,6 +2442,8 @@
     const selectScreen = document.getElementById('vs-select-screen');
     if (!selectScreen) return;
 
+    const dict = t();
+
     let linkBtn =
       document.getElementById('kf-credits-link') ||
       document.getElementById('credits-btn');
@@ -1922,9 +2453,10 @@
       linkBtn.id = 'kf-credits-link';
       linkBtn.type = 'button';
       linkBtn.className = 'kf-credits-link';
-      linkBtn.textContent = '★ CREDITS';
       selectScreen.appendChild(linkBtn);
     }
+
+    linkBtn.textContent = dict.creditsLink;
 
     if (!linkBtn.dataset.kfCreditsBound) {
       linkBtn.addEventListener('click', window.openCreditsModal);
@@ -1974,7 +2506,7 @@
 
       const pre = document.createElement('pre');
       pre.className = 'kf-credits-pre';
-      pre.textContent = CREDITS_CONTENT;
+      pre.textContent = dict.creditsContent;
 
       body.appendChild(pre);
 
@@ -1985,7 +2517,7 @@
       okBtn.id = 'kf-credits-ok-btn';
       okBtn.type = 'button';
       okBtn.className = 'kf-credits-ok-btn';
-      okBtn.textContent = 'OK';
+      okBtn.textContent = dict.creditsCloseBtn;
       okBtn.addEventListener('click', window.closeCreditsModal);
 
       footer.appendChild(okBtn);
@@ -2008,6 +2540,8 @@
     const selectScreen = document.getElementById('vs-select-screen');
     if (!selectScreen) return;
 
+    const dict = t();
+
     // Remove the volume bar and its label container from the DOM
     document.querySelectorAll('input[type="range"], #volume-control, #bgm-volume-control, .volume-control, .bgm-control').forEach(el => {
       if (el.tagName === 'INPUT' && el.parentElement && el.parentElement !== document.body && el.parentElement !== selectScreen && el.parentElement.children.length <= 3) {
@@ -2026,9 +2560,10 @@
       linkBtn.id = 'kf-howto-link';
       linkBtn.type = 'button';
       linkBtn.className = 'kf-howto-link';
-      linkBtn.textContent = '? HOW TO PLAY';
       selectScreen.appendChild(linkBtn);
     }
+
+    linkBtn.textContent = dict.howtoLink;
 
     if (!linkBtn.dataset.kfHowtoBound) {
       linkBtn.addEventListener('click', window.openHowToPlayModal);
@@ -2052,7 +2587,7 @@
 
       const body = document.createElement('div');
       body.className = 'kf-credits-modal-body';
-      body.innerHTML = HOW_TO_PLAY_HTML;
+      body.innerHTML = dict.howtoHtml;
 
       const footer = document.createElement('div');
       footer.className = 'kf-credits-modal-footer';
@@ -2061,7 +2596,7 @@
       okBtn.id = 'kf-howto-ok-btn';
       okBtn.type = 'button';
       okBtn.className = 'kf-credits-ok-btn';
-      okBtn.textContent = 'GOT IT';
+      okBtn.textContent = dict.howtoCloseBtn;
       okBtn.addEventListener('click', window.closeHowToPlayModal);
 
       footer.appendChild(okBtn);
@@ -2084,20 +2619,23 @@
     const headerText = document.getElementById('select-step-title') || document.getElementById('vs-header-text');
     if (!headerText || !headerText.parentNode) return;
 
+    const dict = t();
+
     let tracker = document.getElementById('kf-step-tracker');
     if (!tracker) {
       tracker = document.createElement('div');
       tracker.id = 'kf-step-tracker';
       tracker.className = 'kf-step-tracker';
-      tracker.innerHTML = `
-        <span class="kf-step-pill step-p1" data-step="1">01 P1 SELECT</span>
-        <span class="kf-step-connector"></span>
-        <span class="kf-step-pill step-p2" data-step="2">02 P2 SELECT</span>
-        <span class="kf-step-connector"></span>
-        <span class="kf-step-pill step-ready" data-step="3">03 VS READY</span>
-      `;
       headerText.insertAdjacentElement('afterend', tracker);
     }
+
+    tracker.innerHTML = `
+      <span class="kf-step-pill step-p1" data-step="1">${dict.trackerStep1}</span>
+      <span class="kf-step-connector"></span>
+      <span class="kf-step-pill step-p2" data-step="2">${dict.trackerStep2}</span>
+      <span class="kf-step-connector"></span>
+      <span class="kf-step-pill step-ready" data-step="3">${dict.trackerStep3}</span>
+    `;
 
     const pills = tracker.querySelectorAll('.kf-step-pill');
     pills.forEach(pill => {
@@ -2112,6 +2650,8 @@
     const nameEl = document.getElementById(playerKey + '-name-display');
     if (!nameEl || !rider) return;
 
+    const dict = t();
+
     let strip = document.getElementById(playerKey + '-stat-strip');
     if (!strip) {
       strip = document.createElement('div');
@@ -2124,7 +2664,7 @@
 
     strip.innerHTML = `
       <span class="kf-stat-chip">LP <strong>${lp}</strong></span>
-      <button type="button" class="kf-stat-chip kf-movelist-btn" data-rider-id="${rider.id}">📋 MOVELIST</button>
+      <button type="button" class="kf-stat-chip kf-movelist-btn" data-rider-id="${rider.id}">${dict.movelistBtn}</button>
     `;
 
     const movelistBtn = strip.querySelector('.kf-movelist-btn');
@@ -2141,6 +2681,7 @@
     const p1Card = document.getElementById('p1-card');
     if (!selectScreen || !p1Card) return;
 
+    const dict = t();
     const riders = window.AVAILABLE_RIDERS || [];
     const state = window.vsSelectionState;
     const currentStep = parseInt(state.step, 10) || 1;
@@ -2161,10 +2702,10 @@
 
     const promptLabel =
       currentStep === 1
-        ? 'QUICK SELECT — CLICK TO ASSIGN PLAYER 1'
+        ? dict.dockStep1
         : currentStep === 2
-        ? 'QUICK SELECT — CLICK TO ASSIGN PLAYER 2'
-        : 'MATCHUP LOCKED — READY FOR BATTLE';
+        ? dict.dockStep2
+        : dict.dockStep3;
 
     dock.innerHTML = `
       <div class="kf-roster-dock-title">${promptLabel}</div>
@@ -2179,9 +2720,9 @@
       const tile = document.createElement('button');
       tile.type = 'button';
       tile.className = 'kf-roster-tile' + (isP1 ? ' is-p1' : '') + (isP2 ? ' is-p2' : '');
-      tile.title = rider.name;
+      tile.title = getLocalizedRiderName(rider);
 
-      const shortName = String(rider.name || rider.id).replace(/^Kamen Rider\s+/i, '');
+      const shortName = getLocalizedRiderShortName(rider);
 
       tile.innerHTML = `
         <div class="kf-roster-badges">
@@ -2252,6 +2793,8 @@
   function setDiffBadgeClasses(el, difficulty, isCPU) {
     if (!el) return;
 
+    const dict = t();
+
     el.classList.remove(
       'easy',
       'normal',
@@ -2265,7 +2808,7 @@
     if (!isCPU) return;
 
     const name = Object.prototype.hasOwnProperty.call(
-      DIFF_LABELS,
+      dict.diffLabels,
       difficulty
     )
       ? difficulty
@@ -2276,7 +2819,7 @@
     if (name === 'rider') {
       const label = document.createElement('span');
       label.className = 'kf-rider-rainbow';
-      label.textContent = DIFF_LABELS.rider;
+      label.textContent = dict.diffLabels.rider;
 
       el.replaceChildren(label);
     }
@@ -2466,12 +3009,13 @@
     window.updateSelectionUI();
   };
 
-  /** Synchronizes selection screen UI elements, controls, and card highlights with selection state. */
+  /** Synchronizes selection screen UI elements, controls, and card highlights with selection state & active language. */
   window.updateSelectionUI = function() {
     ensureCreditsUI();
     ensureHowToPlayUI();
     ensureMovelistUI();
 
+    const dict = t();
     const riders = window.AVAILABLE_RIDERS;
     const state = window.vsSelectionState;
     if (!riders || riders.length === 0) return;
@@ -2494,23 +3038,45 @@
       p2
     );
 
+    // Card Headings & Difficulty Static Labels
+    const p1Card = document.getElementById('p1-card');
+    const p2Card = document.getElementById('p2-card');
+    if (p1Card) {
+      const h2 = p1Card.querySelector('h2');
+      if (h2) h2.textContent = dict.player1Heading;
+      const diffLbl = p1Card.querySelector('.diff-label');
+      if (diffLbl) diffLbl.textContent = dict.difficultyLabel;
+    }
+    if (p2Card) {
+      const h2 = p2Card.querySelector('h2');
+      if (h2) h2.textContent = dict.player2Heading;
+      const diffLbl = p2Card.querySelector('.diff-label');
+      if (diffLbl) diffLbl.textContent = dict.difficultyLabel;
+    }
+
+    // Error Banner
+    const errorBanner = document.getElementById('vs-error-banner');
+    if (errorBanner) {
+      errorBanner.textContent = dict.errorCpuBanner;
+    }
+
     // P1 Display updates
     const p1ImgEl = document.getElementById('p1-img');
     if (p1ImgEl) p1ImgEl.src = p1.icon;
 
     const p1NameEl = document.getElementById('p1-name-display');
-    if (p1NameEl) p1NameEl.textContent = p1.name;
+    if (p1NameEl) p1NameEl.textContent = getLocalizedRiderName(p1);
     updateRiderStatStrip('p1', p1);
 
     const p1TypeEl = document.getElementById('p1-type-display');
-    if (p1TypeEl) p1TypeEl.textContent = state.p1IsCPU ? 'CPU' : 'HUMAN';
+    if (p1TypeEl) p1TypeEl.textContent = state.p1IsCPU ? dict.cpuLabel : dict.humanLabel;
 
     const p1DiffDisplay = document.getElementById('p1-diff-display');
     if (p1DiffDisplay) {
       if (!state.p1IsCPU) {
-        p1DiffDisplay.textContent = 'N/A';
+        p1DiffDisplay.textContent = dict.naLabel;
       } else {
-        p1DiffDisplay.textContent = DIFF_LABELS[state.p1Difficulty] || 'All-rounder';
+        p1DiffDisplay.textContent = dict.diffLabels[state.p1Difficulty] || dict.diffLabels.balanced;
       }
       setDiffBadgeClasses(p1DiffDisplay, state.p1Difficulty, state.p1IsCPU);
     }
@@ -2523,29 +3089,30 @@
     }
 
     const p2NameEl = document.getElementById('p2-name-display');
-    if (p2NameEl) p2NameEl.textContent = p2.name;
+    if (p2NameEl) p2NameEl.textContent = getLocalizedRiderName(p2);
     updateRiderStatStrip('p2', p2);
 
     const p2TypeEl = document.getElementById('p2-type-display');
-    if (p2TypeEl) p2TypeEl.textContent = state.p2IsCPU ? 'CPU' : 'HUMAN';
+    if (p2TypeEl) p2TypeEl.textContent = state.p2IsCPU ? dict.cpuLabel : dict.humanLabel;
 
     const p2DiffDisplay = document.getElementById('p2-diff-display');
     if (p2DiffDisplay) {
       if (!state.p2IsCPU) {
-        p2DiffDisplay.textContent = 'N/A';
+        p2DiffDisplay.textContent = dict.naLabel;
       } else {
-        p2DiffDisplay.textContent = DIFF_LABELS[state.p2Difficulty] || 'All-rounder';
+        p2DiffDisplay.textContent = dict.diffLabels[state.p2Difficulty] || dict.diffLabels.balanced;
       }
       setDiffBadgeClasses(p2DiffDisplay, state.p2Difficulty, state.p2IsCPU);
     }
 
-    const p1Card = document.getElementById('p1-card');
-    const p2Card = document.getElementById('p2-card');
     const headerText = document.getElementById('select-step-title') || document.getElementById('vs-header-text');
 
     const confirmBtns = document.querySelectorAll('#confirm-btn, #confirm-p1-btn, #confirm-p2-btn, .btn-confirm, .confirm-btn');
     const startBtn = document.getElementById('start-game-btn') || document.querySelector('.btn-start');
     const backBtn = document.getElementById('back-btn') || document.querySelector('.btn-back');
+
+    if (backBtn) backBtn.textContent = dict.backBtn;
+    if (startBtn) startBtn.textContent = dict.startGameBtn;
 
     const p1LeftBtn = document.getElementById('p1-left-btn');
     const p1RightBtn = document.getElementById('p1-right-btn');
@@ -2553,7 +3120,7 @@
     const p2RightBtn = document.getElementById('p2-right-btn');
 
     if (currentStep === 1) {
-      if (headerText) headerText.textContent = 'STEP 1: SELECT PLAYER 1 RIDER';
+      if (headerText) headerText.textContent = dict.step1Header;
       setCardSlotClasses(p1Card, true);
       setCardSlotClasses(p2Card, false);
 
@@ -2565,7 +3132,7 @@
       confirmBtns.forEach(btn => {
         btn.hidden = false;
         btn.style.display = '';
-        btn.textContent = 'CONFIRM P1';
+        btn.textContent = dict.confirmP1Btn;
         btn.disabled = false;
       });
 
@@ -2576,7 +3143,7 @@
       if (backBtn) backBtn.disabled = true;
 
     } else if (currentStep === 2) {
-      if (headerText) headerText.textContent = 'STEP 2: SELECT PLAYER 2 RIDER';
+      if (headerText) headerText.textContent = dict.step2Header;
       setCardSlotClasses(p1Card, false);
       setCardSlotClasses(p2Card, true);
 
@@ -2588,7 +3155,7 @@
       confirmBtns.forEach(btn => {
         btn.hidden = false;
         btn.style.display = '';
-        btn.textContent = 'CONFIRM P2';
+        btn.textContent = dict.confirmP2Btn;
         btn.disabled = false;
       });
 
@@ -2599,7 +3166,7 @@
       if (backBtn) backBtn.disabled = false;
 
     } else if (currentStep === 3) {
-      if (headerText) headerText.textContent = 'READY FOR BATTLE!';
+      if (headerText) headerText.textContent = dict.step3Header;
       setCardSlotClasses(p1Card, true);
       setCardSlotClasses(p2Card, true);
 
@@ -2653,7 +3220,8 @@
       p1Difficulty: state.p1IsCPU ? state.p1Difficulty : 'balanced',
       p2Rider: riders[state.p2Index] || riders[0],
       p2IsCPU: state.p2IsCPU,
-      p2Difficulty: state.p2IsCPU ? state.p2Difficulty : 'balanced'
+      p2Difficulty: state.p2IsCPU ? state.p2Difficulty : 'balanced',
+      lang: window.gameLang
     };
 
     if (typeof window.startBattle === 'function') {
@@ -2680,10 +3248,7 @@
 
   // DOM initialization and roster fetching
   document.addEventListener('DOMContentLoaded', async () => {
-    const selectScreen = document.getElementById('vs-select-screen');
-    const battleScreen = document.getElementById('battle-screen');
-    if (selectScreen) selectScreen.hidden = false;
-    if (battleScreen) battleScreen.hidden = true;
+    protectStartPromptButtons();
 
     ensureCreditsUI();
     ensureHowToPlayUI();
