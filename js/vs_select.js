@@ -139,6 +139,158 @@
   `;
 
   /*
+   * Complete Tabulated Movelist Database for all 6 Riders
+   */
+  const RIDER_MOVELISTS = {
+    ichigo: {
+      name: 'Kamen Rider Ichigo',
+      basic: [
+        { name: 'Standard Punch', cmd: 'D+J', chi: 0, dmg: 52, remarks: 'Gain 2 CHI if hit' },
+        { name: 'Standard Kick', cmd: 'D+K', chi: 0, dmg: 52, remarks: 'Gain 2 CHI if hit' },
+        { name: 'Punch Combo', cmd: 'D+L', chi: 1, dmg: 90, remarks: 'Gain 3 CHI if hit' },
+        { name: 'Kick Combo', cmd: 'D+I', chi: 1, dmg: 87, remarks: 'Gain 3 CHI if hit' }
+      ],
+      special: [
+        { name: 'Rider Power Chop', cmd: 'S+J', chi: 3, dmg: 400, remarks: '' },
+        { name: 'Rider Head Crusher', cmd: 'S+K', chi: 4, dmg: 480, remarks: '' },
+        { name: 'Rider Kick', cmd: 'S+L', chi: 6, dmg: 860, remarks: '' },
+        { name: 'Kirimomi Kick', cmd: 'S+I', chi: 9, dmg: 1100, remarks: '' }
+      ],
+      utilities: [
+        { name: 'Rider High Jump', cmd: 'W+I', chi: 0, effect: 'Buff attack and evasion', remarks: 'Last 3 rounds' },
+        { name: 'Typhoon Charge', cmd: 'W+J', chi: 1, effect: 'Buff charge speed', remarks: 'Last 3 rounds' },
+        { name: 'Typhoon Focus', cmd: 'W+K', chi: 1, effect: 'Buff special attack', remarks: 'Last 3 rounds' },
+        { name: 'Typhoon Bless', cmd: 'W+L', chi: 1, effect: 'Decrease faint', remarks: '' }
+      ],
+      defense: [
+        { name: 'Windmill Guard', cmd: 'A+I', chi: 4, effect: 'Defense against all attacks', remarks: '' },
+        { name: 'Standard Guard', cmd: 'A+J, A+K, A+L', chi: 0, effect: 'Defense against J, K & L attacks respectively', remarks: '' }
+      ]
+    },
+    nigo: {
+      name: 'Kamen Rider Nigo',
+      basic: [
+        { name: 'Standard Punch', cmd: 'D+J', chi: 0, dmg: 75, remarks: 'Gain 2 CHI if hit' },
+        { name: 'Standing Kick', cmd: 'D+K', chi: 0, dmg: 80, remarks: 'Gain 2 CHI if hit' },
+        { name: 'Punches', cmd: 'D+L', chi: 1, dmg: 140, remarks: 'Gain 3 CHI if hit' },
+        { name: 'Mixed Combo', cmd: 'D+I', chi: 1, dmg: 130, remarks: 'Gain 3 CHI if hit' }
+      ],
+      special: [
+        { name: 'Rider Punch', cmd: 'S+J', chi: 3, dmg: 370, remarks: '' },
+        { name: 'Rider Flying Knee', cmd: 'S+K', chi: 5, dmg: 480, remarks: '' },
+        { name: 'Rider Power Kick', cmd: 'S+L', chi: 7, dmg: 860, remarks: '' },
+        { name: 'Typhoon Power Break', cmd: 'S+I', chi: 10, dmg: 1065, remarks: '' }
+      ],
+      utilities: [
+        { name: 'Rider Power Jump', cmd: 'W+I', chi: 0, effect: 'Buff attack and accuracy', remarks: 'Last 3 rounds' },
+        { name: 'Typhoon Red Shutter', cmd: 'W+J', chi: 0, effect: 'Buff charge speed and armor', remarks: 'Last 2 rounds' },
+        { name: 'Power Focus', cmd: 'W+K', chi: 1, effect: 'Buff basic attack', remarks: 'Last 2 rounds' },
+        { name: 'Battle Cry', cmd: 'W+L', chi: 2, effect: 'Decrease faint', remarks: '' }
+      ],
+      defense: [
+        { name: 'Windmill Guard', cmd: 'A+I', chi: 4, effect: 'Defense against all attacks', remarks: '' },
+        { name: 'Standard Guard', cmd: 'A+J, A+K, A+L', chi: 0, effect: 'Defense against J, K & L attacks respectively', remarks: '' }
+      ]
+    },
+    v3: {
+      name: 'Kamen Rider V3',
+      basic: [
+        { name: 'Chop', cmd: 'D+J', chi: 0, dmg: 60, remarks: 'Gain 2 CHI if hit' },
+        { name: 'High Kick', cmd: 'D+K', chi: 0, dmg: 63, remarks: 'Gain 2 CHI if hit' },
+        { name: 'Chop Combo', cmd: 'D+L', chi: 1, dmg: 116, remarks: 'Gain 3 CHI if hit' },
+        { name: 'Mixed Hits', cmd: 'D+I', chi: 1, dmg: 106, remarks: 'Gain 3 CHI if hit' }
+      ],
+      special: [
+        { name: 'V3 Kick', cmd: 'S+J', chi: 4, dmg: 430, remarks: '' },
+        { name: 'V3 Return Kick', cmd: 'S+K', chi: 5, dmg: 560, remarks: '' },
+        { name: 'V3 Screw Kick', cmd: 'S+L', chi: 8, dmg: 940, remarks: '' },
+        { name: 'V3 Triple Kick', cmd: 'S+I', chi: 11, dmg: 1160, remarks: '' }
+      ],
+      utilities: [
+        { name: 'Leap', cmd: 'W+I', chi: 0, effect: 'Buff basic attack and evasion', remarks: 'Last 3 rounds' },
+        { name: 'Accelerator', cmd: 'W+J', chi: 0, effect: 'Buff charging speed', remarks: 'Last 3 rounds' },
+        { name: 'Red Lamp Focus', cmd: 'W+K', chi: 1, effect: 'Buff attack', remarks: 'Last 3 rounds' },
+        { name: 'Double Typhoon Blow', cmd: 'W+L', chi: 2, effect: 'Deal damage and build faint', remarks: 'Long reach' }
+      ],
+      defense: [
+        { name: 'Standard Guard', cmd: 'A+I, A+J, A+K, A+L', chi: 0, effect: 'Defense against I, J, K & L attacks respectively', remarks: '' }
+      ]
+    },
+    riderman: {
+      name: 'Riderman',
+      basic: [
+        { name: 'Standard Punch', cmd: 'D+J', chi: 0, dmg: 55, remarks: 'Gain 2 CHI if hit' },
+        { name: 'Standard Kick', cmd: 'D+K', chi: 0, dmg: 58, remarks: 'Gain 2 CHI if hit' },
+        { name: 'Cassette Combo', cmd: 'D+L', chi: 1, dmg: 125, remarks: 'Gain 3 CHI if hit' },
+        { name: 'Rope Arm Hook', cmd: 'D+I', chi: 1, dmg: 130, remarks: 'Gain 3 CHI if hit, Long reach' }
+      ],
+      special: [
+        { name: 'Riderman Kick', cmd: 'S+J', chi: 4, dmg: 420, remarks: '' },
+        { name: 'Drill Arm Break', cmd: 'S+K', chi: 6, dmg: 608, remarks: 'Long reach' },
+        { name: 'Power Arm Strike', cmd: 'S+L', chi: 7, dmg: 688, remarks: 'Long reach' },
+        { name: 'Hook Finisher', cmd: 'S+I', chi: 10, dmg: 999, remarks: 'Long reach' }
+      ],
+      utilities: [
+        { name: 'High Leap', cmd: 'W+I', chi: 1, effect: 'Buff evasion', remarks: 'Last 3 rounds' },
+        { name: 'Target Lock', cmd: 'W+J', chi: 1, effect: 'Buff accuracy', remarks: 'Last 3 rounds' },
+        { name: 'Battle Cry', cmd: 'W+K', chi: 0, effect: 'Decrease faint', remarks: '' },
+        { name: 'Rope Arm Tie-Up', cmd: 'W+L', chi: 2, effect: 'Slows opponent charge speed for 3 rounds', remarks: 'Deals damage' }
+      ],
+      defense: [
+        { name: 'Standard Guard', cmd: 'A+I, A+J, A+K, A+L', chi: 0, effect: 'Defense against I, J, K & L attacks respectively', remarks: '' }
+      ]
+    },
+    x: {
+      name: 'Kamen Rider X',
+      basic: [
+        { name: 'Standard Punch', cmd: 'D+J', chi: 0, dmg: 60, remarks: 'Gain 2 CHI if hit' },
+        { name: 'Standard Kick', cmd: 'D+K', chi: 0, dmg: 70, remarks: 'Gain 2 CHI if hit' },
+        { name: 'Ridol Rod Strike', cmd: 'D+L', chi: 1, dmg: 122, remarks: 'Gain 3 CHI if hit' },
+        { name: 'Ridol Whip Lash', cmd: 'D+I', chi: 1, dmg: 100, remarks: 'Gain 3 CHI if hit' }
+      ],
+      special: [
+        { name: 'Rider Kick', cmd: 'S+J', chi: 4, dmg: 440, remarks: '' },
+        { name: 'X-Kick', cmd: 'S+K', chi: 6, dmg: 700, remarks: '' },
+        { name: 'Ridol Crown Split', cmd: 'S+L', chi: 7, dmg: 740, remarks: 'Long reach, build faint' },
+        { name: 'Vacuum Hell Wheel', cmd: 'S+I', chi: 10, dmg: 1111, remarks: '' }
+      ],
+      utilities: [
+        { name: 'Jump', cmd: 'W+I', chi: 0, effect: 'Buff basic attack and evasion', remarks: 'Last 3 rounds' },
+        { name: 'Mercury Overdrive', cmd: 'W+J', chi: 0, effect: 'Buff attack', remarks: 'Last 2 rounds' },
+        { name: 'Mercury Fortification', cmd: 'W+K', chi: 1, effect: 'Buff armor', remarks: 'Last 3 rounds' },
+        { name: 'Kaizorg Vitality', cmd: 'W+L', chi: 2, effect: 'Recover LP and decrease faint', remarks: '' }
+      ],
+      defense: [
+        { name: 'Standard Guard', cmd: 'A+I, A+J, A+K, A+L', chi: 0, effect: 'Defense against I, J, K & L attacks respectively', remarks: '' }
+      ]
+    },
+    amazon: {
+      name: 'Kamen Rider Amazon',
+      basic: [
+        { name: 'Mystic Kick', cmd: 'D+J', chi: 0, dmg: 77, remarks: 'Gain 2 CHI if hit' },
+        { name: 'Claw Attack', cmd: 'D+K', chi: 1, dmg: 130, remarks: 'Gain 3 CHI if hit' },
+        { name: 'Claw Combo', cmd: 'D+L', chi: 1, dmg: 142, remarks: 'Gain 3 CHI if hit' },
+        { name: 'Standard Kick', cmd: 'D+I', chi: 0, dmg: 74, remarks: 'Gain 2 CHI if hit' }
+      ],
+      special: [
+        { name: 'Amazon Kick', cmd: 'S+J', chi: 4, dmg: 420, remarks: '' },
+        { name: 'Jaguar Shock', cmd: 'S+K', chi: 5, dmg: 450, remarks: 'Inflict Bleed for 3 rounds' },
+        { name: 'Wild Tackle', cmd: 'S+L', chi: 7, dmg: 880, remarks: '' },
+        { name: 'Daisetsudan', cmd: 'S+I', chi: 9, dmg: 1020, remarks: '' }
+      ],
+      utilities: [
+        { name: 'Wild Leap', cmd: 'W+I', chi: 2, effect: 'Buff attack and evasion', remarks: 'Last 4 rounds' },
+        { name: 'Inca Blessing', cmd: 'W+J', chi: 2, effect: 'Regenerate LP', remarks: 'Last 3 rounds, stops if took damage' },
+        { name: 'Gigi Focus', cmd: 'W+K', chi: 0, effect: 'Buff evasion', remarks: 'Last 3 rounds' },
+        { name: 'Wild Instinct', cmd: 'W+L', chi: 1, effect: 'Decrease faint', remarks: '' }
+      ],
+      defense: [
+        { name: 'Standard Guard', cmd: 'A+I, A+J, A+K, A+L', chi: 0, effect: 'Defense against I, J, K & L attacks respectively', remarks: '' }
+      ]
+    }
+  };
+
+  /*
    * All 6 Riders (6x6 = 36 Matrix) enabled for RIDER difficulty.
    */
   const RIDER_READY_IDS = new Set([
@@ -457,10 +609,34 @@
         font-family: var(--kf-font-display);
       }
 
-      .kf-stat-chip.ai-ready {
-        background: rgba(187, 100, 255, 0.14);
-        border-color: rgba(224, 166, 255, 0.45);
+      /* Interactive Movelist Button replacing RIDER AI badge */
+      .kf-movelist-btn {
+        cursor: pointer;
+        font-family: var(--kf-font-display);
+        font-size: 0.66rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        padding: 3px 10px;
+        background: linear-gradient(135deg, rgba(187, 100, 255, 0.24) 0%, rgba(0, 240, 255, 0.2) 100%);
+        border: 1px solid rgba(224, 166, 255, 0.65);
         color: #f3d5ff;
+        box-shadow: 0 0 10px rgba(187, 100, 255, 0.28);
+        transition: all 0.16s ease;
+        pointer-events: auto !important;
+      }
+
+      .kf-movelist-btn:hover,
+      .kf-movelist-btn:focus-visible {
+        background: linear-gradient(135deg, #00f0ff 0%, #bb64ff 100%);
+        border-color: #ffffff;
+        color: #060911;
+        box-shadow: 0 0 16px rgba(0, 240, 255, 0.65);
+        transform: translateY(-1px) scale(1.04);
+        outline: none;
+      }
+
+      .kf-movelist-btn:active {
+        transform: translateY(0) scale(0.99);
       }
 
       /* --- Cycle Arrow Buttons & Control Type Selector --- */
@@ -846,7 +1022,7 @@
         outline: none;
       }
 
-/* --- Hide Volume Bar --- */
+      /* --- Hide Volume Bar --- */
       #volume-control,
       #bgm-volume-control,
       #volume-slider,
@@ -918,6 +1094,7 @@
       /* --- Upper Layer Modal Shared Styles --- */
       #kf-credits-modal,
       #kf-howto-modal,
+      #kf-movelist-modal,
       .kf-credits-modal-backdrop {
         position: fixed !important;
         inset: 0 !important;
@@ -934,6 +1111,7 @@
 
       #kf-credits-modal[hidden],
       #kf-howto-modal[hidden],
+      #kf-movelist-modal[hidden],
       .kf-credits-modal-backdrop[hidden] {
         display: none !important;
       }
@@ -949,6 +1127,7 @@
         flex-direction: column;
         overflow: hidden;
         color: #f4f6fb;
+        position: relative;
       }
 
       .kf-howto-modal-card {
@@ -956,13 +1135,266 @@
         box-shadow: 0 16px 48px rgba(0, 0, 0, 0.9), 0 0 24px rgba(0, 240, 255, 0.2);
       }
 
+      /* --- Movelist Modal Specific Styles --- */
+      .kf-movelist-modal-card {
+        width: min(920px, 96vw);
+        max-height: 88vh;
+        border-color: rgba(0, 240, 255, 0.75);
+        box-shadow: 0 16px 52px rgba(0, 0, 0, 0.92), 0 0 28px rgba(0, 240, 255, 0.25);
+      }
+
+      .kf-movelist-watermark {
+        position: absolute;
+        right: -24px;
+        bottom: 40px;
+        width: clamp(220px, 36vw, 340px);
+        height: clamp(220px, 36vw, 340px);
+        object-fit: cover;
+        border-radius: 50%;
+        opacity: 0.07;
+        filter: saturate(1.2) contrast(1.1);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .kf-movelist-top-switcher {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 10px 16px;
+        background: rgba(8, 12, 22, 0.9);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        z-index: 2;
+      }
+
+      .kf-movelist-tab-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 11px;
+        border-radius: 999px;
+        font-family: var(--kf-font-display);
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #cbd5e1;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .kf-movelist-tab-btn img {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .kf-movelist-tab-btn:hover {
+        border-color: rgba(0, 240, 255, 0.6);
+        color: #ffffff;
+        background: rgba(0, 240, 255, 0.14);
+      }
+
+      .kf-movelist-tab-btn.is-active {
+        background: linear-gradient(90deg, #00f0ff, #5cfbff);
+        color: #050811;
+        border-color: #ffffff;
+        font-weight: 900;
+        box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+      }
+
+      .kf-movelist-header-banner {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        width: 100%;
+        padding-bottom: 12px;
+        margin-bottom: 14px;
+        border-bottom: 1px solid rgba(0, 240, 255, 0.28);
+        z-index: 1;
+      }
+
+      .kf-movelist-avatar {
+        width: 58px;
+        height: 58px;
+        border-radius: 12px;
+        object-fit: cover;
+        border: 2px solid var(--kf-p1-accent);
+        box-shadow: 0 0 14px rgba(0, 240, 255, 0.35);
+        background: #090d16;
+        flex-shrink: 0;
+      }
+
+      .kf-movelist-title-group {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 3px;
+      }
+
+      .kf-movelist-rider-title {
+        margin: 0;
+        font-family: var(--kf-font-display);
+        font-size: clamp(1.05rem, 2.3vw, 1.38rem);
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #ffffff;
+        text-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+      }
+
+      .kf-movelist-subtitle {
+        font-family: var(--kf-font-display);
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        color: #ffd166;
+        text-transform: uppercase;
+      }
+
+      .kf-movelist-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        width: 100%;
+        z-index: 1;
+      }
+
+      @media (max-width: 760px) {
+        .kf-movelist-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .kf-movelist-cat-card {
+        background: rgba(10, 15, 26, 0.82);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 10px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .kf-movelist-cat-header {
+        padding: 7px 12px;
+        font-family: var(--kf-font-display);
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .kf-cat-basic .kf-movelist-cat-header {
+        background: linear-gradient(90deg, rgba(0, 240, 255, 0.2), transparent);
+        color: #6ee7ff;
+        border-left: 3px solid #00f0ff;
+      }
+
+      .kf-cat-special .kf-movelist-cat-header {
+        background: linear-gradient(90deg, rgba(255, 42, 109, 0.22), transparent);
+        color: #ff8da8;
+        border-left: 3px solid #ff2a6d;
+      }
+
+      .kf-cat-utility .kf-movelist-cat-header {
+        background: linear-gradient(90deg, rgba(120, 255, 156, 0.2), transparent);
+        color: #78ff9c;
+        border-left: 3px solid #78ff9c;
+      }
+
+      .kf-cat-defense .kf-movelist-cat-header {
+        background: linear-gradient(90deg, rgba(224, 166, 255, 0.22), transparent);
+        color: #e0a6ff;
+        border-left: 3px solid #bb64ff;
+      }
+
+      .kf-movelist-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.76rem;
+        text-align: left;
+      }
+
+      .kf-movelist-table th,
+      .kf-movelist-table td {
+        padding: 6px 9px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        vertical-align: middle;
+      }
+
+      .kf-movelist-table th {
+        font-family: var(--kf-font-display);
+        font-size: 0.64rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.52);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .kf-movelist-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .kf-move-name {
+        font-weight: 700;
+        color: #f8fafc;
+      }
+
+      .kf-cmd-badge {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 5px;
+        font-family: var(--kf-font-display);
+        font-size: 0.66rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        background: rgba(0, 240, 255, 0.14);
+        border: 1px solid rgba(0, 240, 255, 0.4);
+        color: #7df9ff;
+        white-space: nowrap;
+      }
+
+      .kf-chi-val {
+        font-family: var(--kf-font-display);
+        font-weight: 700;
+        color: #ffd166;
+        text-align: center;
+      }
+
+      .kf-dmg-val {
+        font-family: var(--kf-font-display);
+        font-weight: 800;
+        color: #ff6b8b;
+      }
+
+      .kf-effect-val {
+        color: #a7f3d0;
+        font-weight: 600;
+      }
+
+      .kf-remarks-val {
+        color: #94a3b8;
+        font-size: 0.71rem;
+      }
+
       .kf-credits-modal-body {
-        padding: 22px 26px;
+        padding: 20px 24px;
         overflow-y: auto;
         flex: 1 1 auto;
         display: flex;
         flex-direction: column;
         align-items: center;
+        z-index: 1;
       }
 
       .kf-credits-qr-wrap {
@@ -1100,6 +1532,7 @@
         display: flex;
         justify-content: center;
         background: rgba(8, 11, 19, 0.92);
+        z-index: 2;
       }
 
       .kf-credits-ok-btn {
@@ -1136,6 +1569,267 @@
 
   installRiderBadgeStyles();
 
+  /** Renders the HTML content for a specific Rider's movelist inside #kf-movelist-modal. */
+  function renderMovelistModalContent(riderId) {
+    const riders = window.AVAILABLE_RIDERS || [];
+    const normalizedId = String(riderId || 'ichigo').toLowerCase();
+    const riderObj = riders.find(r => r.id === normalizedId) || riders[0] || {
+      id: normalizedId,
+      name: RIDER_MOVELISTS[normalizedId]?.name || 'Kamen Rider',
+      icon: `assets/images/icons/${normalizedId}.png`,
+      maxLp: 3000
+    };
+    const moveData = RIDER_MOVELISTS[normalizedId] || RIDER_MOVELISTS.ichigo;
+
+    const switcherEl = document.getElementById('kf-movelist-switcher');
+    if (switcherEl) {
+      switcherEl.innerHTML = riders.map(r => {
+        const shortName = String(r.name || r.id).replace(/^Kamen Rider\s+/i, '');
+        const activeClass = r.id === normalizedId ? ' is-active' : '';
+        return `
+          <button type="button" class="kf-movelist-tab-btn${activeClass}" data-rider-id="${r.id}">
+            <img src="${r.icon}" alt="${shortName}">
+            <span>${shortName}</span>
+          </button>
+        `;
+      }).join('');
+
+      switcherEl.querySelectorAll('.kf-movelist-tab-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+          renderMovelistModalContent(this.getAttribute('data-rider-id'));
+        });
+      });
+    }
+
+    const watermarkEl = document.getElementById('kf-movelist-watermark');
+    if (watermarkEl) {
+      watermarkEl.src = riderObj.icon;
+      watermarkEl.alt = '';
+    }
+
+    const bodyEl = document.getElementById('kf-movelist-body');
+    if (!bodyEl) return;
+
+    const renderAttackRows = (rows) => rows.map(row => `
+      <tr>
+        <td class="kf-move-name">${row.name}</td>
+        <td><span class="kf-cmd-badge">${row.cmd}</span></td>
+        <td class="kf-chi-val">${row.chi}</td>
+        <td class="kf-dmg-val">${row.dmg}</td>
+        <td class="kf-remarks-val">${row.remarks || '—'}</td>
+      </tr>
+    `).join('');
+
+    const renderEffectRows = (rows) => rows.map(row => `
+      <tr>
+        <td class="kf-move-name">${row.name}</td>
+        <td><span class="kf-cmd-badge">${row.cmd}</span></td>
+        <td class="kf-chi-val">${row.chi}</td>
+        <td class="kf-effect-val">${row.effect}</td>
+        <td class="kf-remarks-val">${row.remarks || '—'}</td>
+      </tr>
+    `).join('');
+
+    bodyEl.innerHTML = `
+      <div class="kf-movelist-header-banner">
+        <img class="kf-movelist-avatar" src="${riderObj.icon}" alt="${moveData.name}">
+        <div class="kf-movelist-title-group">
+          <h2 class="kf-movelist-rider-title">${moveData.name}</h2>
+          <span class="kf-movelist-subtitle">MAX LP: ${riderObj.maxLp || 3000} &bull; COMMAND &amp; COMBAT DATA SHEET</span>
+        </div>
+      </div>
+
+      <div class="kf-movelist-grid">
+        <!-- Basic Attack -->
+        <div class="kf-movelist-cat-card kf-cat-basic">
+          <div class="kf-movelist-cat-header">
+            <span>Basic Attack (D-Stance)</span>
+            <span>Physical Strikes</span>
+          </div>
+          <table class="kf-movelist-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Command</th>
+                <th>CHI</th>
+                <th>Damage</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${renderAttackRows(moveData.basic)}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Special Attack -->
+        <div class="kf-movelist-cat-card kf-cat-special">
+          <div class="kf-movelist-cat-header">
+            <span>Special Attack (S-Stance)</span>
+            <span>Signature Finishers</span>
+          </div>
+          <table class="kf-movelist-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Command</th>
+                <th>CHI</th>
+                <th>Damage</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${renderAttackRows(moveData.special)}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Utilities -->
+        <div class="kf-movelist-cat-card kf-cat-utility">
+          <div class="kf-movelist-cat-header">
+            <span>Utilities (W-Stance)</span>
+            <span>Buffs &amp; Tech</span>
+          </div>
+          <table class="kf-movelist-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Command</th>
+                <th>CHI</th>
+                <th>Effect</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${renderEffectRows(moveData.utilities)}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Defense -->
+        <div class="kf-movelist-cat-card kf-cat-defense">
+          <div class="kf-movelist-cat-header">
+            <span>Defense (A-Stance)</span>
+            <span>Guard &amp; Counter</span>
+          </div>
+          <table class="kf-movelist-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Command</th>
+                <th>CHI</th>
+                <th>Effect</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${renderEffectRows(moveData.defense)}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  /** Ensures the Movelist modal container exists inside #vs-select-screen. */
+  function ensureMovelistUI() {
+    const selectScreen = document.getElementById('vs-select-screen');
+    if (!selectScreen) return;
+
+    let modal = document.getElementById('kf-movelist-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'kf-movelist-modal';
+      modal.className = 'kf-credits-modal-backdrop';
+      modal.hidden = true;
+      modal.style.display = 'none';
+      modal.setAttribute('role', 'dialog');
+      modal.setAttribute('aria-modal', 'true');
+      modal.setAttribute('aria-label', 'Rider Movelist');
+
+      const card = document.createElement('div');
+      card.className = 'kf-credits-modal-card kf-movelist-modal-card';
+
+      const watermark = document.createElement('img');
+      watermark.id = 'kf-movelist-watermark';
+      watermark.className = 'kf-movelist-watermark';
+      watermark.alt = '';
+
+      const switcher = document.createElement('div');
+      switcher.id = 'kf-movelist-switcher';
+      switcher.className = 'kf-movelist-top-switcher';
+
+      const body = document.createElement('div');
+      body.id = 'kf-movelist-body';
+      body.className = 'kf-credits-modal-body';
+
+      const footer = document.createElement('div');
+      footer.className = 'kf-credits-modal-footer';
+
+      const closeBtn = document.createElement('button');
+      closeBtn.id = 'kf-movelist-close-btn';
+      closeBtn.type = 'button';
+      closeBtn.className = 'kf-credits-ok-btn';
+      closeBtn.textContent = 'CLOSE';
+      closeBtn.addEventListener('click', window.closeMovelistModal);
+
+      footer.appendChild(closeBtn);
+      card.appendChild(watermark);
+      card.appendChild(switcher);
+      card.appendChild(body);
+      card.appendChild(footer);
+      modal.appendChild(card);
+
+      modal.addEventListener('click', function (event) {
+        if (event.target === modal) {
+          window.closeMovelistModal(event);
+        }
+      });
+
+      selectScreen.appendChild(modal);
+    }
+  }
+
+  /** Opens the Movelist modal for the specified Rider ID. */
+  window.openMovelistModal = function (riderId, e) {
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
+
+    if (typeof window.closeCreditsModal === 'function') {
+      window.closeCreditsModal();
+    }
+    if (typeof window.closeHowToPlayModal === 'function') {
+      window.closeHowToPlayModal();
+    }
+
+    ensureMovelistUI();
+    renderMovelistModalContent(riderId || 'ichigo');
+
+    const modal = document.getElementById('kf-movelist-modal');
+    if (!modal) return;
+
+    modal.hidden = false;
+    modal.style.display = 'flex';
+
+    const body = document.getElementById('kf-movelist-body');
+    if (body) body.scrollTop = 0;
+
+    const closeBtn = document.getElementById('kf-movelist-close-btn');
+    if (closeBtn) closeBtn.focus();
+  };
+
+  /** Closes the Movelist modal. */
+  window.closeMovelistModal = function (e) {
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
+
+    const modal = document.getElementById('kf-movelist-modal');
+    if (!modal) return;
+
+    modal.hidden = true;
+    modal.style.display = 'none';
+  };
+
   /** Opens the upper-layer Credits modal on the VS Selection screen. */
   window.openCreditsModal = function (e) {
     if (e && e.preventDefault) e.preventDefault();
@@ -1143,6 +1837,9 @@
 
     if (typeof window.closeHowToPlayModal === 'function') {
       window.closeHowToPlayModal();
+    }
+    if (typeof window.closeMovelistModal === 'function') {
+      window.closeMovelistModal();
     }
 
     ensureCreditsUI();
@@ -1179,6 +1876,9 @@
 
     if (typeof window.closeCreditsModal === 'function') {
       window.closeCreditsModal();
+    }
+    if (typeof window.closeMovelistModal === 'function') {
+      window.closeMovelistModal();
     }
 
     ensureHowToPlayUI();
@@ -1303,8 +2003,8 @@
     }
   }
 
-  /** Ensures the How To Play link (below BGM slider) and upper-layer modal exist inside #vs-select-screen. */
-function ensureHowToPlayUI() {
+  /** Ensures the How To Play link and upper-layer modal exist inside #vs-select-screen. */
+  function ensureHowToPlayUI() {
     const selectScreen = document.getElementById('vs-select-screen');
     if (!selectScreen) return;
 
@@ -1407,7 +2107,7 @@ function ensureHowToPlayUI() {
     });
   }
 
-  /** Injects or updates the LP & AI Matrix Ready stat strip below each Rider's name. */
+  /** Injects or updates the LP & interactive MOVELIST button strip below each Rider's name. */
   function updateRiderStatStrip(playerKey, rider) {
     const nameEl = document.getElementById(playerKey + '-name-display');
     if (!nameEl || !rider) return;
@@ -1421,12 +2121,18 @@ function ensureHowToPlayUI() {
     }
 
     const lp = rider.maxLp || 3000;
-    const hasRiderAI = riderLevelAvailable(rider);
 
     strip.innerHTML = `
       <span class="kf-stat-chip">LP <strong>${lp}</strong></span>
-      ${hasRiderAI ? '<span class="kf-stat-chip ai-ready">★ RIDER AI</span>' : ''}
+      <button type="button" class="kf-stat-chip kf-movelist-btn" data-rider-id="${rider.id}">📋 MOVELIST</button>
     `;
+
+    const movelistBtn = strip.querySelector('.kf-movelist-btn');
+    if (movelistBtn) {
+      movelistBtn.addEventListener('click', function (e) {
+        window.openMovelistModal(rider.id, e);
+      });
+    }
   }
 
   /** Renders and updates the bottom Quick-Select Roster Dock. */
@@ -1501,7 +2207,7 @@ function ensureHowToPlayUI() {
     });
   }
 
-  // Close Credits or How To Play modal on Escape or Enter key
+  // Close Credits, How To Play, or Movelist modal on Escape or Enter key
   document.addEventListener('keydown', function (event) {
     if (event.key !== 'Escape' && event.key !== 'Enter') return;
 
@@ -1513,6 +2219,11 @@ function ensureHowToPlayUI() {
     const howtoModal = document.getElementById('kf-howto-modal');
     if (howtoModal && !howtoModal.hidden) {
       window.closeHowToPlayModal(event);
+    }
+
+    const movelistModal = document.getElementById('kf-movelist-modal');
+    if (movelistModal && !movelistModal.hidden) {
+      window.closeMovelistModal(event);
     }
   });
 
@@ -1759,6 +2470,7 @@ function ensureHowToPlayUI() {
   window.updateSelectionUI = function() {
     ensureCreditsUI();
     ensureHowToPlayUI();
+    ensureMovelistUI();
 
     const riders = window.AVAILABLE_RIDERS;
     const state = window.vsSelectionState;
@@ -1917,6 +2629,7 @@ function ensureHowToPlayUI() {
   window.validateAndStartMatch = function() {
     window.closeCreditsModal();
     window.closeHowToPlayModal();
+    window.closeMovelistModal();
 
     if (typeof window.unlockMobileVideos === 'function') {
       window.unlockMobileVideos();
@@ -1974,6 +2687,7 @@ function ensureHowToPlayUI() {
 
     ensureCreditsUI();
     ensureHowToPlayUI();
+    ensureMovelistUI();
 
     try {
       const res = await fetch('data/riders.json');
