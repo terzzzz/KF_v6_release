@@ -238,7 +238,6 @@
       "rangeType": "REACH",
       "chiCost": 2,
       "baseDamage": 52,
-      "baseFaintDamage": 28,
       "hitChance": 80,
       "video": "rope_tie.mp4",
       "debuff": {
