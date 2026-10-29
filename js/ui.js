@@ -1,88 +1,272 @@
 /* js/ui.js
- * Battle HUD and status presentation with English & Japanese (EN/JA) Bilingual UI support.
+ * Battle HUD and status presentation (Bilingual EN / JA).
  *
- * Patch: numeric-status-hud-2 + cyber-tokusatsu-jp-hud + glass-shatter-dmg-fx + bilingual-i18n
+ * Patch: numeric-status-hud-2 + cyber-tokusatsu-jp-hud + glass-shatter-dmg-fx + i18n-ja
  */
 (function (g) {
   "use strict";
 
-  /**
-   * Status & Buff Name Dictionary (English & Japanese)
-   */
-  const STATUS_NAMES = Object.freeze({
+  const I18N_UI = Object.freeze({
     en: {
-      typhoon_speed: "Typhoon Charge",
-      charge_speed: "Charge Speed",
-      focus: "Typhoon Focus",
-      v3_focus: "V3 Focus",
-      red_shutter: "Red Shutter",
-      power_focus: "Power Focus",
-      double_typhoon_speed: "Double Typhoon",
-      red_lamp_boost: "Red Lamp",
-      accuracy_focus: "Target Lock",
-      arm_calibration: "Arm Calibration",
-      rope_bind: "Rope Bind",
-      mercury_atk: "Mercury Attack",
-      mercury_def: "Mercury Defense",
-      airborne_evasion: "Airborne Evasion",
-      inca_blessing: "Inca Blessing",
-      gigi_focus: "Gigi Focus",
-      bleeding: "Bleeding",
-      lprecover: "LP Recovery",
-      lpRecovery: "LP Recovery",
-      airborne_boost: "Airborne Boost"
+      statusNames: {
+        typhoon_speed: "Typhoon Charge",
+        charge_speed: "Charge Speed",
+        focus: "Typhoon Focus",
+        v3_focus: "V3 Focus",
+        red_shutter: "Red Shutter",
+        power_focus: "Power Focus",
+        double_typhoon_speed: "Double Typhoon",
+        red_lamp_boost: "Red Lamp",
+        accuracy_focus: "Target Lock",
+        arm_calibration: "Arm Calibration",
+        rope_bind: "Rope Bind",
+        mercury_atk: "Mercury Attack",
+        mercury_def: "Mercury Defense",
+        airborne_evasion: "Airborne Evasion",
+        inca_blessing: "Inca Blessing",
+        gigi_focus: "Gigi Focus",
+        bleeding: "Bleeding",
+        lprecover: "LP Recovery",
+        lpRecovery: "LP Recovery",
+        airborne_boost: "Airborne Boost"
+      },
+      diffLabels: {
+        easy: "Rugrat",
+        balanced: "All-rounder",
+        master: "Geek",
+        soul: "Monomaniac",
+        rider: "Rider"
+      },
+      riderNames: {
+        ichigo: "Kamen Rider Ichigo",
+        nigo: "Kamen Rider Nigo",
+        v3: "Kamen Rider V3",
+        riderman: "Riderman",
+        x: "Kamen Rider X",
+        amazon: "Kamen Rider Amazon"
+      },
+      statLabels: {
+        attack: "ATK",
+        dAttack: "D-ATK",
+        sAttack: "S-ATK",
+        armor: "damage taken",
+        speed: "charge speed",
+        hit: "HIT",
+        evs: "EVS",
+        hitUnit: "pp",
+        evsUnit: "pp",
+        lpPerTurn: "LP/turn",
+        breaksOnDmg: "breaks on LP damage",
+        turnShort: "t",
+        durationDetail: (t) => `Engine duration remaining: ${t} turns.`,
+        periodicDue: "Eligible for this turn's periodic payment.",
+        periodicInitial: "No periodic payment on the initial application turn.",
+        periodicRule:
+          "Regeneration resolves before bleeding. Regeneration cannot revive a fighter at zero LP."
+      },
+      hud: {
+        lp: "LP",
+        chi: "CHI",
+        faint: "FAINT",
+        faintAria: "Faint buildup",
+        faintedOverlay: "FAINTED!",
+        ko: "KO",
+        faintedState: "FAINTED — forced recovery",
+        airborneState: (t) => `AIRBORNE · ${t}t`,
+        lowChiText: "LOW CHI · damage taken +25% · EVS -25pp",
+        lowChiTitle:
+          "Below 5 CHI: incoming LP damage is multiplied by 1.25, evasion is reduced by 25 percentage points, and faint buildup is increased.",
+        highChiText: "HIGH CHI · ATK +20% · HIT +20pp",
+        highChiTitle:
+          "Above 14 CHI: the attack resolver can apply +20% damage and +20 percentage points of accuracy. The attack's CHI cost is paid before these checks.",
+        p1PadLabel: "PLAYER 1 [W-A-S-D + I-J-K-L]",
+        p2PadLabel: "PLAYER 2 [ARROWS + 1-2-3-5]",
+        lockedFlag: "LOCKED!",
+        readyText: "READY",
+        tapToCharge: "TAP DIRECTION TO CHARGE"
+      }
     },
+
     ja: {
-      typhoon_speed: "タイフーンチャージ",
-      charge_speed: "チャージ速度",
-      focus: "タイフーン集中",
-      v3_focus: "V3集中",
-      red_shutter: "レッドシャッター",
-      power_focus: "パワー集中",
-      double_typhoon_speed: "ダブルタイフーン",
-      red_lamp_boost: "レッドランプ",
-      accuracy_focus: "ターゲットロック",
-      arm_calibration: "アーム調整",
-      rope_bind: "ロープ拘束",
-      mercury_atk: "マーキュリー攻撃",
-      mercury_def: "マーキュリー防御",
-      airborne_evasion: "空中回避",
-      inca_blessing: "インカの秘術",
-      gigi_focus: "ギギの腕輪",
-      bleeding: "出血",
-      lprecover: "LP回復",
-      lpRecovery: "LP回復",
-      airborne_boost: "空中強化"
+      statusNames: {
+        typhoon_speed: "タイフーンチャージ",
+        charge_speed: "チャージ加速",
+        focus: "タイフーン集中",
+        v3_focus: "V3集中",
+        red_shutter: "レッドシャッター",
+        power_focus: "パワー集中",
+        double_typhoon_speed: "ダブルタイフーン",
+        red_lamp_boost: "レッドランプ集中",
+        accuracy_focus: "ターゲットロック",
+        arm_calibration: "アーム照準調整",
+        rope_bind: "ロープアーム拘束",
+        mercury_atk: "マーキュリー・オーバードライブ",
+        mercury_def: "マーキュリー装甲強化",
+        airborne_evasion: "空中回避",
+        inca_blessing: "インカの秘術",
+        gigi_focus: "ギギの腕輪・集中",
+        bleeding: "出血",
+        lprecover: "LP回復",
+        lpRecovery: "LP回復",
+        airborne_boost: "空中強化"
+      },
+      diffLabels: {
+        easy: "ちびっこ",
+        balanced: "オールラウンダー",
+        master: "マニア",
+        soul: "特撮の鬼",
+        rider: "ライダー"
+      },
+      riderNames: {
+        ichigo: "仮面ライダー1号",
+        nigo: "仮面ライダー2号",
+        v3: "仮面ライダーV3",
+        riderman: "ライダーマン",
+        x: "仮面ライダーX",
+        amazon: "仮面ライダーアマゾン"
+      },
+      statLabels: {
+        attack: "攻撃力",
+        dAttack: "通常攻撃",
+        sAttack: "必殺技",
+        armor: "被ダメージ",
+        speed: "チャージ速度",
+        hit: "命中",
+        evs: "回避",
+        hitUnit: "%",
+        evsUnit: "%",
+        lpPerTurn: "LP/ターン",
+        breaksOnDmg: "被ダメージで解除",
+        turnShort: "T",
+        durationDetail: (t) => `残り持続ターン: ${t}ターン`,
+        periodicDue: "このターンに継続効果が発動します。",
+        periodicInitial: "付与された最初のターンは継続効果は発動しません。",
+        periodicRule:
+          "回復は出血ダメージより先に処理されます。LPが0のライダーは回復では復活しません。"
+      },
+      hud: {
+        lp: "LP",
+        chi: "氣",
+        faint: "気絶",
+        faintAria: "気絶ゲージ",
+        faintedOverlay: "気絶中！",
+        ko: "KO",
+        faintedState: "気絶中 ― 強制回復ターン",
+        airborneState: (t) => `空中状態 · ${t}T`,
+        lowChiText: "氣不足 · 被ダメージ +25% · 回避 -25%",
+        lowChiTitle:
+          "氣が5未満：受けるLPダメージが1.25倍になり、回避率が25%低下し、気絶値が溜まりやすくなります。",
+        highChiText: "氣充満 · 攻撃力 +20% · 命中 +20%",
+        highChiTitle:
+          "氣が14超：攻撃時にダメージ+20%・命中率+20%のボーナスが適用されます（技の氣コスト消費後に判定）。",
+        p1PadLabel: "プレイヤー 1 [W-A-S-D + I-J-K-L]",
+        p2PadLabel: "プレイヤー 2 [矢印キー + 1-2-3-5]",
+        lockedFlag: "確定！",
+        readyText: "準備完了",
+        tapToCharge: "方向キーでチャージ"
+      }
     }
   });
 
-  /**
-   * CPU Difficulty Labels (Matching vs_select.js)
-   */
-  const DIFF_LABELS = Object.freeze({
-    en: {
-      easy: "Rugrat",
-      balanced: "All-rounder",
-      master: "Geek",
-      soul: "Monomaniac",
-      rider: "Rider"
-    },
-    ja: {
-      easy: "ちびっこ",
-      balanced: "オールラウンダー",
-      master: "マニア",
-      soul: "特撮の鬼",
-      rider: "ライダー"
-    }
-  });
+  // English -> Japanese dictionary for Move Names & Rider Names in banners/popups
+  const EN_TO_JA_TERMS = Object.freeze([
+    // Full Rider Names
+    ["Kamen Rider Ichigo", "仮面ライダー1号"],
+    ["Kamen Rider Nigo", "仮面ライダー2号"],
+    ["Kamen Rider V3", "仮面ライダーV3"],
+    ["Kamen Rider X", "仮面ライダーX"],
+    ["Kamen Rider Amazon", "仮面ライダーアマゾン"],
+    ["Riderman", "ライダーマン"],
+
+    // Move Names (matched with vs_select.js RIDER_MOVELISTS)
+    ["Typhoon Power Break", "タイフーン・パワーブレイク"],
+    ["Typhoon Red Shutter", "タイフーン・レッドシャッター"],
+    ["Double Typhoon Blow", "ダブルタイフーン・ブロー"],
+    ["Mercury Fortification", "マーキュリー装甲強化"],
+    ["Mercury Overdrive", "マーキュリー・オーバードライブ"],
+    ["Rider Head Crusher", "ライダー頭突き"],
+    ["Rider Power Chop", "ライダーチョップ"],
+    ["Rider High Jump", "ライダー大ジャンプ"],
+    ["Rider Flying Knee", "ライダー飛び膝蹴り"],
+    ["Rider Power Kick", "ライダーパワーキック"],
+    ["Rider Power Jump", "ライダーパワージャンプ"],
+    ["Vacuum Hell Wheel", "真空地獄車"],
+    ["Ridol Crown Split", "ライドル脳天割り"],
+    ["Ridol Rod Strike", "ライドルスティック連撃"],
+    ["Ridol Whip Lash", "ライドルホイップ斬り"],
+    ["Power Arm Strike", "パワーアーム・ストライク"],
+    ["Drill Arm Break", "ドリルアーム・ブレイク"],
+    ["Hook Finisher", "スイングアーム・フィニッシャー"],
+    ["Rope Arm Tie-Up", "ロープアーム拘束"],
+    ["Rope Arm Hook", "ロープアーム・フック"],
+    ["Cassette Combo", "カセットアーム連撃"],
+    ["Kirimomi Kick", "ライダーきりもみキック"],
+    ["V3 Triple Kick", "V3トリプルキック"],
+    ["V3 Screw Kick", "V3きりもみキック"],
+    ["V3 Return Kick", "V3反転キック"],
+    ["Windmill Guard", "風車ガード"],
+    ["Standard Guard", "通常ガード"],
+    ["Standard Punch", "通常パンチ"],
+    ["Standard Kick", "通常キック"],
+    ["Standing Kick", "立ちキック"],
+    ["Red Lamp Focus", "レッドランプ集中"],
+    ["Typhoon Charge", "タイフーンチャージ"],
+    ["Typhoon Focus", "タイフーン集中"],
+    ["Typhoon Bless", "タイフーンの加護"],
+    ["Kaizorg Vitality", "カイゾーグ活性"],
+    ["Inca Blessing", "インカの秘術"],
+    ["Jaguar Shock", "ジャガーショック"],
+    ["Riderman Kick", "ライダーマンキック"],
+    ["Wild Instinct", "野生の本能"],
+    ["Wild Tackle", "ワイルドタックル"],
+    ["Amazon Kick", "アマゾンキック"],
+    ["Mystic Kick", "ミスティックキック"],
+    ["Claw Attack", "コンドルクローひっかき"],
+    ["Claw Combo", "ワイルドクロー連撃"],
+    ["Daisetsudan", "大切断"],
+    ["Mixed Combo", "コンビネーション攻撃"],
+    ["Mixed Hits", "連続コンビネーション"],
+    ["Punch Combo", "連続パンチ"],
+    ["Kick Combo", "連続キック"],
+    ["Chop Combo", "連続チョップ"],
+    ["Rider Punch", "ライダーパンチ"],
+    ["Rider Kick", "ライダーキック"],
+    ["Power Focus", "パワー集中"],
+    ["Accelerator", "アクセラレーター"],
+    ["Target Lock", "ターゲットロック"],
+    ["Gigi Focus", "ギギの腕輪・集中"],
+    ["Battle Cry", "気合の咆哮"],
+    ["Wild Leap", "野生の大跳躍"],
+    ["High Leap", "ハイジャンプ"],
+    ["High Kick", "ハイキック"],
+    ["V3 Kick", "V3キック"],
+    ["X-Kick", "Xキック"],
+    ["Punches", "連続パンチ"],
+    ["Chop", "V3チョップ"],
+    ["Leap", "V3大ジャンプ"],
+    ["Jump", "Xジャンプ"]
+  ]);
 
   const renderedTags = new WeakMap();
 
   const byId = id => document.getElementById(id);
 
-  /** Helper to determine current active game language ('en' or 'ja'). */
   function getLang() {
-    return (g.gameLang || window.gameLang) === "ja" ? "ja" : "en";
+    const raw =
+      g.gameLang ||
+      g.gameState?.matchConfig?.lang ||
+      g.gameState?.lang ||
+      document.documentElement?.lang ||
+      "en";
+    return String(raw).toLowerCase().startsWith("ja") ? "ja" : "en";
+  }
+
+  function isJa() {
+    return getLang() === "ja";
+  }
+
+  function dict() {
+    return I18N_UI[getLang()] || I18N_UI.en;
   }
 
   function number(value, fallback = 0) {
@@ -110,19 +294,159 @@
     );
   }
 
-  /** Resolves localized status name. */
-  function statusName(id, lang = getLang()) {
-    const dict = STATUS_NAMES[lang] || STATUS_NAMES.en;
-    if (dict && dict[id]) {
-      return dict[id];
+  function statusName(id) {
+    const d = dict();
+    if (d.statusNames[id]) {
+      return d.statusNames[id];
     }
-    const fallbackDict = STATUS_NAMES.en;
-    if (fallbackDict && fallbackDict[id]) {
-      return fallbackDict[id];
+    if (I18N_UI.en.statusNames[id]) {
+      return I18N_UI.en.statusNames[id];
     }
-    return String(id || "Status")
+    return String(id || (isJa() ? "状態" : "Status"))
       .replace(/_/g, " ")
       .replace(/\b\w/g, letter => letter.toUpperCase());
+  }
+
+  /**
+   * Resolves localized Rider display name for P1 / P2 HUD.
+   */
+  function resolveLocalizedRiderName(player, fallbackSlot) {
+    if (!player) return fallbackSlot.toUpperCase();
+    const d = dict();
+    const id = String(player.id || player.riderId || "").toLowerCase();
+    if (id && d.riderNames[id]) {
+      return d.riderNames[id];
+    }
+
+    const rawName = String(player.name || fallbackSlot.toUpperCase());
+    if (!isJa()) return rawName;
+
+    const lower = rawName.toLowerCase();
+    for (const [key, jaName] of Object.entries(d.riderNames)) {
+      const enName = I18N_UI.en.riderNames[key];
+      if (enName && lower === enName.toLowerCase()) {
+        return jaName;
+      }
+    }
+    return localizeBattleText(rawName);
+  }
+
+  /**
+   * Translates English battle/action banners, popups, and HUD strings into Japanese when active.
+   */
+  function localizeBattleText(input) {
+    const raw = String(input ?? "");
+    if (!raw || !isJa()) return raw;
+
+    let out = raw;
+
+    // Exact or common popup/banner phrases
+    out = out
+      .replace(/\bGET READY!\b/gi, "バトル開始！")
+      .replace(/\bREADY FOR BATTLE!\b/gi, "バトル準備完了！")
+      .replace(/\bTAP DIRECTION TO CHARGE\b/gi, "方向キーでチャージ")
+      .replace(/\bHOLD DIRECTION TO CHARGE\b/gi, "方向キー長押しでチャージ")
+      .replace(/\bPRESS ACTION KEY\b/gi, "アクションキーで決定")
+      .replace(/\bLOCKED!\b/gi, "確定！")
+      .replace(/\bLOCKED\b/gi, "確定")
+      .replace(/\bFAINTED!\b/gi, "気絶中！")
+      .replace(/\bGLANCING HIT\b/gi, "かすりヒット")
+      .replace(/\bCOUNTER HIT\b/gi, "カウンター")
+      .replace(/\bCRITICAL HIT\b/gi, "クリティカル")
+      .replace(/\bGUARD BREAK\b/gi, "ガードブレイク")
+      .replace(/\bSCRATCH\b/gi, "かすり傷")
+      .replace(/\bBLOCKED\b/gi, "ガード")
+      .replace(/\bBLOCK\b/gi, "ガード")
+      .replace(/\bGUARD\b/gi, "ガード")
+      .replace(/\bEVADED\b/gi, "回避")
+      .replace(/\bDODGED\b/gi, "回避")
+      .replace(/\bMISSED\b/gi, "ミス")
+      .replace(/\bMISS\b/gi, "ミス")
+      .replace(/\bHEAL\b/gi, "回復")
+      .replace(/\bDRAW GAME\b/gi, "引き分け")
+      .replace(/\bDOUBLE KO\b/gi, "ダブルKO")
+      .replace(/\bTIME OVER\b/gi, "タイムアップ")
+      .replace(/\bYOU WIN!\b/gi, "勝利！")
+      .replace(/\bYOU LOSE!\b/gi, "敗北…");
+
+    // Pattern replacements (Round, Timer, Wins, Uses, etc.)
+    out = out
+      .replace(/\bROUND\s+(\d+)\b/gi, "ラウンド $1")
+      .replace(/\bTIME:\s*([0-9.]+)s\b/gi, "残り時間: $1秒")
+      .replace(/\bPLAYER\s*1\s+WINS!\b/gi, "プレイヤー1の勝利！")
+      .replace(/\bPLAYER\s*2\s+WINS!\b/gi, "プレイヤー2の勝利！")
+      .replace(/(.+?)\s+WINS!\b/gi, "$1 の勝利！")
+      .replace(/\bREADY\b/g, "準備完了");
+
+    // Replace Rider names and Move names
+    for (const [enTerm, jaTerm] of EN_TO_JA_TERMS) {
+      if (out.includes(enTerm)) {
+        out = out.split(enTerm).join(jaTerm);
+      }
+    }
+
+    // Common combat verb connectors
+    out = out
+      .replace(/\s+uses\s+/gi, " の ")
+      .replace(/\s+used\s+/gi, " の ")
+      .replace(/\bCHI\b/g, "氣")
+      .replace(/\bFAINT\b/g, "気絶");
+
+    return out;
+  }
+
+  /**
+   * Synchronizes static/shared DOM labels on the Battle & Splash screens with the active language.
+   */
+  function syncBattleStaticDOM() {
+    const d = dict();
+
+    const p1PadLabel = document.querySelector("#p1-controls .pad-label");
+    if (p1PadLabel) p1PadLabel.textContent = d.hud.p1PadLabel;
+
+    const p2PadLabel = document.querySelector("#p2-controls .pad-label");
+    if (p2PadLabel) p2PadLabel.textContent = d.hud.p2PadLabel;
+
+    ["p1", "p2"].forEach(slot => {
+      const stunEl = byId(`${slot}-stun-overlay`);
+      if (stunEl) stunEl.textContent = d.hud.faintedOverlay;
+
+      const flagEl = byId(`${slot}-action-flag`);
+      if (flagEl && (flagEl.textContent === "LOCKED!" || flagEl.textContent === "確定！")) {
+        flagEl.textContent = d.hud.lockedFlag;
+      }
+
+      const chargeTextEl = byId(`${slot}-charge-text`);
+      if (chargeTextEl && isJa()) {
+        const localized = localizeBattleText(chargeTextEl.textContent);
+        if (localized !== chargeTextEl.textContent) {
+          chargeTextEl.textContent = localized;
+        }
+      }
+    });
+
+    ["charge-status-display", "p2-charge-status-display"].forEach(id => {
+      const el = byId(id);
+      if (!el) return;
+      if (!isJa() && el.textContent === I18N_UI.ja.hud.tapToCharge) {
+        el.textContent = I18N_UI.en.hud.tapToCharge;
+      } else if (isJa()) {
+        const localized = localizeBattleText(el.textContent);
+        if (localized !== el.textContent) {
+          el.textContent = localized;
+        }
+      }
+    });
+
+    ["turn-display", "turn-timer", "splash-round-text", "splash-names-text"].forEach(id => {
+      const el = byId(id);
+      if (el && isJa()) {
+        const localized = localizeBattleText(el.textContent);
+        if (localized !== el.textContent) {
+          el.textContent = localized;
+        }
+      }
+    });
   }
 
   function periodicAmount(buff, field) {
@@ -132,27 +456,20 @@
     );
   }
 
-  /** Formats localized status description string and detailed title tooltip. */
   function describeStatus(buff, round = currentRound()) {
-    const lang = getLang();
-    const isJa = lang === "ja";
+    const d = dict();
+    const s = d.statLabels;
     const effects = buff?.effects || {};
     const remaining = Math.max(0, number(buff?.roundsLeft));
     const parts = [];
     let harmful = false;
 
-    const multiplicative = isJa ? [
-      ["attack", "攻撃力"],
-      ["dAttack", "通常攻撃"],
-      ["sAttack", "必殺技"],
-      ["armor", "被ダメージ"],
-      ["speed", "チャージ速度"]
-    ] : [
-      ["attack", "ATK"],
-      ["dAttack", "D-ATK"],
-      ["sAttack", "S-ATK"],
-      ["armor", "damage taken"],
-      ["speed", "charge speed"]
+    const multiplicative = [
+      ["attack", s.attack],
+      ["dAttack", s.dAttack],
+      ["sAttack", s.sAttack],
+      ["armor", s.armor],
+      ["speed", s.speed]
     ];
 
     for (const [field, label] of multiplicative) {
@@ -172,76 +489,52 @@
 
     if (effects.accuracy !== undefined && number(effects.accuracy) !== 0) {
       const value = number(effects.accuracy);
-      parts.push(isJa ? `命中率 ${signed(value)}pp` : `HIT ${signed(value)}pp`);
+      parts.push(`${s.hit} ${signed(value)}${s.hitUnit}`);
       if (value < 0) harmful = true;
     }
 
     if (effects.evasion !== undefined && number(effects.evasion) !== 0) {
       const value = 100 * number(effects.evasion);
-      parts.push(isJa ? `回避率 ${signed(value)}pp` : `EVS ${signed(value)}pp`);
+      parts.push(`${s.evs} ${signed(value)}${s.evsUnit}`);
       if (value < 0) harmful = true;
     }
 
     const regeneration = periodicAmount(buff, "lpRegen");
     const bleeding = periodicAmount(buff, "lpBleed");
 
-    if (regeneration > 0) parts.push(isJa ? `+${pretty(regeneration)} LP/ターン` : `+${pretty(regeneration)} LP/turn`);
+    if (regeneration > 0) parts.push(`+${pretty(regeneration)} ${s.lpPerTurn}`);
     if (bleeding > 0) {
-      parts.push(isJa ? `-${pretty(bleeding)} LP/ターン` : `-${pretty(bleeding)} LP/turn`);
+      parts.push(`-${pretty(bleeding)} ${s.lpPerTurn}`);
       harmful = true;
     }
 
     const fragile = Boolean(
       buff?.cancelOnLpDamage ?? effects.cancelOnLpDamage ?? false
     );
-    if (fragile) parts.push(isJa ? "LPダメージで解除" : "breaks on LP damage");
+    if (fragile) parts.push(s.breaksOnDmg);
 
     const periodic = regeneration > 0 || bleeding > 0;
     const firstApplied =
       buff?.periodicAppliedRound ?? buff?.appliedRound ?? round - 1;
     const paymentDue = periodic && remaining > 0 && firstApplied < round;
 
-    const name = statusName(buff?.id, lang);
-    const turnSuffix = isJa ? "ターン" : "t";
+    const name = statusName(buff?.id);
 
     const text = [
       name,
       parts.length ? parts.join(", ") : "",
-      `${pretty(remaining)}${turnSuffix}`
+      `${pretty(remaining)}${s.turnShort}`
     ].filter(Boolean).join(" · ");
 
-    const details = isJa ? [
+    const details = [
       name,
       ...parts,
-      `効果残り期間: ${pretty(remaining)} ターン。`
-    ] : [
-      name,
-      ...parts,
-      `Engine duration remaining: ${pretty(remaining)} turns.`
+      s.durationDetail(pretty(remaining))
     ];
 
     if (periodic) {
-      if (isJa) {
-        details.push(
-          paymentDue
-            ? "今ターンの継続効果適用対象。"
-            : "初回発動ターンは継続効果なし。"
-        );
-        details.push(
-          "回復は出血ダメージの前に処理されます。" +
-          "LP 0のファイターは回復できません。"
-        );
-      } else {
-        details.push(
-          paymentDue
-            ? "Eligible for this turn's periodic payment."
-            : "No periodic payment on the initial application turn."
-        );
-        details.push(
-          "Regeneration resolves before bleeding. " +
-          "Regeneration cannot revive a fighter at zero LP."
-        );
-      }
+      details.push(paymentDue ? s.periodicDue : s.periodicInitial);
+      details.push(s.periodicRule);
     }
 
     return {
@@ -324,12 +617,13 @@
     return { isCPU, diffKey };
   }
 
-  /** Updates Player HUD readouts, gauges, and status tags for active language. */
   function updatePlayerHUD(slot, player) {
     if (!player) return;
 
-    const lang = getLang();
-    const isJa = lang === "ja";
+    syncBattleStaticDOM();
+
+    const d = dict();
+    const h = d.hud;
 
     const maxLp = Math.max(1, number(player.maxLp, 2300));
     const lp = clamp(number(player.lp), 0, maxLp);
@@ -357,7 +651,7 @@
     const chiFill = byId(`${slot}-chi-bar-fill`);
 
     if (nameElement) {
-      nameElement.textContent = player.name || slot.toUpperCase();
+      nameElement.textContent = resolveLocalizedRiderName(player, slot);
     }
 
     // Dynamic Subtext (Blank for Human, Difficulty badge for CPU)
@@ -365,8 +659,7 @@
       const { isCPU, diffKey } = resolveControllerInfo(slot, player);
 
       if (isCPU) {
-        const dict = DIFF_LABELS[lang] || DIFF_LABELS.en;
-        const label = dict[diffKey] || diffKey.toUpperCase();
+        const label = d.diffLabels[diffKey] || I18N_UI.en.diffLabels[diffKey] || diffKey.toUpperCase();
         subtextElement.textContent = label;
         subtextElement.classList.add("cpu-subtext");
         subtextElement.classList.remove("human-subtext");
@@ -380,7 +673,7 @@
     }
 
     if (lpElement) {
-      lpElement.textContent = `LP ${pretty(lp)} / ${pretty(maxLp)}`;
+      lpElement.textContent = `${h.lp} ${pretty(lp)} / ${pretty(maxLp)}`;
       lpElement.classList.toggle("lp-text-danger", lpPercent < 40);
       lpElement.classList.toggle("lp-text-warn", lpPercent >= 40 && lpPercent <= 60);
     }
@@ -411,8 +704,7 @@
     });
 
     if (chiElement) {
-      const chiPrefix = isJa ? "氣" : "CHI";
-      chiElement.textContent = `${chiPrefix} ${pretty(chi)} / ${pretty(maxChi)}`;
+      chiElement.textContent = `${h.chi} ${pretty(chi)} / ${pretty(maxChi)}`;
 
       chiElement.classList.toggle("chi-text-low", chi < 5);
       chiElement.classList.toggle("chi-text-full", chi > 14);
@@ -444,8 +736,7 @@
 
     const faintText = byId(`${slot}-faint-text`) || byId(`${slot}-faint`);
     if (faintText) {
-      const faintPrefix = isJa ? "気絶値" : "FAINT";
-      faintText.textContent = `${faintPrefix} ${pretty(faint)} / ${pretty(faintThreshold)}`;
+      faintText.textContent = `${h.faint} ${pretty(faint)} / ${pretty(faintThreshold)}`;
     }
 
     // Update FAINT label inside .faint-bar-wrapper with live percentage
@@ -453,8 +744,7 @@
     if (hudContainer) {
       const faintLabel = hudContainer.querySelector(".faint-label");
       if (faintLabel) {
-        const faintPrefix = isJa ? "気絶値" : "FAINT";
-        faintLabel.textContent = `${faintPrefix} ${Math.round(faintPercent)}%`;
+        faintLabel.textContent = `${h.faint} ${Math.round(faintPercent)}%`;
         faintLabel.classList.toggle("faint-danger", faintPercent >= 75);
       }
     }
@@ -470,25 +760,24 @@
       element.setAttribute("aria-valuemin", "0");
       element.setAttribute("aria-valuemax", String(faintThreshold));
       element.setAttribute("aria-valuenow", String(faint));
-      element.setAttribute("aria-label", isJa ? "気絶値" : "Faint buildup");
+      element.setAttribute("aria-label", h.faintAria);
     });
 
     const faintOverlay = byId(`${slot}-stun-overlay`);
     if (faintOverlay) {
+      faintOverlay.textContent = h.faintedOverlay;
       faintOverlay.hidden = !player.isFainted;
     }
 
     const stateLabels = [];
     if (lp <= 0) {
-      stateLabels.push("KO");
+      stateLabels.push(h.ko);
     } else if (player.isFainted) {
-      stateLabels.push(isJa ? "気絶中 — 強制回復" : "FAINTED — forced recovery");
+      stateLabels.push(h.faintedState);
     }
 
     if (number(player.airborneTicks) > 0) {
-      const turnLabel = isJa ? "ターン" : "t";
-      const airPrefix = isJa ? "空中状態" : "AIRBORNE";
-      stateLabels.push(`${airPrefix} · ${pretty(player.airborneTicks)}${turnLabel}`);
+      stateLabels.push(h.airborneState(pretty(player.airborneTicks)));
     }
 
     const statusElement = byId(`${slot}-status`);
@@ -512,18 +801,14 @@
 
     if (chi < 5) {
       tags.push({
-        text: isJa ? "氣不足 · 被ダメージ +25% · 回避率 -25pp" : "LOW CHI · damage taken +25% · EVS -25pp",
-        title: isJa
-          ? "氣5未満: 被LPダメージ1.25倍、回避率25pp低下、気絶値蓄積増加。"
-          : "Below 5 CHI: incoming LP damage is multiplied by 1.25, evasion is reduced by 25 percentage points, and faint buildup is increased.",
+        text: h.lowChiText,
+        title: h.lowChiTitle,
         className: "debuff-low-power"
       });
     } else if (chi > 14) {
       tags.push({
-        text: isJa ? "氣充填 · 攻撃力 +20% · 命中率 +20pp" : "HIGH CHI · ATK +20% · HIT +20pp",
-        title: isJa
-          ? "氣14超: 攻撃判定時にダメージ+20%、命中率+20ppが適用されます（氣コスト消費後に判定）。"
-          : "Above 14 CHI: the attack resolver can apply +20% damage and +20 percentage points of accuracy. The attack's CHI cost is paid before these checks.",
+        text: h.highChiText,
+        title: h.highChiTitle,
         className: "buff-full-power"
       });
     }
@@ -648,7 +933,7 @@
       popup.style.top = `${Math.min(68, 42 + activeCount * 12)}%`;
     }
 
-    popup.textContent = rawText;
+    popup.textContent = localizeBattleText(rawText);
     popup.style.whiteSpace = "pre-line";
 
     box.appendChild(popup);
@@ -660,17 +945,76 @@
     const banner = byId("battle-message");
     if (!banner) return;
 
-    banner.textContent = String(message || "");
+    const localized = localizeBattleText(String(message || ""));
+    banner.textContent = localized;
     banner.style.whiteSpace = "pre-line";
-    banner.hidden = !message;
+    banner.hidden = !localized;
   }
 
   function showActionBanner(message) {
     const banner = byId("center-action-label");
     if (!banner) return;
 
-    banner.textContent = String(message || "");
-    banner.hidden = !message;
+    const localized = localizeBattleText(String(message || ""));
+    banner.textContent = localized;
+    banner.hidden = !localized;
+  }
+
+  /**
+   * Installs a lightweight observer on shared battle text elements so direct textContent
+   * updates from other battle modules automatically localize when in Japanese mode.
+   */
+  function installBattleTextObserver() {
+    if (g.__kfBattleTextObserverInstalled) return;
+    g.__kfBattleTextObserverInstalled = true;
+
+    const watchedIds = [
+      "turn-display",
+      "turn-timer",
+      "splash-round-text",
+      "splash-names-text",
+      "charge-status-display",
+      "p2-charge-status-display",
+      "p1-charge-text",
+      "p2-charge-text",
+      "p1-action-flag",
+      "p2-action-flag"
+    ];
+
+    let isMutating = false;
+
+    const observer = new MutationObserver(mutations => {
+      if (isMutating || !isJa()) return;
+      isMutating = true;
+      try {
+        for (const m of mutations) {
+          const el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+          if (!el) continue;
+          const localized = localizeBattleText(el.textContent);
+          if (localized !== el.textContent) {
+            el.textContent = localized;
+          }
+        }
+      } finally {
+        isMutating = false;
+      }
+    });
+
+    const attach = () => {
+      syncBattleStaticDOM();
+      watchedIds.forEach(id => {
+        const el = byId(id);
+        if (el) {
+          observer.observe(el, { childList: true, characterData: true, subtree: true });
+        }
+      });
+    };
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", attach);
+    } else {
+      attach();
+    }
   }
 
   function installStyles() {
@@ -1298,17 +1642,20 @@
   }
 
   installStyles();
+  installBattleTextObserver();
 
   g.UI = {
     ...(g.UI || {}),
-    PATCH: "numeric-status-hud-2",
+    PATCH: "numeric-status-hud-2-i18n",
     updatePlayerHUD,
     showDamagePopup,
     triggerGlassCrack,
     showBattleBanner,
     showActionBanner,
     describeStatus,
-    statusName
+    statusName,
+    localizeBattleText,
+    syncBattleStaticDOM
   };
 
   // Existing compatibility entry points.
@@ -1317,4 +1664,5 @@
   g.triggerGlassCrack = triggerGlassCrack;
   g.showBattleBanner = showBattleBanner;
   g.showActionBanner = showActionBanner;
+  g.localizeBattleText = localizeBattleText;
 })(window);
