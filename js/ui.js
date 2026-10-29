@@ -1,45 +1,89 @@
 /* js/ui.js
- * Battle HUD and status presentation.
+ * Battle HUD and status presentation with English & Japanese (EN/JA) Bilingual UI support.
  *
- * Patch: numeric-status-hud-2 + cyber-tokusatsu-jp-hud + glass-shatter-dmg-fx
+ * Patch: numeric-status-hud-2 + cyber-tokusatsu-jp-hud + glass-shatter-dmg-fx + bilingual-i18n
  */
 (function (g) {
   "use strict";
 
+  /**
+   * Status & Buff Name Dictionary (English & Japanese)
+   */
   const STATUS_NAMES = Object.freeze({
-    typhoon_speed: "Typhoon Charge",
-    charge_speed: "Charge Speed",
-    focus: "Typhoon Focus",
-    v3_focus: "V3 Focus",
-    red_shutter: "Red Shutter",
-    power_focus: "Power Focus",
-    double_typhoon_speed: "Double Typhoon",
-    red_lamp_boost: "Red Lamp",
-    accuracy_focus: "Target Lock",
-    arm_calibration: "Arm Calibration",
-    rope_bind: "Rope Bind",
-    mercury_atk: "Mercury Attack",
-    mercury_def: "Mercury Defense",
-    airborne_evasion: "Airborne Evasion",
-    inca_blessing: "Inca Blessing",
-    gigi_focus: "Gigi Focus",
-    bleeding: "Bleeding",
-    lprecover: "LP Recovery",
-    lpRecovery: "LP Recovery",
-    airborne_boost: "Airborne Boost"
+    en: {
+      typhoon_speed: "Typhoon Charge",
+      charge_speed: "Charge Speed",
+      focus: "Typhoon Focus",
+      v3_focus: "V3 Focus",
+      red_shutter: "Red Shutter",
+      power_focus: "Power Focus",
+      double_typhoon_speed: "Double Typhoon",
+      red_lamp_boost: "Red Lamp",
+      accuracy_focus: "Target Lock",
+      arm_calibration: "Arm Calibration",
+      rope_bind: "Rope Bind",
+      mercury_atk: "Mercury Attack",
+      mercury_def: "Mercury Defense",
+      airborne_evasion: "Airborne Evasion",
+      inca_blessing: "Inca Blessing",
+      gigi_focus: "Gigi Focus",
+      bleeding: "Bleeding",
+      lprecover: "LP Recovery",
+      lpRecovery: "LP Recovery",
+      airborne_boost: "Airborne Boost"
+    },
+    ja: {
+      typhoon_speed: "タイフーンチャージ",
+      charge_speed: "チャージ速度",
+      focus: "タイフーン集中",
+      v3_focus: "V3集中",
+      red_shutter: "レッドシャッター",
+      power_focus: "パワー集中",
+      double_typhoon_speed: "ダブルタイフーン",
+      red_lamp_boost: "レッドランプ",
+      accuracy_focus: "ターゲットロック",
+      arm_calibration: "アーム調整",
+      rope_bind: "ロープ拘束",
+      mercury_atk: "マーキュリー攻撃",
+      mercury_def: "マーキュリー防御",
+      airborne_evasion: "空中回避",
+      inca_blessing: "インカの秘術",
+      gigi_focus: "ギギの腕輪",
+      bleeding: "出血",
+      lprecover: "LP回復",
+      lpRecovery: "LP回復",
+      airborne_boost: "空中強化"
+    }
   });
 
+  /**
+   * CPU Difficulty Labels (Matching vs_select.js)
+   */
   const DIFF_LABELS = Object.freeze({
-    easy: "Rugrat",
-    balanced: "All-rounder",
-    master: "Geek",
-    soul: "Monomaniac",
-    rider: "Rider"
+    en: {
+      easy: "Rugrat",
+      balanced: "All-rounder",
+      master: "Geek",
+      soul: "Monomaniac",
+      rider: "Rider"
+    },
+    ja: {
+      easy: "ちびっこ",
+      balanced: "オールラウンダー",
+      master: "マニア",
+      soul: "特撮の鬼",
+      rider: "ライダー"
+    }
   });
 
   const renderedTags = new WeakMap();
 
   const byId = id => document.getElementById(id);
+
+  /** Helper to determine current active game language ('en' or 'ja'). */
+  function getLang() {
+    return (g.gameLang || window.gameLang) === "ja" ? "ja" : "en";
+  }
 
   function number(value, fallback = 0) {
     const result = Number(value);
@@ -66,9 +110,15 @@
     );
   }
 
-  function statusName(id) {
-    if (STATUS_NAMES[id]) {
-      return STATUS_NAMES[id];
+  /** Resolves localized status name. */
+  function statusName(id, lang = getLang()) {
+    const dict = STATUS_NAMES[lang] || STATUS_NAMES.en;
+    if (dict && dict[id]) {
+      return dict[id];
+    }
+    const fallbackDict = STATUS_NAMES.en;
+    if (fallbackDict && fallbackDict[id]) {
+      return fallbackDict[id];
     }
     return String(id || "Status")
       .replace(/_/g, " ")
@@ -82,13 +132,22 @@
     );
   }
 
+  /** Formats localized status description string and detailed title tooltip. */
   function describeStatus(buff, round = currentRound()) {
+    const lang = getLang();
+    const isJa = lang === "ja";
     const effects = buff?.effects || {};
     const remaining = Math.max(0, number(buff?.roundsLeft));
     const parts = [];
     let harmful = false;
 
-    const multiplicative = [
+    const multiplicative = isJa ? [
+      ["attack", "攻撃力"],
+      ["dAttack", "通常攻撃"],
+      ["sAttack", "必殺技"],
+      ["armor", "被ダメージ"],
+      ["speed", "チャージ速度"]
+    ] : [
       ["attack", "ATK"],
       ["dAttack", "D-ATK"],
       ["sAttack", "S-ATK"],
@@ -113,59 +172,76 @@
 
     if (effects.accuracy !== undefined && number(effects.accuracy) !== 0) {
       const value = number(effects.accuracy);
-      parts.push(`HIT ${signed(value)}pp`);
+      parts.push(isJa ? `命中率 ${signed(value)}pp` : `HIT ${signed(value)}pp`);
       if (value < 0) harmful = true;
     }
 
     if (effects.evasion !== undefined && number(effects.evasion) !== 0) {
       const value = 100 * number(effects.evasion);
-      parts.push(`EVS ${signed(value)}pp`);
+      parts.push(isJa ? `回避率 ${signed(value)}pp` : `EVS ${signed(value)}pp`);
       if (value < 0) harmful = true;
     }
 
     const regeneration = periodicAmount(buff, "lpRegen");
     const bleeding = periodicAmount(buff, "lpBleed");
 
-    if (regeneration > 0) parts.push(`+${pretty(regeneration)} LP/turn`);
+    if (regeneration > 0) parts.push(isJa ? `+${pretty(regeneration)} LP/ターン` : `+${pretty(regeneration)} LP/turn`);
     if (bleeding > 0) {
-      parts.push(`-${pretty(bleeding)} LP/turn`);
+      parts.push(isJa ? `-${pretty(bleeding)} LP/ターン` : `-${pretty(bleeding)} LP/turn`);
       harmful = true;
     }
 
     const fragile = Boolean(
       buff?.cancelOnLpDamage ?? effects.cancelOnLpDamage ?? false
     );
-    if (fragile) parts.push("breaks on LP damage");
+    if (fragile) parts.push(isJa ? "LPダメージで解除" : "breaks on LP damage");
 
     const periodic = regeneration > 0 || bleeding > 0;
     const firstApplied =
       buff?.periodicAppliedRound ?? buff?.appliedRound ?? round - 1;
     const paymentDue = periodic && remaining > 0 && firstApplied < round;
 
-    const name = statusName(buff?.id);
+    const name = statusName(buff?.id, lang);
+    const turnSuffix = isJa ? "ターン" : "t";
 
     const text = [
       name,
       parts.length ? parts.join(", ") : "",
-      `${pretty(remaining)}t`
+      `${pretty(remaining)}${turnSuffix}`
     ].filter(Boolean).join(" · ");
 
-    const details = [
+    const details = isJa ? [
+      name,
+      ...parts,
+      `効果残り期間: ${pretty(remaining)} ターン。`
+    ] : [
       name,
       ...parts,
       `Engine duration remaining: ${pretty(remaining)} turns.`
     ];
 
     if (periodic) {
-      details.push(
-        paymentDue
-          ? "Eligible for this turn's periodic payment."
-          : "No periodic payment on the initial application turn."
-      );
-      details.push(
-        "Regeneration resolves before bleeding. " +
-        "Regeneration cannot revive a fighter at zero LP."
-      );
+      if (isJa) {
+        details.push(
+          paymentDue
+            ? "今ターンの継続効果適用対象。"
+            : "初回発動ターンは継続効果なし。"
+        );
+        details.push(
+          "回復は出血ダメージの前に処理されます。" +
+          "LP 0のファイターは回復できません。"
+        );
+      } else {
+        details.push(
+          paymentDue
+            ? "Eligible for this turn's periodic payment."
+            : "No periodic payment on the initial application turn."
+        );
+        details.push(
+          "Regeneration resolves before bleeding. " +
+          "Regeneration cannot revive a fighter at zero LP."
+        );
+      }
     }
 
     return {
@@ -248,8 +324,12 @@
     return { isCPU, diffKey };
   }
 
+  /** Updates Player HUD readouts, gauges, and status tags for active language. */
   function updatePlayerHUD(slot, player) {
     if (!player) return;
+
+    const lang = getLang();
+    const isJa = lang === "ja";
 
     const maxLp = Math.max(1, number(player.maxLp, 2300));
     const lp = clamp(number(player.lp), 0, maxLp);
@@ -285,7 +365,8 @@
       const { isCPU, diffKey } = resolveControllerInfo(slot, player);
 
       if (isCPU) {
-        const label = DIFF_LABELS[diffKey] || diffKey.toUpperCase();
+        const dict = DIFF_LABELS[lang] || DIFF_LABELS.en;
+        const label = dict[diffKey] || diffKey.toUpperCase();
         subtextElement.textContent = label;
         subtextElement.classList.add("cpu-subtext");
         subtextElement.classList.remove("human-subtext");
@@ -330,7 +411,8 @@
     });
 
     if (chiElement) {
-      chiElement.textContent = `CHI ${pretty(chi)} / ${pretty(maxChi)}`;
+      const chiPrefix = isJa ? "氣" : "CHI";
+      chiElement.textContent = `${chiPrefix} ${pretty(chi)} / ${pretty(maxChi)}`;
 
       chiElement.classList.toggle("chi-text-low", chi < 5);
       chiElement.classList.toggle("chi-text-full", chi > 14);
@@ -362,7 +444,8 @@
 
     const faintText = byId(`${slot}-faint-text`) || byId(`${slot}-faint`);
     if (faintText) {
-      faintText.textContent = `FAINT ${pretty(faint)} / ${pretty(faintThreshold)}`;
+      const faintPrefix = isJa ? "気絶値" : "FAINT";
+      faintText.textContent = `${faintPrefix} ${pretty(faint)} / ${pretty(faintThreshold)}`;
     }
 
     // Update FAINT label inside .faint-bar-wrapper with live percentage
@@ -370,7 +453,8 @@
     if (hudContainer) {
       const faintLabel = hudContainer.querySelector(".faint-label");
       if (faintLabel) {
-        faintLabel.textContent = `FAINT ${Math.round(faintPercent)}%`;
+        const faintPrefix = isJa ? "気絶値" : "FAINT";
+        faintLabel.textContent = `${faintPrefix} ${Math.round(faintPercent)}%`;
         faintLabel.classList.toggle("faint-danger", faintPercent >= 75);
       }
     }
@@ -386,7 +470,7 @@
       element.setAttribute("aria-valuemin", "0");
       element.setAttribute("aria-valuemax", String(faintThreshold));
       element.setAttribute("aria-valuenow", String(faint));
-      element.setAttribute("aria-label", "Faint buildup");
+      element.setAttribute("aria-label", isJa ? "気絶値" : "Faint buildup");
     });
 
     const faintOverlay = byId(`${slot}-stun-overlay`);
@@ -398,11 +482,13 @@
     if (lp <= 0) {
       stateLabels.push("KO");
     } else if (player.isFainted) {
-      stateLabels.push("FAINTED — forced recovery");
+      stateLabels.push(isJa ? "気絶中 — 強制回復" : "FAINTED — forced recovery");
     }
 
     if (number(player.airborneTicks) > 0) {
-      stateLabels.push(`AIRBORNE · ${pretty(player.airborneTicks)}t`);
+      const turnLabel = isJa ? "ターン" : "t";
+      const airPrefix = isJa ? "空中状態" : "AIRBORNE";
+      stateLabels.push(`${airPrefix} · ${pretty(player.airborneTicks)}${turnLabel}`);
     }
 
     const statusElement = byId(`${slot}-status`);
@@ -426,16 +512,18 @@
 
     if (chi < 5) {
       tags.push({
-        text: "LOW CHI · damage taken +25% · EVS -25pp",
-        title:
-          "Below 5 CHI: incoming LP damage is multiplied by 1.25, evasion is reduced by 25 percentage points, and faint buildup is increased.",
+        text: isJa ? "氣不足 · 被ダメージ +25% · 回避率 -25pp" : "LOW CHI · damage taken +25% · EVS -25pp",
+        title: isJa
+          ? "氣5未満: 被LPダメージ1.25倍、回避率25pp低下、気絶値蓄積増加。"
+          : "Below 5 CHI: incoming LP damage is multiplied by 1.25, evasion is reduced by 25 percentage points, and faint buildup is increased.",
         className: "debuff-low-power"
       });
     } else if (chi > 14) {
       tags.push({
-        text: "HIGH CHI · ATK +20% · HIT +20pp",
-        title:
-          "Above 14 CHI: the attack resolver can apply +20% damage and +20 percentage points of accuracy. The attack's CHI cost is paid before these checks.",
+        text: isJa ? "氣充填 · 攻撃力 +20% · 命中率 +20pp" : "HIGH CHI · ATK +20% · HIT +20pp",
+        title: isJa
+          ? "氣14超: 攻撃判定時にダメージ+20%、命中率+20ppが適用されます（氣コスト消費後に判定）。"
+          : "Above 14 CHI: the attack resolver can apply +20% damage and +20 percentage points of accuracy. The attack's CHI cost is paid before these checks.",
         className: "buff-full-power"
       });
     }
