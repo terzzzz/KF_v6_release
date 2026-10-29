@@ -17,6 +17,12 @@
     'assets/sounds/matchup2.mp3'
   ];
 
+  const BATTLE_BGM_TRACKS = [
+    'assets/sounds/matchup.mp3',
+    'assets/sounds/matchup1.mp3',
+    'assets/sounds/matchup2.mp3'
+  ];
+
   // Candidate paths for the Credits QR code image (tries in order)
   const CREDITS_QR_PATHS = [
     'assets/images/bmc_qr.png',
@@ -2682,7 +2688,7 @@
     if (!selectScreen || !p1Card) return;
 
     const dict = t();
-    const riders = window.AVAILABLE_RIDERS || [];
+    const riders = window.AVAILABLE_RIDERS;
     const state = window.vsSelectionState;
     const currentStep = parseInt(state.step, 10) || 1;
 
@@ -2883,7 +2889,7 @@
     if (window.battleBGM) window.battleBGM.volume = window.currentVolume;
   };
 
-  /** Plays background music for character selection screen. */
+  /** Plays randomized background music for character selection screen. */
   window.playSelectionBGM = function() {
     if (window.selectionBGM) return;
     try {
@@ -2911,11 +2917,14 @@
     }
   };
 
-  /** Plays background music for live battle screen. */
+  /** Plays randomized background music for live battle screen. */
   window.playBattleBGM = function() {
     if (window.battleBGM) return;
     try {
-      window.battleBGM = new Audio('assets/sounds/matchup1.mp3');
+      const randomIndex = Math.floor(Math.random() * BATTLE_BGM_TRACKS.length);
+      const randomTrack = BATTLE_BGM_TRACKS[randomIndex];
+
+      window.battleBGM = new Audio(randomTrack);
       window.battleBGM.loop = true;
       window.battleBGM.volume = window.currentVolume;
       const playPromise = window.battleBGM.play();
