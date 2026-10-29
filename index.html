@@ -42,29 +42,72 @@
     }
 
     #start-prompt {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 16px;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+    }
+
+    .start-lang-caption {
+      font-family: 'Orbitron', 'Chakra Petch', 'Noto Sans JP', sans-serif;
+      font-size: clamp(0.75rem, 1.4vw, 0.9rem);
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      color: #cbd5e1;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+      text-transform: uppercase;
+    }
+
+    .start-lang-btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .start-lang-btn {
       cursor: pointer;
-      font-family: 'Orbitron', 'Chakra Petch', 'M PLUS 1p', 'Noto Sans JP', sans-serif;
-      font-size: clamp(0.85rem, 1.6vw, 1.05rem);
+      min-width: 160px;
+      font-family: 'Orbitron', 'Chakra Petch', 'Noto Sans JP', sans-serif;
+      font-size: clamp(0.9rem, 1.7vw, 1.1rem);
       font-weight: 900;
       letter-spacing: 0.12em;
       color: #060b16 !important;
       text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) !important;
       background: linear-gradient(180deg, #e2f8ff 0%, #99e6ff 100%) !important;
       border: 2px solid #00f0ff !important;
-      border-radius: 6px;
-      padding: 10px 26px;
-      margin-top: 14px;
+      border-radius: 8px;
+      padding: 11px 28px;
       box-shadow: 0 4px 18px rgba(0, 0, 0, 0.75), 0 0 14px rgba(0, 240, 255, 0.45);
       transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
     }
 
-    #start-prompt:hover,
-    #start-prompt:focus-visible {
+    .start-lang-btn.lang-ja {
+      background: linear-gradient(180deg, #fff3c4 0%, #ffd166 100%) !important;
+      border-color: #ffae00 !important;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.75), 0 0 14px rgba(255, 209, 102, 0.45);
+    }
+
+    .start-lang-btn:hover,
+    .start-lang-btn:focus-visible {
       color: #4a0012 !important;
       background: linear-gradient(180deg, #ffffff 0%, #7df9ff 100%) !important;
-      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.85), 0 0 20px rgba(0, 240, 255, 0.75);
-      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.85), 0 0 22px rgba(0, 240, 255, 0.8);
+      transform: translateY(-2px) scale(1.02);
       outline: none;
+    }
+
+    .start-lang-btn.lang-ja:hover,
+    .start-lang-btn.lang-ja:focus-visible {
+      background: linear-gradient(180deg, #ffffff 0%, #ffe082 100%) !important;
+      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.85), 0 0 22px rgba(255, 209, 102, 0.85);
     }
 
     a.action-btn,
@@ -95,12 +138,25 @@
         <div id="loading-bar-fill" class="loading-bar-fill"></div>
       </div>
 
-      <button id="start-prompt"
-              type="button"
-              class="start-prompt"
-              hidden>
-        PRESS ANY KEY OR TAP TO FIGHT
-      </button>
+      <div id="start-prompt"
+           class="start-prompt"
+           hidden>
+        <div class="start-lang-caption">SELECT LANGUAGE / 言語を選択</div>
+        <div class="start-lang-btn-row">
+          <button id="start-btn-en"
+                  type="button"
+                  class="start-lang-btn lang-en"
+                  onclick="if(window.setGameLanguage) window.setGameLanguage('en');">
+            ENGLISH
+          </button>
+          <button id="start-btn-ja"
+                  type="button"
+                  class="start-lang-btn lang-ja"
+                  onclick="if(window.setGameLanguage) window.setGameLanguage('ja');">
+            日本語
+          </button>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -184,7 +240,7 @@
         return `
           <div id="${slot}-card"
                class="rider-card ${index === 0 ? "active-slot" : "locked-slot"}">
-            <h2>PLAYER ${index + 1}</h2>
+            <h2 id="${slot}-player-heading">PLAYER ${index + 1}</h2>
 
             <div class="portrait-box">
               <img id="${slot}-img"
