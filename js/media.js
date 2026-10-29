@@ -1,29 +1,27 @@
 /*
  * js/media.js
- * Sequential battle-media controller.
+ * Sequential & Parallel battle-media controller.
  *
  * Public compatibility:
  *   getTransformFlip()
  *   updateCharacterMedia()
+ *   playReactionVideo()
  *   playCenterVideo()
  *   hideCenterScreen()
  *   unlockMobileVideos()
+ *   playMatchEndMedia() [NEW: Parallel Victory + KO execution]
  *
- * New:
- *   playReactionVideo()
+ * KFMedia namespace:
  *   KFMedia.freezeSides()
  *   KFMedia.cancelAll()
  *   KFMedia.status()
- *
- * Background idle/faint/airborne loops are allowed during planning.
- * Foreground actions, reactions, victory and KO clips share one queue.
- * Center cleanup NEVER starts idle videos.
+ *   KFMedia.playMatchEndMedia()
  */
 
 (function (g) {
   "use strict";
 
-  const VERSION = "sequential-media-1";
+  const VERSION = "sequential-media-2-parallel-end";
   const SLOTS = ["p1", "p2"];
   const VIDEO_IDS = ["p1-video", "p2-video", "center-video"];
 
@@ -82,7 +80,6 @@
   function prepareVideo(video) {
     if (!video) return;
 
-    // Playback is owned by this controller, not HTML autoplay.
     video.autoplay = false;
     video.removeAttribute("autoplay");
 
@@ -163,8 +160,6 @@
   function filesForState(state) {
     const files = {
       IDLE: ["idle.mp4"],
-
-      // Actual reaction filename first; legacy alias second.
       HIT: ["hit.mp4"],
       HIT2: ["hit_physical.mp4", "hit.mp4"],
       GUARD: ["guard.mp4"],
@@ -252,7 +247,6 @@
       el(`${slot}-box`)?.classList.toggle("blanked", show);
     }
 
-    // The battle banner already displays the action name.
     visible(el("center-action-label"), false);
   }
 
@@ -271,10 +265,6 @@
     }
   }
 
-  /*
-   * Reuses the persistent channel <video> element in the DOM so user-gesture
-   * activation and compositor state are never lost across attempts.
-   */
   function acquireVideo(task) {
     const id = task.channel === "center"
       ? "center-video"
@@ -310,9 +300,6 @@
     return video;
   }
 
-  /*
-   * A single candidate attempt has exactly one completion path.
-   */
   function attemptVideo(task, src) {
     task.attempt += 1;
 
@@ -384,7 +371,6 @@
             return;
           }
 
-          // Transient play() interruption while loading: allow retry if not exhausted.
           if (playRetries < 3) {
             playRetries += 1;
             playInFlight = false;
@@ -398,7 +384,6 @@
 
           complete("error", error);
         } else if (error?.name === "NotAllowedError") {
-          // Ensure muted fallback and retry once before giving up as blocked.
           if (video && playRetries < 2) {
             playRetries += 1;
             playInFlight = false;
@@ -434,7 +419,6 @@
 
           log("playing", task.id, attemptToken, src);
 
-          // Background loops resolve as soon as playback is active.
           if (task.background) {
             task.ready({ status: "playing", src });
             complete("playing");
@@ -464,7 +448,6 @@
                 complete("cancelled");
                 return;
               }
-              // If already playing despite promise rejection, ignore.
               if (started || !video.paused) {
                 markPlaying();
                 return;
@@ -495,24 +478,10 @@
           return;
         }
 
-        video.onloadeddata = () => {
-          if (!ownsAttempt()) return;
-          requestPlay();
-        };
-
-        video.oncanplay = () => {
-          if (!ownsAttempt()) return;
-          requestPlay();
-        };
-
-        video.oncanplaythrough = () => {
-          if (!ownsAttempt()) return;
-          requestPlay();
-        };
-
-        video.onplaying = () => {
-          markPlaying();
-        };
+        video.onloadeddata = () => { if (ownsAttempt()) requestPlay(); };
+        video.oncanplay = () => { if (ownsAttempt()) requestPlay(); };
+        video.oncanplaythrough = () => { if (ownsAttempt()) requestPlay(); };
+        video.onplaying = () => { markPlaying(); };
 
         video.ontimeupdate = () => {
           if (!ownsAttempt()) return;
@@ -530,7 +499,6 @@
             complete("cancelled");
             return;
           }
-
           if (!task.background) {
             complete("ended");
           }
@@ -548,7 +516,6 @@
 
           const now = performance.now();
 
-          // Do not count a backgrounded tab as a playback stall.
           if (document.hidden) {
             lastProgress = now;
             lastTime = video.currentTime;
@@ -560,16 +527,11 @@
             lastProgress = now;
           }
 
-          if (
-            started &&
-            !task.background &&
-            video.ended
-          ) {
+          if (started && !task.background && video.ended) {
             complete("ended");
             return;
           }
 
-          // If browser paused a foreground clip mid-playback without ending, resume it.
           if (
             started &&
             !task.background &&
@@ -600,7 +562,6 @@
         video.load();
       } catch (error) {
         failed(error);
-
         if (!finished && !video) complete("error", error);
       }
     });
@@ -730,7 +691,7 @@
     task.valid = () => (
       tasks.get(channel) === task &&
       !controller.signal.aborted &&
-      spec.valid()
+      (typeof spec.valid !== "function" || spec.valid())
     );
 
     tasks.set(channel, task);
@@ -770,8 +731,6 @@
             if (preferredSources.get(task.cacheKey) === src) {
               preferredSources.delete(task.cacheKey);
             }
-
-            // Only this loop advances the candidate list.
             continue;
           }
 
@@ -784,8 +743,6 @@
             return result;
           }
 
-          // Autoplay restriction or missing DOM:
-          // do not misclassify every filename as missing.
           break;
         }
 
@@ -807,7 +764,6 @@
 
           for (const src of images) {
             result = await attemptImage(task, src);
-
             if (result.status !== "error") return result;
           }
         }
@@ -830,7 +786,6 @@
 
         spec.signal?.removeEventListener("abort", externalAbort);
 
-        // Keep background loop alive in the DOM after attemptVideo resolves "playing".
         if (!task.background || result.status !== "playing") {
           controller.abort();
           if (tasks.get(channel) === task) {
@@ -865,7 +820,6 @@
       pendingForeground -= 1;
     });
 
-    // A failed job must not poison the queue.
     queue = completed.then(
       () => undefined,
       () => undefined
@@ -890,12 +844,50 @@
       candidates: candidatePaths(rider, files),
       cacheKey: `${rider}|reaction|${state}`,
       identity: `${rider}|${state}`,
-      background: false, // Even FAINT must end when used as a reaction.
+      background: false,
       transform,
       stallMs: options.stallMs,
       signal: options.signal,
       valid
     }), options);
+  }
+
+  /**
+   * Triggers parallel execution of VICTORY and KO videos across winner and loser viewports.
+   */
+  function playMatchEndMedia(winnerSlot, loserSlot) {
+    if (!SLOTS.includes(winnerSlot) || !SLOTS.includes(loserSlot)) {
+      return Promise.resolve({ status: "unavailable" });
+    }
+
+    const winnerRider = riderFor(winnerSlot);
+    const loserRider = riderFor(loserSlot);
+
+    const winnerFiles = filesForState("VICTORY");
+    const loserFiles = filesForState("KO");
+
+    return Promise.all([
+      runChannel(winnerSlot, {
+        slot: winnerSlot,
+        rider: winnerRider,
+        candidates: candidatePaths(winnerRider, winnerFiles),
+        cacheKey: `${winnerRider}|victory`,
+        identity: `${winnerRider}|VICTORY`,
+        background: false,
+        transform: getTransformFlip(playerFor(winnerSlot), winnerSlot),
+        valid: () => true
+      }),
+      runChannel(loserSlot, {
+        slot: loserSlot,
+        rider: loserRider,
+        candidates: candidatePaths(loserRider, loserFiles),
+        cacheKey: `${loserRider}|ko`,
+        identity: `${loserRider}|KO`,
+        background: false,
+        transform: getTransformFlip(playerFor(loserSlot), loserSlot),
+        valid: () => true
+      })
+    ]);
   }
 
   function updateCharacterMedia(slot, stateType = "IDLE", options = {}) {
@@ -910,7 +902,6 @@
       return playReactionVideo(slot, state, options);
     }
 
-    // Do not let unrelated idle updates interrupt a combat sequence.
     if (
       pendingForeground > 0 ||
       g.gameState?.roundPhase === "RESOLUTION"
@@ -988,11 +979,7 @@
           identity: `${rider}|${videoFile}`,
           background: false,
           transform,
-
-          // Compatibility argument now acts as a no-progress timeout.
-          // A healthy clip longer than 8 seconds is not cut short.
           stallMs: options.stallMs ?? maxDurationMs,
-
           signal: options.signal,
           valid
         });
@@ -1001,14 +988,11 @@
           centerOwner = null;
           centerVisible(false);
         }
-
-        // Intentionally NO updateCharacterMedia(..., "IDLE") here.
       }
     }, options);
   }
 
   function cancelAll() {
-    // Invalidates active AND queued requests.
     epoch += 1;
 
     for (const task of tasks.values()) {
@@ -1087,6 +1071,7 @@
   g.updateCharacterMedia = updateCharacterMedia;
   g.playReactionVideo = playReactionVideo;
   g.playCenterVideo = playCenterVideo;
+  g.playMatchEndMedia = playMatchEndMedia;
   g.hideCenterScreen = hideCenterScreen;
   g.unlockMobileVideos = unlockMobileVideos;
 
@@ -1094,7 +1079,8 @@
     VERSION,
     freezeSides,
     cancelAll,
-    status
+    status,
+    playMatchEndMedia
   };
 
   for (const id of VIDEO_IDS) prepareVideo(el(id));
