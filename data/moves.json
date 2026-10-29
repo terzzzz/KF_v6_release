@@ -180,7 +180,7 @@
     },
     "D+J": { "name": "Chop", "type": "PHYSICAL", "chiCost": 0, "baseDamage": 60, "hitChance": 79, "video": "chop.mp4" },
     "D+K": { "name": "High Kick", "type": "PHYSICAL", "chiCost": 0, "baseDamage": 63, "hitChance": 80, "video": "kick.mp4" },
-    "D+L": { "name": "Chop Combo", "type": "PHYSICAL", "chiCost": 1, "baseDamage": 136, "hitChance": 79, "video": "chop_comb.mp4" },
+    "D+L": { "name": "Chop Combo", "type": "PHYSICAL", "chiCost": 1, "baseDamage": 116, "hitChance": 79, "video": "chop_comb.mp4" },
     "D+I": { "name": "Mixed Hits", "type": "PHYSICAL", "chiCost": 1, "baseDamage": 106, "hitChance": 80, "video": "mixed_comb.mp4" },
     "S+J": { "name": "V3 Kick", "type": "SPECIAL", "chiCost": 4, "baseDamage": 430, "hitChance": 78, "video": "v3_kick.mp4" },
     "S+K": { "name": "V3 Return Kick", "type": "SPECIAL", "chiCost": 5, "baseDamage": 560, "hitChance": 72, "video": "return_kick.mp4" },
