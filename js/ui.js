@@ -1571,7 +1571,7 @@
       }
 
       .damage-popup.heal {
-        font-size: clamp(2rem, 4.8vw, 3.4rem) !important;
+        font-size: clamp(1.5rem, 3.6vw, 1.1rem) !important;
         background: linear-gradient(180deg, #ffffff 0%, #a8ffdb 35%, #00e676 78%, #007a3d 100%) !important;
         -webkit-background-clip: text !important;
         background-clip: text !important;
@@ -1581,7 +1581,7 @@
       }
 
       .damage-popup.block {
-        font-size: clamp(1.85rem, 4.3vw, 3.1rem) !important;
+        font-size: clamp(1.25rem, 2.8vw, 2.6rem) !important;
         background: linear-gradient(180deg, #ffffff 0%, #ffe89e 40%, #f59e0b 85%, #92400e 100%) !important;
         -webkit-background-clip: text !important;
         background-clip: text !important;
@@ -1591,7 +1591,7 @@
       }
 
       .damage-popup.miss {
-        font-size: clamp(1.85rem, 4.3vw, 3.1rem) !important;
+        font-size: clamp(1.25rem, 2.8vw, 2.6rem) !important;
         background: linear-gradient(180deg, #ffffff 0%, #bae6fd 45%, #38bdf8 88%, #0369a1 100%) !important;
         -webkit-background-clip: text !important;
         background-clip: text !important;
