@@ -1,6 +1,6 @@
 /*
  * js/media.js
- * Sequential battle-media controller.
+ * Sequential battle-media controller with KFAudio & Glass Shatter FX triggers.
  *
  * Public compatibility:
  *   getTransformFlip()
@@ -14,10 +14,6 @@
  *   KFMedia.freezeSides()
  *   KFMedia.cancelAll()
  *   KFMedia.status()
- *
- * Background idle/faint/airborne loops are allowed during planning.
- * Foreground actions, reactions, victory and KO clips share one queue.
- * Center cleanup NEVER starts idle videos.
  */
 
 (function (g) {
@@ -271,6 +267,24 @@
     }
   }
 
+  /**
+   * Fires a callback at an exact video playback timestamp (in seconds).
+   */
+  function syncTimestamp(video, targetSeconds, callback) {
+    if (!video || typeof callback !== "function") return;
+    let fired = false;
+
+    const onTimeUpdate = () => {
+      if (!fired && video.currentTime >= targetSeconds) {
+        fired = true;
+        callback();
+        video.removeEventListener("timeupdate", onTimeUpdate);
+      }
+    };
+
+    video.addEventListener("timeupdate", onTimeUpdate);
+  }
+
   /*
    * Reuses the persistent channel <video> element in the DOM so user-gesture
    * activation and compositor state are never lost across attempts.
@@ -434,16 +448,26 @@
 
           log("playing", task.id, attemptToken, src);
 
-          // Glass crack FX trigger on reaction hit video playback start
-          const triggerCrack = g.triggerGlassCrack || g.UI?.triggerGlassCrack;
-          if (typeof triggerCrack === "function" && (task.channel === "p1" || task.channel === "p2")) {
+          // Reaction hit audio SFX and visual glass shatter integration
+          if (task.channel === "p1" || task.channel === "p2") {
             const srcLower = String(src || "").toLowerCase();
-            const targetBox = `${task.channel}-box`;
+            const isHitPhysical = srcLower.includes("hit_physical");
+            const isHit = srcLower.includes("hit");
 
-            if (srcLower.includes("hit_physical")) {
-              triggerCrack(targetBox, 150, null, false); // Minor breakage for hit_physical.mp4
-            } else if (srcLower.includes("hit")) {
-              triggerCrack(targetBox, 350, null, true);  // Serious breakage for hit.mp4
+            if (isHitPhysical || isHit) {
+              // 1. Timed Audio Impact SFX via KFAudio
+              if (isHitPhysical) {
+                syncTimestamp(video, 0.12, () => g.KFAudio?.playHitSFX(false));
+              } else if (isHit) {
+                syncTimestamp(video, 0.22, () => g.KFAudio?.playHitSFX(true));
+              }
+
+              // 2. Glass Crack Visual Shatter
+              const triggerCrack = g.triggerGlassCrack || g.UI?.triggerGlassCrack;
+              if (typeof triggerCrack === "function") {
+                const targetBox = `${task.channel}-box`;
+                triggerCrack(targetBox, isHit ? 350 : 150, null, isHit);
+              }
             }
           }
 
@@ -980,6 +1004,15 @@
 
     const rider = riderFor(slot);
     const transform = getTransformFlip(playerFor(slot), slot, moveObj);
+
+    // Shout localized Japanese move callout when special attack begins
+    const localizedMove = typeof g.localizeBattleText === "function"
+      ? g.localizeBattleText(actionName)
+      : actionName;
+
+    if (g.KFAudio?.shout && localizedMove) {
+      g.KFAudio.shout(localizedMove, "ja-JP");
+    }
 
     return enqueueForeground(async valid => {
       if (!el("center-box") || !el("center-video")) {
