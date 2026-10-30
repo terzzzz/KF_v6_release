@@ -5,10 +5,9 @@
   let audioCtx = null;
   let cachedVoices = [];
 
-  // Populate voice cache asynchronously (SpeechSynthesis voices load lazily)
   function loadVoices() {
     if (!("speechSynthesis" in window)) return;
-    cachedVoices = window.speechSynthesis.getVoices();
+    cachedVoices = window.speechSynthesis.getVoices() || [];
   }
 
   if ("speechSynthesis" in window) {
@@ -29,52 +28,65 @@
   }
 
   /**
-   * Searches system voices for a male voice matching the requested language.
+   * Finds the best masculine voice available on the device.
    */
-  function findMaleVoice(lang = "ja-JP") {
+  function findBestMaleVoice(targetLang = "ja-JP") {
     if (!cachedVoices.length) loadVoices();
-    const targetLangPrefix = lang.toLowerCase().substring(0, 2);
 
-    const maleKeywords = ["male", "keita", "ichiro", "daichi", "takumi", "naoki", "george", "david", "mark"];
-    const femaleKeywords = ["female", "kyoko", "haruka", "nanami", "ayumi", "zira", "jenny", "aria"];
+    const maleKeywords = ["keita", "ichiro", "daichi", "takumi", "naoki", "george", "david", "mark", "alex", "male"];
+    const femaleKeywords = ["kyoko", "haruka", "nanami", "ayumi", "zira", "jenny", "aria", "female"];
 
-    const langVoices = cachedVoices.filter(v => v.lang.toLowerCase().startsWith(targetLangPrefix));
-    if (!langVoices.length) return null;
-
-    // 1. Explicit male voice match
-    const maleVoice = langVoices.find(v =>
+    // 1. Look for explicit Japanese male voice
+    const jaMale = cachedVoices.find(v => 
+      v.lang.toLowerCase().startsWith("ja") &&
       maleKeywords.some(kw => v.name.toLowerCase().includes(kw))
     );
-    if (maleVoice) return maleVoice;
+    if (jaMale) return { voice: jaMale, lang: "ja-JP" };
 
-    // 2. Any voice that is not explicitly female
-    const nonFemaleVoice = langVoices.find(v =>
+    // 2. Look for explicit English male voice as fallback
+    const enMale = cachedVoices.find(v => 
+      v.lang.toLowerCase().startsWith("en") &&
+      maleKeywords.some(kw => v.name.toLowerCase().includes(kw))
+    );
+    if (enMale) return { voice: enMale, lang: "en-US" };
+
+    // 3. Fallback to any non-female Japanese voice
+    const jaNonFemale = cachedVoices.find(v => 
+      v.lang.toLowerCase().startsWith("ja") &&
       !femaleKeywords.some(kw => v.name.toLowerCase().includes(kw))
     );
-    if (nonFemaleVoice) return nonFemaleVoice;
+    if (jaNonFemale) return { voice: jaNonFemale, lang: "ja-JP" };
 
-    // 3. Fallback to first available voice in target lang
-    return langVoices[0];
+    return { voice: null, lang: targetLang };
   }
 
-  // Shouts move names in a deep masculine arcade voice
+  // Shouts move names using the best male voice available
   function shout(text, lang = "ja-JP") {
     if (!("speechSynthesis" in window) || !text) return;
     window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang;
+    const { voice, lang: resolvedLang } = findBestMaleVoice(lang);
 
-    const maleVoice = findMaleVoice(lang);
-    if (maleVoice) {
-      utterance.voice = maleVoice;
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang;
+    } else {
+      utterance.lang = resolvedLang;
     }
 
-    utterance.rate = 1.25;  // High-energy pace
-    utterance.pitch = 0.82; // Deeper, masculine pitch shift (0.80 - 0.85)
+    // Keep pitch near natural 1.0 if a true male voice is found; lower slightly if falling back
+    const isMaleVoice = voice && maleKeywordsExist(voice.name);
+    utterance.rate = 1.25;
+    utterance.pitch = isMaleVoice ? 0.95 : 0.85;
     utterance.volume = 1.0;
 
     window.speechSynthesis.speak(utterance);
+  }
+
+  function maleKeywordsExist(name) {
+    const maleKeywords = ["keita", "ichiro", "daichi", "takumi", "naoki", "george", "david", "mark", "alex", "male"];
+    return maleKeywords.some(kw => String(name).toLowerCase().includes(kw));
   }
 
   // Synthesized heavy hit impact
