@@ -902,15 +902,14 @@ function showDamagePopup(boxId, text, type = "damage") {
 
   const rawText = String(text ?? "");
 
-  // Extract numeric value (supports negative or positive numbers)
+  // Extract numeric value
   const dmgMatch = rawText.replace(/,/g, "").match(/(-?\d+(?:\.\d+)?)/);
   const dmgValue = dmgMatch ? Math.abs(number(dmgMatch[1], 0)) : 0;
 
-  // Recognized popup visual styles
   const validTypes = new Set(["damage", "heal", "miss", "scratch", "block", "info"]);
   const resolvedType = validTypes.has(type) ? type : "info";
 
-  // Trigger glass-shatter ONLY if the popup type is explicitly damage/scratch AND damage > 0
+  // Trigger glass shatter on victim box
   if ((resolvedType === "damage" || resolvedType === "scratch") && dmgValue > 0) {
     triggerGlassCrack(box, dmgValue);
   }
@@ -922,30 +921,29 @@ function showDamagePopup(boxId, text, type = "damage") {
     popup.classList.add("heavy-dmg");
   }
 
-  // Stagger vertical placement if multiple popups overlap
+  // Find root battle screen container so popup isn't clipped by .player-box overflow: hidden
+  const battleScreen = byId("battle-screen") || document.body;
+
+  // Calculate box coordinates relative to screen root
+  const boxRect = box.getBoundingClientRect();
+  const screenRect = battleScreen.getBoundingClientRect();
+
+  // Calculate center coordinates
   const activeCount = box.querySelectorAll(".damage-popup").length;
-  if (activeCount > 0) {
-    popup.style.top = `${Math.min(68, 42 + activeCount * 12)}%`;
-  }
+  const topOffsetPercent = activeCount > 0 ? Math.min(0.68, 0.42 + activeCount * 0.12) : 0.42;
+
+  const centerX = (boxRect.left + boxRect.width / 2) - screenRect.left;
+  const centerY = (boxRect.top + boxRect.height * topOffsetPercent) - screenRect.top;
+
+  popup.style.position = "absolute";
+  popup.style.left = `${centerX}px`;
+  popup.style.top = `${centerY}px`;
+  popup.style.zIndex = "9999";
 
   popup.textContent = localizeBattleText(rawText);
 
-  box.appendChild(popup);
-
-  // Dynamic font-size auto-scaling to keep text strictly within frame bounds
-  requestAnimationFrame(() => {
-    const maxAllowedWidth = box.clientWidth * 0.82; // Max 82% of player box width
-    const currentWidth = popup.scrollWidth;
-
-    if (currentWidth > maxAllowedWidth && currentWidth > 0) {
-      const computedStyle = window.getComputedStyle(popup);
-      const baseFontSize = parseFloat(computedStyle.fontSize);
-      const scaleFactor = maxAllowedWidth / currentWidth;
-      const newFontSize = Math.max(12, baseFontSize * scaleFactor);
-
-      popup.style.fontSize = `${newFontSize}px`;
-    }
-  });
+  // Append to unclipped battle screen overlay
+  battleScreen.appendChild(popup);
 
   setTimeout(() => popup.remove(), 1450);
 }
@@ -1536,17 +1534,16 @@ function showDamagePopup(boxId, text, type = "damage") {
       }
 
       /* --- Big Stylish Arcade Damage & Action Popups (-400, BLOCK, HEAL, MISS) --- */
-.damage-popup {
-  position: absolute !important;
-  left: 50% !important;
-  top: 42%;
-  transform: translate(-50%, -50%);
-  z-index: 35 !important;
-  pointer-events: none !important;
-  text-align: center !important;
-  white-space: nowrap !important; /* <--- ADD THIS to prevent text wrapping before scaling */
-  font-family: var(--kf-hud-font-display) !important;
-  font-size: clamp(2.4rem, 5.8vw, 4.2rem) !important;
+/* --- Big Stylish Arcade Damage & Action Popups --- */
+      .damage-popup {
+        position: absolute !important;
+        transform: translate(-50%, -50%);
+        z-index: 9999 !important; /* <--- Set high overlay z-index */
+        pointer-events: none !important;
+        text-align: center !important;
+        white-space: nowrap !important;
+        font-family: var(--kf-hud-font-display) !important;
+        font-size: clamp(2.4rem, 5.8vw, 4.2rem) !important;
         font-weight: 900 !important;
         font-style: italic !important;
         letter-spacing: 0.04em !important;
