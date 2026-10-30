@@ -866,9 +866,84 @@
     return overlay;
   }
 
+
+  
   /**
    * Triggers the glass-shatter crack overlay and viewport impact shake on the victim's box.
    */
+// State map tracking hit sequence counts per rider ID
+const riderHitCounters = new Map();
+
+/**
+ * Generates a 32-bit integer hash from a Rider ID string (e.g., "ichigo", "v3").
+ */
+function hashRiderId(str) {
+  let hash = 2166136261;
+  const s = String(str || "rider").toLowerCase();
+  for (let i = 0; i < s.length; i++) {
+    hash ^= s.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+/**
+ * Seeded pseudo-random number generator producing a value in [0, 1).
+ */
+function seededRandom(seed, step) {
+  const x = Math.sin(seed + step * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+/**
+ * Triggers the glass-shatter crack overlay using riderId as a deterministic seed.
+ */
+function triggerGlassCrack(boxOrId, damageAmount = 0, explicitRiderId = null) {
+  const box = typeof boxOrId === "string" ? byId(boxOrId) : boxOrId;
+  if (!box) return;
+
+  const overlay = ensureGlassCrackOverlay(box);
+  const svg = overlay.querySelector("svg");
+
+  // Derive slot ("p1" / "p2") and look up active Rider ID from game state
+  const boxIdStr = typeof boxOrId === "string" ? boxOrId : (box.id || "");
+  const slot = boxIdStr.split("-")[0].toLowerCase();
+  const player = g.gameState?.[slot] || g.gameState?.core?.[slot];
+  const riderId = String(
+    explicitRiderId || player?.id || player?.riderId || slot || "rider"
+  ).toLowerCase();
+
+  // Advance hit counter for this specific Rider ID to vary consecutive hits deterministically
+  const currentHit = (riderHitCounters.get(riderId) || 0) + 1;
+  riderHitCounters.set(riderId, currentHit);
+
+  const seed = hashRiderId(riderId);
+
+  if (svg) {
+    // Generate deterministic rotation and flip using riderId seed + hit step
+    const randAngle = seededRandom(seed, currentHit);
+    const randFlip = seededRandom(seed + 100, currentHit);
+
+    const deg = Math.floor(randAngle * 360);
+    const flipX = randFlip > 0.5 ? -1 : 1;
+
+    svg.style.transform = `scale(${flipX}, 1) rotate(${deg}deg)`;
+  }
+
+  overlay.classList.remove("crack-active", "heavy-crack");
+  box.classList.remove("victim-hit-shake");
+
+  // Force reflow so rapid consecutive hits restart the animation cleanly
+  void overlay.offsetWidth;
+
+  if (number(damageAmount) >= 300) {
+    overlay.classList.add("heavy-crack");
+  }
+
+  overlay.classList.add("crack-active");
+  box.classList.add("victim-hit-shake");
+}
+  
   function triggerGlassCrack(boxOrId, damageAmount = 0) {
     const box = typeof boxOrId === "string" ? byId(boxOrId) : boxOrId;
     if (!box) return;
