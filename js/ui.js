@@ -293,9 +293,6 @@
     );
   }
 
-  /**
-   * Resets rider hit counters so glass break variations start fresh per round or match.
-   */
   function resetRiderHitCounters() {
     riderHitCounters.clear();
   }
@@ -613,7 +610,6 @@
   function updatePlayerHUD(slot, player) {
     if (!player) return;
 
-    // Detect round transition and automatically reset rider hit sequence
     const cRound = currentRound();
     if (lastTrackedRound !== null && lastTrackedRound !== cRound) {
       resetRiderHitCounters();
@@ -901,17 +897,20 @@
     }
 
     overlay.classList.remove("crack-active", "heavy-crack");
-    box.classList.remove("victim-hit-shake");
+    box.classList.remove("victim-hit-shake", "victim-hit-heavy-shake");
 
     void overlay.offsetWidth;
 
-    // Serious breakage for S moves or damage >= 300; minor breakage otherwise
-    if (isSpecialMove || number(damageAmount) >= 300) {
+    const isHeavy = isSpecialMove || number(damageAmount) >= 300;
+
+    if (isHeavy) {
       overlay.classList.add("heavy-crack");
+      box.classList.add("victim-hit-heavy-shake");
+    } else {
+      box.classList.add("victim-hit-shake");
     }
 
     overlay.classList.add("crack-active");
-    box.classList.add("victim-hit-shake");
   }
 
   function showDamagePopup(boxId, text, type = "damage", isSpecialMove = false) {
@@ -1461,6 +1460,7 @@
         background: rgba(68, 48, 10, 0.85) !important;
       }
 
+      /* Base Glass Crack Overlay Container */
       .glass-crack-overlay {
         position: absolute;
         inset: 0;
@@ -1474,57 +1474,105 @@
       }
 
       .glass-crack-overlay svg {
-        width: 116%;
-        height: 116%;
+        width: 108%;
+        height: 108%;
         transform-origin: center center;
-        filter: drop-shadow(0 0 6px rgba(195, 245, 255, 0.92))
-                drop-shadow(0 2px 5px rgba(0, 0, 0, 0.95));
+        filter: drop-shadow(0 0 5px rgba(180, 240, 255, 0.85))
+                drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9));
+        transition: filter 0.2s ease, width 0.2s ease, height 0.2s ease;
       }
 
+      /* Heavy S-Move Glass Overlay SVG styling */
       .glass-crack-overlay.heavy-crack svg {
-        filter: drop-shadow(0 0 9px rgba(255, 55, 55, 0.98))
-                drop-shadow(0 0 18px rgba(255, 190, 0, 0.8))
-                drop-shadow(0 2px 5px rgba(0, 0, 0, 0.95));
+        width: 135%;
+        height: 135%;
+        filter: drop-shadow(0 0 14px rgba(255, 30, 60, 1))
+                drop-shadow(0 0 28px rgba(255, 180, 0, 0.9))
+                drop-shadow(0 4px 10px rgba(0, 0, 0, 0.98));
       }
 
-      .glass-crack-overlay.crack-active {
-        animation: kfGlassShatter 1.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      /* Minor Hit Animation (Fast, cyan/white flash, subtle scale expansion) */
+      .glass-crack-overlay.crack-active:not(.heavy-crack) {
+        animation: kfMinorGlassShatter 0.68s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
 
+      /* Heavy S-Move Animation (Longer, blood-red explosion flash, massive scale shatter) */
+      .glass-crack-overlay.crack-active.heavy-crack {
+        animation: kfHeavyGlassShatter 1.25s cubic-bezier(0.12, 0.9, 0.2, 1) forwards;
+      }
+
+      /* Minor victim box tremor */
       .victim-hit-shake {
-        animation: kfVictimShake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        animation: kfVictimShake 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
       }
 
-      @keyframes kfGlassShatter {
+      /* Heavy S-Move violent scaling screen shake */
+      .victim-hit-heavy-shake {
+        animation: kfVictimHeavyShake 0.58s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+
+      @keyframes kfMinorGlassShatter {
         0% {
-          opacity: 1;
-          background: rgba(255, 255, 255, 0.42);
-          transform: scale(0.84);
-        }
-        12% {
-          opacity: 1;
-          background: rgba(255, 35, 35, 0.15);
-          transform: scale(1.02);
-        }
-        65% {
           opacity: 0.9;
-          background: transparent;
-          transform: scale(1);
+          background: rgba(200, 245, 255, 0.22);
+          transform: scale(0.88);
+        }
+        15% {
+          opacity: 1;
+          background: rgba(120, 220, 255, 0.12);
+          transform: scale(1.02);
         }
         100% {
           opacity: 0;
           background: transparent;
-          transform: scale(1.03);
+          transform: scale(1.05);
+        }
+      }
+
+      @keyframes kfHeavyGlassShatter {
+        0% {
+          opacity: 1;
+          background: rgba(255, 255, 255, 0.68);
+          transform: scale(0.75);
+        }
+        10% {
+          opacity: 1;
+          background: rgba(255, 20, 50, 0.38);
+          transform: scale(1.28);
+        }
+        25% {
+          opacity: 1;
+          background: rgba(255, 140, 0, 0.22);
+          transform: scale(1.18);
+        }
+        70% {
+          opacity: 0.85;
+          background: transparent;
+          transform: scale(1.1);
+        }
+        100% {
+          opacity: 0;
+          background: transparent;
+          transform: scale(1.32);
         }
       }
 
       @keyframes kfVictimShake {
         0%, 100% { transform: translate(0, 0) rotate(0deg); }
-        15% { transform: translate(-8px, -5px) rotate(-1.2deg); }
-        30% { transform: translate(8px, 4px) rotate(1.2deg); }
-        45% { transform: translate(-6px, 5px) rotate(-0.8deg); }
-        60% { transform: translate(6px, -4px) rotate(0.8deg); }
-        75% { transform: translate(-3px, 2px) rotate(-0.4deg); }
+        20% { transform: translate(-5px, -3px) rotate(-0.8deg); }
+        40% { transform: translate(5px, 3px) rotate(0.8deg); }
+        60% { transform: translate(-4px, 2px) rotate(-0.4deg); }
+        80% { transform: translate(3px, -2px) rotate(0.4deg); }
+      }
+
+      @keyframes kfVictimHeavyShake {
+        0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+        10% { transform: translate(-14px, -10px) scale(1.06) rotate(-2.5deg); }
+        25% { transform: translate(14px, 8px) scale(0.96) rotate(2.5deg); }
+        40% { transform: translate(-10px, 9px) scale(1.04) rotate(-1.8deg); }
+        55% { transform: translate(10px, -7px) scale(0.98) rotate(1.8deg); }
+        70% { transform: translate(-6px, 4px) scale(1.02) rotate(-0.9deg); }
+        85% { transform: translate(4px, -3px) scale(1.01) rotate(0.5deg); }
       }
 
       .damage-popup {
