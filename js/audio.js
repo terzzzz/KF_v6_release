@@ -82,60 +82,10 @@
   }
 
   /**
-   * Fast, clean Light Hit (D-moves)
-   * High-pitch triangle drop (700Hz -> 220Hz) + sharp slap click (18ms).
+   * Light Hit (D-moves) - Disabled.
    */
   function playLightHitSFX() {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-
-    const now = ctx.currentTime;
-    const duration = 0.06;
-
-    const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(0.6, now);
-    masterGain.connect(ctx.destination);
-
-    // 1. High-pitched slap tone
-    const osc = ctx.createOscillator();
-    const oscGain = ctx.createGain();
-    osc.type = "triangle";
-    osc.frequency.setValueAtTime(700, now);
-    osc.frequency.exponentialRampToValueAtTime(220, now + duration);
-
-    oscGain.gain.setValueAtTime(0.7, now);
-    oscGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-
-    osc.connect(oscGain);
-    oscGain.connect(masterGain);
-    osc.start(now);
-    osc.stop(now + duration);
-
-    // 2. High-pass transient click
-    const snapLen = Math.floor(ctx.sampleRate * 0.018);
-    const noiseBuffer = ctx.createBuffer(1, snapLen, ctx.sampleRate);
-    const output = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < snapLen; i++) {
-      output[i] = Math.random() * 2 - 1;
-    }
-
-    const noiseSource = ctx.createBufferSource();
-    noiseSource.buffer = noiseBuffer;
-
-    const filter = ctx.createBiquadFilter();
-    filter.type = "highpass";
-    filter.frequency.setValueAtTime(3200, now);
-
-    const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.5, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
-
-    noiseSource.connect(filter);
-    filter.connect(noiseGain);
-    noiseGain.connect(masterGain);
-
-    noiseSource.start(now);
-    noiseSource.stop(now + 0.018);
+    // Disabled
   }
 
   /**
@@ -228,8 +178,6 @@
   function playHitSFX(heavy = false) {
     if (heavy) {
       playHeavyHitSFX();
-    } else {
-      playLightHitSFX();
     }
   }
 
