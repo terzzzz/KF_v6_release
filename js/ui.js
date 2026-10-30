@@ -896,7 +896,7 @@
     box.classList.add("victim-hit-shake");
   }
 
- function showDamagePopup(boxId, text, type = "damage") {
+function showDamagePopup(boxId, text, type = "damage") {
   const box = byId(boxId);
   if (!box) return;
 
@@ -929,14 +929,23 @@
   }
 
   popup.textContent = localizeBattleText(rawText);
-  popup.style.whiteSpace = "pre-line";
+  popup.style.whiteSpace = "nowrap"; // Force single-line calculation for fit
 
   box.appendChild(popup);
 
+  // Dynamic auto-scale measurement
+  requestAnimationFrame(() => {
+    const boxWidth = box.clientWidth * 0.85; // Target max 85% of viewport width
+    const popupWidth = popup.scrollWidth;
+
+    if (popupWidth > boxWidth && popupWidth > 0) {
+      const scaleFactor = Math.max(0.45, boxWidth / popupWidth);
+      popup.style.transform = `translate(-50%, -50%) scale(${scaleFactor})`;
+    }
+  });
+
   setTimeout(() => popup.remove(), 1450);
 }
-
-
   
 
   function showBattleBanner(message) {
