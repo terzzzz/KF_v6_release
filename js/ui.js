@@ -245,6 +245,9 @@
   ]);
 
   const renderedTags = new WeakMap();
+  const riderHitCounters = new Map();
+  let lastTrackedRound = null;
+
   const byId = id => document.getElementById(id);
 
   function getLang() {
@@ -288,6 +291,13 @@
       g.gameState?.presentationRound ?? g.gameState?.core?.round,
       1
     );
+  }
+
+  /**
+   * Resets rider hit counters so glass break variations start fresh per round or match.
+   */
+  function resetRiderHitCounters() {
+    riderHitCounters.clear();
   }
 
   function statusName(id) {
@@ -603,6 +613,13 @@
   function updatePlayerHUD(slot, player) {
     if (!player) return;
 
+    // Detect round transition and automatically reset rider hit sequence
+    const cRound = currentRound();
+    if (lastTrackedRound !== null && lastTrackedRound !== cRound) {
+      resetRiderHitCounters();
+    }
+    lastTrackedRound = cRound;
+
     syncBattleStaticDOM();
 
     const d = dict();
@@ -838,9 +855,6 @@
     box.appendChild(overlay);
     return overlay;
   }
-
-  // State map tracking hit sequence counts per rider ID
-  const riderHitCounters = new Map();
 
   function hashRiderId(str) {
     let hash = 2166136261;
@@ -1631,6 +1645,7 @@
     updatePlayerHUD,
     showDamagePopup,
     triggerGlassCrack,
+    resetRiderHitCounters,
     showBattleBanner,
     showActionBanner,
     describeStatus,
@@ -1642,6 +1657,7 @@
   g.updatePlayerHUD = updatePlayerHUD;
   g.showDamagePopup = showDamagePopup;
   g.triggerGlassCrack = triggerGlassCrack;
+  g.resetRiderHitCounters = resetRiderHitCounters;
   g.showBattleBanner = showBattleBanner;
   g.showActionBanner = showActionBanner;
   g.localizeBattleText = localizeBattleText;
