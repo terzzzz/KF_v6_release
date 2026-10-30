@@ -929,24 +929,26 @@ function showDamagePopup(boxId, text, type = "damage") {
   }
 
   popup.textContent = localizeBattleText(rawText);
-  popup.style.whiteSpace = "nowrap"; // Force single-line calculation for fit
 
   box.appendChild(popup);
 
-  // Dynamic auto-scale measurement
+  // Dynamic font-size auto-scaling to keep text strictly within frame bounds
   requestAnimationFrame(() => {
-    const boxWidth = box.clientWidth * 0.85; // Target max 85% of viewport width
-    const popupWidth = popup.scrollWidth;
+    const maxAllowedWidth = box.clientWidth * 0.82; // Max 82% of player box width
+    const currentWidth = popup.scrollWidth;
 
-    if (popupWidth > boxWidth && popupWidth > 0) {
-      const scaleFactor = Math.max(0.45, boxWidth / popupWidth);
-      popup.style.transform = `translate(-50%, -50%) scale(${scaleFactor})`;
+    if (currentWidth > maxAllowedWidth && currentWidth > 0) {
+      const computedStyle = window.getComputedStyle(popup);
+      const baseFontSize = parseFloat(computedStyle.fontSize);
+      const scaleFactor = maxAllowedWidth / currentWidth;
+      const newFontSize = Math.max(12, baseFontSize * scaleFactor);
+
+      popup.style.fontSize = `${newFontSize}px`;
     }
   });
 
   setTimeout(() => popup.remove(), 1450);
 }
-  
 
   function showBattleBanner(message) {
     const banner = byId("battle-message");
@@ -1534,16 +1536,17 @@ function showDamagePopup(boxId, text, type = "damage") {
       }
 
       /* --- Big Stylish Arcade Damage & Action Popups (-400, BLOCK, HEAL, MISS) --- */
-      .damage-popup {
-        position: absolute !important;
-        left: 50% !important;
-        top: 42%;
-        transform: translate(-50%, -50%);
-        z-index: 35 !important;
-        pointer-events: none !important;
-        text-align: center !important;
-        font-family: var(--kf-hud-font-display) !important;
-        font-size: clamp(2.4rem, 5.8vw, 4.2rem) !important;
+.damage-popup {
+  position: absolute !important;
+  left: 50% !important;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  z-index: 35 !important;
+  pointer-events: none !important;
+  text-align: center !important;
+  white-space: nowrap !important; /* <--- ADD THIS to prevent text wrapping before scaling */
+  font-family: var(--kf-hud-font-display) !important;
+  font-size: clamp(2.4rem, 5.8vw, 4.2rem) !important;
         font-weight: 900 !important;
         font-style: italic !important;
         letter-spacing: 0.04em !important;
