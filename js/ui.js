@@ -871,7 +871,7 @@
     return x - Math.floor(x);
   }
 
-  function triggerGlassCrack(boxOrId, damageAmount = 0, explicitRiderId = null) {
+  function triggerGlassCrack(boxOrId, damageAmount = 0, explicitRiderId = null, isSpecialMove = false) {
     const box = typeof boxOrId === "string" ? byId(boxOrId) : boxOrId;
     if (!box) return;
 
@@ -905,7 +905,8 @@
 
     void overlay.offsetWidth;
 
-    if (number(damageAmount) >= 300) {
+    // Serious breakage for S moves or damage >= 300; minor breakage otherwise
+    if (isSpecialMove || number(damageAmount) >= 300) {
       overlay.classList.add("heavy-crack");
     }
 
@@ -913,7 +914,7 @@
     box.classList.add("victim-hit-shake");
   }
 
-  function showDamagePopup(boxId, text, type = "damage") {
+  function showDamagePopup(boxId, text, type = "damage", isSpecialMove = false) {
     const box = byId(boxId);
     if (!box) return;
 
@@ -922,17 +923,19 @@
     const dmgMatch = rawText.replace(/,/g, "").match(/(-?\d+(?:\.\d+)?)/);
     const dmgValue = dmgMatch ? Math.abs(number(dmgMatch[1], 0)) : 0;
 
-    const validTypes = new Set(["damage", "heal", "miss", "scratch", "block", "info"]);
+    const validTypes = new Set(["damage", "heal", "miss", "scratch", "block", "info", "special"]);
     const resolvedType = validTypes.has(type) ? type : "info";
 
-    if ((resolvedType === "damage" || resolvedType === "scratch") && dmgValue > 0) {
-      triggerGlassCrack(box, dmgValue);
+    const isSpecial = isSpecialMove || resolvedType === "special";
+
+    if ((resolvedType === "damage" || resolvedType === "scratch" || resolvedType === "special") && dmgValue > 0) {
+      triggerGlassCrack(box, dmgValue, null, isSpecial);
     }
 
     const popup = document.createElement("div");
 
-    popup.classList.add("damage-popup", resolvedType);
-    if (dmgValue >= 300 && resolvedType === "damage") {
+    popup.classList.add("damage-popup", resolvedType === "special" ? "damage" : resolvedType);
+    if (isSpecial || (dmgValue >= 300 && resolvedType === "damage")) {
       popup.classList.add("heavy-dmg");
     }
 
