@@ -27,30 +27,24 @@
     return audioCtx;
   }
 
-  /**
-   * Finds the best masculine voice available on the device.
-   */
   function findBestMaleVoice(targetLang = "ja-JP") {
     if (!cachedVoices.length) loadVoices();
 
     const maleKeywords = ["keita", "ichiro", "daichi", "takumi", "naoki", "george", "david", "mark", "alex", "male"];
     const femaleKeywords = ["kyoko", "haruka", "nanami", "ayumi", "zira", "jenny", "aria", "female"];
 
-    // 1. Look for explicit Japanese male voice
     const jaMale = cachedVoices.find(v => 
       v.lang.toLowerCase().startsWith("ja") &&
       maleKeywords.some(kw => v.name.toLowerCase().includes(kw))
     );
     if (jaMale) return { voice: jaMale, lang: "ja-JP" };
 
-    // 2. Look for explicit English male voice as fallback
     const enMale = cachedVoices.find(v => 
       v.lang.toLowerCase().startsWith("en") &&
       maleKeywords.some(kw => v.name.toLowerCase().includes(kw))
     );
     if (enMale) return { voice: enMale, lang: "en-US" };
 
-    // 3. Fallback to any non-female Japanese voice
     const jaNonFemale = cachedVoices.find(v => 
       v.lang.toLowerCase().startsWith("ja") &&
       !femaleKeywords.some(kw => v.name.toLowerCase().includes(kw))
@@ -65,7 +59,6 @@
     return maleKeywords.some(kw => String(name).toLowerCase().includes(kw));
   }
 
-  // Shouts move names using the best male voice available
   function shout(text, lang = "ja-JP") {
     if (!("speechSynthesis" in window) || !text) return;
     window.speechSynthesis.cancel();
@@ -89,29 +82,28 @@
   }
 
   /**
-   * Fast, snappy Light Punch SFX for D-moves.
-   * Combines a 360Hz -> 60Hz rapid triangle body drop (80ms)
-   * with a high-pass filtered noise slap (25ms).
+   * Fast, clean Light Hit (D-moves)
+   * High-pitch triangle drop (700Hz -> 220Hz) + sharp slap click (18ms).
    */
   function playLightHitSFX() {
     const ctx = getAudioContext();
     if (!ctx) return;
 
     const now = ctx.currentTime;
-    const duration = 0.08;
+    const duration = 0.06;
 
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(0.75, now);
+    masterGain.gain.setValueAtTime(0.6, now);
     masterGain.connect(ctx.destination);
 
-    // 1. Snappy Body Tone (Triangle sweep)
+    // 1. High-pitched slap tone
     const osc = ctx.createOscillator();
     const oscGain = ctx.createGain();
     osc.type = "triangle";
-    osc.frequency.setValueAtTime(360, now);
-    osc.frequency.exponentialRampToValueAtTime(60, now + duration);
+    osc.frequency.setValueAtTime(700, now);
+    osc.frequency.exponentialRampToValueAtTime(220, now + duration);
 
-    oscGain.gain.setValueAtTime(0.85, now);
+    oscGain.gain.setValueAtTime(0.7, now);
     oscGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
     osc.connect(oscGain);
@@ -119,8 +111,8 @@
     osc.start(now);
     osc.stop(now + duration);
 
-    // 2. Fist Impact Slap (Highpass noise transient)
-    const snapLen = Math.floor(ctx.sampleRate * 0.025);
+    // 2. High-pass transient click
+    const snapLen = Math.floor(ctx.sampleRate * 0.018);
     const noiseBuffer = ctx.createBuffer(1, snapLen, ctx.sampleRate);
     const output = noiseBuffer.getChannelData(0);
     for (let i = 0; i < snapLen; i++) {
@@ -132,89 +124,80 @@
 
     const filter = ctx.createBiquadFilter();
     filter.type = "highpass";
-    filter.frequency.setValueAtTime(2200, now);
+    filter.frequency.setValueAtTime(3200, now);
 
     const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.6, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+    noiseGain.gain.setValueAtTime(0.5, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
 
     noiseSource.connect(filter);
     filter.connect(noiseGain);
     noiseGain.connect(masterGain);
 
     noiseSource.start(now);
-    noiseSource.stop(now + 0.025);
+    noiseSource.stop(now + 0.018);
   }
 
   /**
-   * Synthesizes hit sound effects:
-   * Non-S / Minor (D-moves): Fast snappy punch impact (playLightHitSFX).
-   * Heavy / S-Attack: Small bomb explosion (sub-bass drop + distortion clip + white noise explosion).
+   * Heavy Hit / S-Attack Mini-Bomb Impact
+   * Deep audible body drop (280Hz -> 55Hz) + saturated distortion + lowpass explosion tail (400ms).
    */
-  function playHitSFX(heavy = false) {
-    if (!heavy) {
-      playLightHitSFX();
-      return;
-    }
-
+  function playHeavyHitSFX() {
     const ctx = getAudioContext();
     if (!ctx) return;
 
     const now = ctx.currentTime;
-    const duration = 0.48; // Extended duration for bomb rumble decay
+    const duration = 0.40;
 
-    // Master Output Gain
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(1.0, now);
+    masterGain.gain.setValueAtTime(0.9, now);
     masterGain.connect(ctx.destination);
 
-    // Hard distortion node for explosive clip saturation
+    // Moderate distortion for warmth without clipping
     const waveShaper = ctx.createWaveShaper();
     const samples = 44100;
     const curve = new Float32Array(samples);
     const deg = Math.PI / 180;
-    const drive = 50; // Massive overdrive for bomb hit
+    const drive = 18;
     for (let i = 0; i < samples; ++i) {
       const x = (i * 2) / samples - 1;
       curve[i] = ((3 + drive) * x * 20 * deg) / (Math.PI + drive * Math.abs(x));
     }
     waveShaper.curve = curve;
-    waveShaper.oversample = "4x";
+    waveShaper.oversample = "2x";
     waveShaper.connect(masterGain);
 
-    // --- S-ATTACK MINI-BOMB SOUND ENGINE ---
+    // 1. Audible Low-End Blast (280Hz -> 55Hz)
+    const subOsc = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    subOsc.type = "sine";
+    subOsc.frequency.setValueAtTime(280, now);
+    subOsc.frequency.exponentialRampToValueAtTime(55, now + duration);
 
-    // 1. SUB-BASS BOMB DROP (160Hz -> 18Hz sub rumble)
-    const bombSub = ctx.createOscillator();
-    const bombSubGain = ctx.createGain();
-    bombSub.type = "sine";
-    bombSub.frequency.setValueAtTime(160, now);
-    bombSub.frequency.exponentialRampToValueAtTime(18, now + duration);
+    subGain.gain.setValueAtTime(1.0, now);
+    subGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-    bombSubGain.gain.setValueAtTime(1.2, now);
-    bombSubGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    subOsc.connect(subGain);
+    subGain.connect(masterGain);
+    subOsc.start(now);
+    subOsc.stop(now + duration);
 
-    bombSub.connect(bombSubGain);
-    bombSubGain.connect(masterGain);
-    bombSub.start(now);
-    bombSub.stop(now + duration);
+    // 2. Mid-range Sawtooth Crunch
+    const midOsc = ctx.createOscillator();
+    const midGain = ctx.createGain();
+    midOsc.type = "sawtooth";
+    midOsc.frequency.setValueAtTime(520, now);
+    midOsc.frequency.exponentialRampToValueAtTime(70, now + 0.25);
 
-    // 2. MID-PUNCH BLAST (480Hz -> 30Hz distorted sawtooth sweep)
-    const blastOsc = ctx.createOscillator();
-    const blastGain = ctx.createGain();
-    blastOsc.type = "sawtooth";
-    blastOsc.frequency.setValueAtTime(480, now);
-    blastOsc.frequency.exponentialRampToValueAtTime(30, now + 0.32);
+    midGain.gain.setValueAtTime(0.65, now);
+    midGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
 
-    blastGain.gain.setValueAtTime(0.9, now);
-    blastGain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+    midOsc.connect(midGain);
+    midGain.connect(waveShaper);
+    midOsc.start(now);
+    midOsc.stop(now + 0.25);
 
-    blastOsc.connect(blastGain);
-    blastGain.connect(waveShaper);
-    blastOsc.start(now);
-    blastOsc.stop(now + 0.32);
-
-    // 3. EXPLOSION NOISE BURST (Filtered white noise shockwave)
+    // 3. Lowpass Filtered Noise Blast (Explosion body)
     const bufferSize = Math.floor(ctx.sampleRate * duration);
     const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const output = noiseBuffer.getChannelData(0);
@@ -225,15 +208,14 @@
     const noiseSource = ctx.createBufferSource();
     noiseSource.buffer = noiseBuffer;
 
-    // Lowpass Filter sweep for muffled explosive boom
     const lowpass = ctx.createBiquadFilter();
     lowpass.type = "lowpass";
-    lowpass.frequency.setValueAtTime(3200, now);
-    lowpass.frequency.exponentialRampToValueAtTime(120, now + duration * 0.9);
+    lowpass.frequency.setValueAtTime(1800, now);
+    lowpass.frequency.exponentialRampToValueAtTime(200, now + duration);
 
     const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(1.0, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.85);
+    noiseGain.gain.setValueAtTime(0.7, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
     noiseSource.connect(lowpass);
     lowpass.connect(noiseGain);
@@ -241,6 +223,14 @@
 
     noiseSource.start(now);
     noiseSource.stop(now + duration);
+  }
+
+  function playHitSFX(heavy = false) {
+    if (heavy) {
+      playHeavyHitSFX();
+    } else {
+      playLightHitSFX();
+    }
   }
 
   g.KFAudio = { shout, playHitSFX, playLightHitSFX, getAudioContext };
