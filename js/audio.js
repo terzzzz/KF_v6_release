@@ -89,96 +89,127 @@
   }
 
   /**
-   * Synthesizes a heavy, bone-crushing impact SFX using multi-layer audio synthesis:
-   * Layer 1: Sub-bass sine sweep (deep body thump)
-   * Layer 2: Distorted sawtooth sweep (mid-range punch force)
-   * Layer 3: Bandpass white noise burst (bone crunch / fracture snap)
+   * Synthesizes heavy hits / S-Attack mini-bomb sound effects:
+   * Non-S / Minor: Crunch punch impact.
+   * Heavy / S-Attack: Small bomb explosion (sub-bass drop + distortion clip + white noise explosion).
    */
   function playHitSFX(heavy = false) {
     const ctx = getAudioContext();
     if (!ctx) return;
 
     const now = ctx.currentTime;
-    const duration = heavy ? 0.22 : 0.14;
+    const duration = heavy ? 0.48 : 0.15; // Extended duration for bomb rumble decay
 
-    // Master bus
+    // Master Output Gain
     const masterGain = ctx.createGain();
     masterGain.gain.setValueAtTime(1.0, now);
     masterGain.connect(ctx.destination);
 
-    // Soft-clipping distortion node for aggressive saturation
+    // Hard distortion node for explosive clip saturation
     const waveShaper = ctx.createWaveShaper();
     const samples = 44100;
     const curve = new Float32Array(samples);
     const deg = Math.PI / 180;
-    const k = heavy ? 22 : 10; // Drive factor
+    const drive = heavy ? 50 : 12; // Massive overdrive for bomb hit
     for (let i = 0; i < samples; ++i) {
       const x = (i * 2) / samples - 1;
-      curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+      curve[i] = ((3 + drive) * x * 20 * deg) / (Math.PI + drive * Math.abs(x));
     }
     waveShaper.curve = curve;
     waveShaper.oversample = "4x";
     waveShaper.connect(masterGain);
 
-    // 1. SUB-BASS THUMP (Physical mass weight)
-    const subOsc = ctx.createOscillator();
-    const subGain = ctx.createGain();
-    subOsc.type = "sine";
-    const startSubFreq = heavy ? 260 : 180;
-    subOsc.frequency.setValueAtTime(startSubFreq, now);
-    subOsc.frequency.exponentialRampToValueAtTime(22, now + duration);
+    if (heavy) {
+      // --- S-ATTACK MINI-BOMB SOUND ENGINE ---
 
-    subGain.gain.setValueAtTime(heavy ? 0.95 : 0.65, now);
-    subGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      // 1. SUB-BASS BOMB DROP (160Hz -> 18Hz sub rumble)
+      const bombSub = ctx.createOscillator();
+      const bombSubGain = ctx.createGain();
+      bombSub.type = "sine";
+      bombSub.frequency.setValueAtTime(160, now);
+      bombSub.frequency.exponentialRampToValueAtTime(18, now + duration);
 
-    subOsc.connect(subGain);
-    subGain.connect(masterGain);
-    subOsc.start(now);
-    subOsc.stop(now + duration);
+      bombSubGain.gain.setValueAtTime(1.2, now);
+      bombSubGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-    // 2. MID PUNCH (Sawtooth pitch drop driven through distortion)
-    const midOsc = ctx.createOscillator();
-    const midGain = ctx.createGain();
-    midOsc.type = "sawtooth";
-    const startMidFreq = heavy ? 680 : 420;
-    midOsc.frequency.setValueAtTime(startMidFreq, now);
-    midOsc.frequency.exponentialRampToValueAtTime(35, now + duration * 0.85);
+      bombSub.connect(bombSubGain);
+      bombSubGain.connect(masterGain);
+      bombSub.start(now);
+      bombSub.stop(now + duration);
 
-    midGain.gain.setValueAtTime(heavy ? 0.8 : 0.5, now);
-    midGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.85);
+      // 2. MID-PUNCH BLAST (480Hz -> 30Hz distorted sawtooth sweep)
+      const blastOsc = ctx.createOscillator();
+      const blastGain = ctx.createGain();
+      blastOsc.type = "sawtooth";
+      blastOsc.frequency.setValueAtTime(480, now);
+      blastOsc.frequency.exponentialRampToValueAtTime(30, now + 0.32);
 
-    midOsc.connect(midGain);
-    midGain.connect(waveShaper);
-    midOsc.start(now);
-    midOsc.stop(now + duration);
+      blastGain.gain.setValueAtTime(0.9, now);
+      blastGain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
 
-    // 3. BONE CRUNCH / FRACTURE SNAP (Bandpass filtered white noise burst)
-    const bufferSize = Math.floor(ctx.sampleRate * duration);
-    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const output = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      output[i] = Math.random() * 2 - 1;
+      blastOsc.connect(blastGain);
+      blastGain.connect(waveShaper);
+      blastOsc.start(now);
+      blastOsc.stop(now + 0.32);
+
+      // 3. EXPLOSION NOISE BURST (Filtered white noise shockwave)
+      const bufferSize = Math.floor(ctx.sampleRate * duration);
+      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+
+      const noiseSource = ctx.createBufferSource();
+      noiseSource.buffer = noiseBuffer;
+
+      // Lowpass Filter sweep for muffled explosive boom
+      const lowpass = ctx.createBiquadFilter();
+      lowpass.type = "lowpass";
+      lowpass.frequency.setValueAtTime(3200, now);
+      lowpass.frequency.exponentialRampToValueAtTime(120, now + duration * 0.9);
+
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(1.0, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.85);
+
+      noiseSource.connect(lowpass);
+      lowpass.connect(noiseGain);
+      noiseGain.connect(waveShaper);
+
+      noiseSource.start(now);
+      noiseSource.stop(now + duration);
+
+    } else {
+      // --- STANDARD MINOR IMPACT ENGINE ---
+      const subOsc = ctx.createOscillator();
+      const subGain = ctx.createGain();
+      subOsc.type = "sine";
+      subOsc.frequency.setValueAtTime(180, now);
+      subOsc.frequency.exponentialRampToValueAtTime(30, now + duration);
+
+      subGain.gain.setValueAtTime(0.65, now);
+      subGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+      subOsc.connect(subGain);
+      subGain.connect(masterGain);
+      subOsc.start(now);
+      subOsc.stop(now + duration);
+
+      const midOsc = ctx.createOscillator();
+      const midGain = ctx.createGain();
+      midOsc.type = "sawtooth";
+      midOsc.frequency.setValueAtTime(420, now);
+      midOsc.frequency.exponentialRampToValueAtTime(40, now + duration);
+
+      midGain.gain.setValueAtTime(0.5, now);
+      midGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+      midOsc.connect(midGain);
+      midGain.connect(waveShaper);
+      midOsc.start(now);
+      midOsc.stop(now + duration);
     }
-
-    const whiteNoise = ctx.createBufferSource();
-    whiteNoise.buffer = noiseBuffer;
-
-    // Bandpass filter isolates crunchy fracture frequencies (1.8kHz - 2.8kHz)
-    const filter = ctx.createBiquadFilter();
-    filter.type = "bandpass";
-    filter.frequency.setValueAtTime(heavy ? 2400 : 1800, now);
-    filter.Q.setValueAtTime(heavy ? 2.8 : 2.0, now);
-
-    const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(heavy ? 0.9 : 0.5, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + (heavy ? 0.16 : 0.09));
-
-    whiteNoise.connect(filter);
-    filter.connect(noiseGain);
-    noiseGain.connect(waveShaper);
-
-    whiteNoise.start(now);
-    whiteNoise.stop(now + duration);
   }
 
   g.KFAudio = { shout, playHitSFX, getAudioContext };
