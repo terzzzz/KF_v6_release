@@ -89,16 +89,79 @@
   }
 
   /**
-   * Synthesizes heavy hits / S-Attack mini-bomb sound effects:
-   * Non-S / Minor: Crunch punch impact.
-   * Heavy / S-Attack: Small bomb explosion (sub-bass drop + distortion clip + white noise explosion).
+   * Fast, snappy Light Punch SFX for D-moves.
+   * Combines a 360Hz -> 60Hz rapid triangle body drop (80ms)
+   * with a high-pass filtered noise slap (25ms).
    */
-  function playHitSFX(heavy = false) {
+  function playLightHitSFX() {
     const ctx = getAudioContext();
     if (!ctx) return;
 
     const now = ctx.currentTime;
-    const duration = heavy ? 0.48 : 0.15; // Extended duration for bomb rumble decay
+    const duration = 0.08;
+
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.75, now);
+    masterGain.connect(ctx.destination);
+
+    // 1. Snappy Body Tone (Triangle sweep)
+    const osc = ctx.createOscillator();
+    const oscGain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(360, now);
+    osc.frequency.exponentialRampToValueAtTime(60, now + duration);
+
+    oscGain.gain.setValueAtTime(0.85, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    osc.connect(oscGain);
+    oscGain.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + duration);
+
+    // 2. Fist Impact Slap (Highpass noise transient)
+    const snapLen = Math.floor(ctx.sampleRate * 0.025);
+    const noiseBuffer = ctx.createBuffer(1, snapLen, ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < snapLen; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+
+    const noiseSource = ctx.createBufferSource();
+    noiseSource.buffer = noiseBuffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = "highpass";
+    filter.frequency.setValueAtTime(2200, now);
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.6, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+
+    noiseSource.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(masterGain);
+
+    noiseSource.start(now);
+    noiseSource.stop(now + 0.025);
+  }
+
+  /**
+   * Synthesizes hit sound effects:
+   * Non-S / Minor (D-moves): Fast snappy punch impact (playLightHitSFX).
+   * Heavy / S-Attack: Small bomb explosion (sub-bass drop + distortion clip + white noise explosion).
+   */
+  function playHitSFX(heavy = false) {
+    if (!heavy) {
+      playLightHitSFX();
+      return;
+    }
+
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const duration = 0.48; // Extended duration for bomb rumble decay
 
     // Master Output Gain
     const masterGain = ctx.createGain();
@@ -110,7 +173,7 @@
     const samples = 44100;
     const curve = new Float32Array(samples);
     const deg = Math.PI / 180;
-    const drive = heavy ? 50 : 12; // Massive overdrive for bomb hit
+    const drive = 50; // Massive overdrive for bomb hit
     for (let i = 0; i < samples; ++i) {
       const x = (i * 2) / samples - 1;
       curve[i] = ((3 + drive) * x * 20 * deg) / (Math.PI + drive * Math.abs(x));
@@ -119,98 +182,66 @@
     waveShaper.oversample = "4x";
     waveShaper.connect(masterGain);
 
-    if (heavy) {
-      // --- S-ATTACK MINI-BOMB SOUND ENGINE ---
+    // --- S-ATTACK MINI-BOMB SOUND ENGINE ---
 
-      // 1. SUB-BASS BOMB DROP (160Hz -> 18Hz sub rumble)
-      const bombSub = ctx.createOscillator();
-      const bombSubGain = ctx.createGain();
-      bombSub.type = "sine";
-      bombSub.frequency.setValueAtTime(160, now);
-      bombSub.frequency.exponentialRampToValueAtTime(18, now + duration);
+    // 1. SUB-BASS BOMB DROP (160Hz -> 18Hz sub rumble)
+    const bombSub = ctx.createOscillator();
+    const bombSubGain = ctx.createGain();
+    bombSub.type = "sine";
+    bombSub.frequency.setValueAtTime(160, now);
+    bombSub.frequency.exponentialRampToValueAtTime(18, now + duration);
 
-      bombSubGain.gain.setValueAtTime(1.2, now);
-      bombSubGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    bombSubGain.gain.setValueAtTime(1.2, now);
+    bombSubGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
-      bombSub.connect(bombSubGain);
-      bombSubGain.connect(masterGain);
-      bombSub.start(now);
-      bombSub.stop(now + duration);
+    bombSub.connect(bombSubGain);
+    bombSubGain.connect(masterGain);
+    bombSub.start(now);
+    bombSub.stop(now + duration);
 
-      // 2. MID-PUNCH BLAST (480Hz -> 30Hz distorted sawtooth sweep)
-      const blastOsc = ctx.createOscillator();
-      const blastGain = ctx.createGain();
-      blastOsc.type = "sawtooth";
-      blastOsc.frequency.setValueAtTime(480, now);
-      blastOsc.frequency.exponentialRampToValueAtTime(30, now + 0.32);
+    // 2. MID-PUNCH BLAST (480Hz -> 30Hz distorted sawtooth sweep)
+    const blastOsc = ctx.createOscillator();
+    const blastGain = ctx.createGain();
+    blastOsc.type = "sawtooth";
+    blastOsc.frequency.setValueAtTime(480, now);
+    blastOsc.frequency.exponentialRampToValueAtTime(30, now + 0.32);
 
-      blastGain.gain.setValueAtTime(0.9, now);
-      blastGain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+    blastGain.gain.setValueAtTime(0.9, now);
+    blastGain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
 
-      blastOsc.connect(blastGain);
-      blastGain.connect(waveShaper);
-      blastOsc.start(now);
-      blastOsc.stop(now + 0.32);
+    blastOsc.connect(blastGain);
+    blastGain.connect(waveShaper);
+    blastOsc.start(now);
+    blastOsc.stop(now + 0.32);
 
-      // 3. EXPLOSION NOISE BURST (Filtered white noise shockwave)
-      const bufferSize = Math.floor(ctx.sampleRate * duration);
-      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const output = noiseBuffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
-      }
-
-      const noiseSource = ctx.createBufferSource();
-      noiseSource.buffer = noiseBuffer;
-
-      // Lowpass Filter sweep for muffled explosive boom
-      const lowpass = ctx.createBiquadFilter();
-      lowpass.type = "lowpass";
-      lowpass.frequency.setValueAtTime(3200, now);
-      lowpass.frequency.exponentialRampToValueAtTime(120, now + duration * 0.9);
-
-      const noiseGain = ctx.createGain();
-      noiseGain.gain.setValueAtTime(1.0, now);
-      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.85);
-
-      noiseSource.connect(lowpass);
-      lowpass.connect(noiseGain);
-      noiseGain.connect(waveShaper);
-
-      noiseSource.start(now);
-      noiseSource.stop(now + duration);
-
-    } else {
-      // --- STANDARD MINOR IMPACT ENGINE ---
-      const subOsc = ctx.createOscillator();
-      const subGain = ctx.createGain();
-      subOsc.type = "sine";
-      subOsc.frequency.setValueAtTime(180, now);
-      subOsc.frequency.exponentialRampToValueAtTime(30, now + duration);
-
-      subGain.gain.setValueAtTime(0.65, now);
-      subGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-
-      subOsc.connect(subGain);
-      subGain.connect(masterGain);
-      subOsc.start(now);
-      subOsc.stop(now + duration);
-
-      const midOsc = ctx.createOscillator();
-      const midGain = ctx.createGain();
-      midOsc.type = "sawtooth";
-      midOsc.frequency.setValueAtTime(420, now);
-      midOsc.frequency.exponentialRampToValueAtTime(40, now + duration);
-
-      midGain.gain.setValueAtTime(0.5, now);
-      midGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-
-      midOsc.connect(midGain);
-      midGain.connect(waveShaper);
-      midOsc.start(now);
-      midOsc.stop(now + duration);
+    // 3. EXPLOSION NOISE BURST (Filtered white noise shockwave)
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
     }
+
+    const noiseSource = ctx.createBufferSource();
+    noiseSource.buffer = noiseBuffer;
+
+    // Lowpass Filter sweep for muffled explosive boom
+    const lowpass = ctx.createBiquadFilter();
+    lowpass.type = "lowpass";
+    lowpass.frequency.setValueAtTime(3200, now);
+    lowpass.frequency.exponentialRampToValueAtTime(120, now + duration * 0.9);
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(1.0, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.85);
+
+    noiseSource.connect(lowpass);
+    lowpass.connect(noiseGain);
+    noiseGain.connect(waveShaper);
+
+    noiseSource.start(now);
+    noiseSource.stop(now + duration);
   }
 
-  g.KFAudio = { shout, playHitSFX, getAudioContext };
+  g.KFAudio = { shout, playHitSFX, playLightHitSFX, getAudioContext };
 })(window);
