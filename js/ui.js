@@ -168,9 +168,7 @@
     }
   });
 
-  // English -> Japanese dictionary for Move Names & Rider Names in banners/popups
   const EN_TO_JA_TERMS = Object.freeze([
-    // Full Rider Names
     ["Kamen Rider Ichigo", "仮面ライダー1号"],
     ["Kamen Rider Nigo", "仮面ライダー2号"],
     ["Kamen Rider V3", "仮面ライダーV3"],
@@ -178,7 +176,6 @@
     ["Kamen Rider Amazon", "仮面ライダーアマゾン"],
     ["Riderman", "ライダーマン"],
 
-    // Move Names (matched with vs_select.js RIDER_MOVELISTS)
     ["Typhoon Power Break", "タイフーン・パワーブレイク"],
     ["Typhoon Red Shutter", "タイフーン・レッドシャッター"],
     ["Double Typhoon Blow", "ダブルタイフーン・ブロー"],
@@ -248,7 +245,6 @@
   ]);
 
   const renderedTags = new WeakMap();
-
   const byId = id => document.getElementById(id);
 
   function getLang() {
@@ -307,9 +303,6 @@
       .replace(/\b\w/g, letter => letter.toUpperCase());
   }
 
-  /**
-   * Resolves localized Rider display name for P1 / P2 HUD.
-   */
   function resolveLocalizedRiderName(player, fallbackSlot) {
     if (!player) return fallbackSlot.toUpperCase();
     const d = dict();
@@ -331,19 +324,19 @@
     return localizeBattleText(rawName);
   }
 
-  /**
-   * Translates English battle/action banners, popups, and HUD strings into Japanese when active.
-   */
   function localizeBattleText(input) {
     const raw = String(input ?? "");
     if (!raw || !isJa()) return raw;
 
     let out = raw;
 
-    // Exact or common popup/banner phrases
     out = out
       .replace(/\bGET READY!\b/gi, "バトル開始！")
       .replace(/\bREADY FOR BATTLE!\b/gi, "バトル準備完了！")
+      .replace(/\bINTERRUPTED!\b/gi, "中断！")
+      .replace(/\bINTERRUPTED\b/gi, "中断！")
+      .replace(/\bINTERRUPT!\b/gi, "中断！")
+      .replace(/\bINTERRUPT\b/gi, "中断！")
       .replace(/\bTAP DIRECTION TO CHARGE\b/gi, "方向キーでチャージ")
       .replace(/\bHOLD DIRECTION TO CHARGE\b/gi, "方向キー長押しでチャージ")
       .replace(/\bPRESS ACTION KEY\b/gi, "アクションキーで決定")
@@ -369,7 +362,6 @@
       .replace(/\bYOU WIN!\b/gi, "勝利！")
       .replace(/\bYOU LOSE!\b/gi, "敗北…");
 
-    // Pattern replacements (Round, Timer, Wins, Uses, etc.)
     out = out
       .replace(/\bROUND\s+(\d+)\b/gi, "ラウンド $1")
       .replace(/\bTIME:\s*([0-9.]+)s\b/gi, "残り時間: $1秒")
@@ -378,14 +370,12 @@
       .replace(/(.+?)\s+WINS!\b/gi, "$1 の勝利！")
       .replace(/\bREADY\b/g, "準備完了");
 
-    // Replace Rider names and Move names
     for (const [enTerm, jaTerm] of EN_TO_JA_TERMS) {
       if (out.includes(enTerm)) {
         out = out.split(enTerm).join(jaTerm);
       }
     }
 
-    // Common combat verb connectors
     out = out
       .replace(/\s+uses\s+/gi, " の ")
       .replace(/\s+used\s+/gi, " の ")
@@ -395,9 +385,6 @@
     return out;
   }
 
-  /**
-   * Synchronizes static/shared DOM labels on the Battle & Splash screens with the active language.
-   */
   function syncBattleStaticDOM() {
     const d = dict();
 
@@ -573,10 +560,6 @@
     tray.replaceChildren(fragment);
   }
 
-  /**
-   * Resolves whether a given slot ("p1" or "p2") is controlled by CPU and its difficulty,
-   * checking player properties, gameState, and vsSelectionState as fallbacks.
-   */
   function resolveControllerInfo(slot, player) {
     const vs = g.vsSelectionState || {};
     const gs = g.gameState || {};
@@ -654,7 +637,6 @@
       nameElement.textContent = resolveLocalizedRiderName(player, slot);
     }
 
-    // Dynamic Subtext (Blank for Human, Difficulty badge for CPU)
     if (subtextElement) {
       const { isCPU, diffKey } = resolveControllerInfo(slot, player);
 
@@ -678,24 +660,20 @@
       lpElement.classList.toggle("lp-text-warn", lpPercent >= 40 && lpPercent <= 60);
     }
 
-    // Dynamic Stylish LP Bar Filling & Color Transitions
     document.querySelectorAll(`#${slot}-lp-bar-fill, .${slot}-lp-fill`).forEach(fill => {
       fill.style.width = `${lpPercent}%`;
 
       if (lpPercent > 60) {
-        // Cyber Emerald Phase (60% - 100%)
         fill.style.background =
           "linear-gradient(180deg, rgba(255,255,255,0.32) 0%, transparent 45%), " +
           "linear-gradient(90deg, #00994d 0%, #00e676 55%, #69f0ae 100%)";
         fill.style.boxShadow = "0 0 12px rgba(0, 230, 118, 0.55)";
       } else if (lpPercent >= 40) {
-        // Tactical Amber Phase (40% - 60%)
         fill.style.background =
           "linear-gradient(180deg, rgba(255,255,255,0.32) 0%, transparent 45%), " +
           "linear-gradient(90deg, #c67c00 0%, #ffbe0b 55%, #ffe169 100%)";
         fill.style.boxShadow = "0 0 12px rgba(255, 190, 11, 0.6)";
       } else {
-        // Critical Crimson Phase (0% - 40%)
         fill.style.background =
           "linear-gradient(180deg, rgba(255,255,255,0.32) 0%, transparent 45%), " +
           "linear-gradient(90deg, #8a001d 0%, #ff1e42 55%, #ff6b8b 100%)";
@@ -739,7 +717,6 @@
       faintText.textContent = `${h.faint} ${pretty(faint)} / ${pretty(faintThreshold)}`;
     }
 
-    // Update FAINT label inside .faint-bar-wrapper with live percentage
     const hudContainer = document.querySelector(`.${slot}-hud`);
     if (hudContainer) {
       const faintLabel = hudContainer.querySelector(".faint-label");
@@ -749,7 +726,6 @@
       }
     }
 
-    // Render FAINT gauge as a sleek horizontal bar
     document.querySelectorAll(
       `#${slot}-faint-fill, .${slot}-faint-fill, #${slot}-faint-bar-fill`
     ).forEach(element => {
@@ -816,9 +792,6 @@
     renderTags(byId(`${slot}-buff-tray`), tags);
   }
 
-  /**
-   * Builds or retrieves the SVG glass-shatter overlay inside a player video box.
-   */
   function ensureGlassCrackOverlay(box) {
     let overlay = box.querySelector(".glass-crack-overlay");
     if (overlay) return overlay;
@@ -866,101 +839,56 @@
     return overlay;
   }
 
+  // State map tracking hit sequence counts per rider ID
+  const riderHitCounters = new Map();
 
-  
-  /**
-   * Triggers the glass-shatter crack overlay and viewport impact shake on the victim's box.
-   */
-// State map tracking hit sequence counts per rider ID
-const riderHitCounters = new Map();
-
-/**
- * Generates a 32-bit integer hash from a Rider ID string (e.g., "ichigo", "v3").
- */
-function hashRiderId(str) {
-  let hash = 2166136261;
-  const s = String(str || "rider").toLowerCase();
-  for (let i = 0; i < s.length; i++) {
-    hash ^= s.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
-}
-
-/**
- * Seeded pseudo-random number generator producing a value in [0, 1).
- */
-function seededRandom(seed, step) {
-  const x = Math.sin(seed + step * 12.9898) * 43758.5453;
-  return x - Math.floor(x);
-}
-
-/**
- * Triggers the glass-shatter crack overlay using riderId as a deterministic seed.
- */
-function triggerGlassCrack(boxOrId, damageAmount = 0, explicitRiderId = null) {
-  const box = typeof boxOrId === "string" ? byId(boxOrId) : boxOrId;
-  if (!box) return;
-
-  const overlay = ensureGlassCrackOverlay(box);
-  const svg = overlay.querySelector("svg");
-
-  // Derive slot ("p1" / "p2") and look up active Rider ID from game state
-  const boxIdStr = typeof boxOrId === "string" ? boxOrId : (box.id || "");
-  const slot = boxIdStr.split("-")[0].toLowerCase();
-  const player = g.gameState?.[slot] || g.gameState?.core?.[slot];
-  const riderId = String(
-    explicitRiderId || player?.id || player?.riderId || slot || "rider"
-  ).toLowerCase();
-
-  // Advance hit counter for this specific Rider ID to vary consecutive hits deterministically
-  const currentHit = (riderHitCounters.get(riderId) || 0) + 1;
-  riderHitCounters.set(riderId, currentHit);
-
-  const seed = hashRiderId(riderId);
-
-  if (svg) {
-    // Generate deterministic rotation and flip using riderId seed + hit step
-    const randAngle = seededRandom(seed, currentHit);
-    const randFlip = seededRandom(seed + 100, currentHit);
-
-    const deg = Math.floor(randAngle * 360);
-    const flipX = randFlip > 0.5 ? -1 : 1;
-
-    svg.style.transform = `scale(${flipX}, 1) rotate(${deg}deg)`;
+  function hashRiderId(str) {
+    let hash = 2166136261;
+    const s = String(str || "rider").toLowerCase();
+    for (let i = 0; i < s.length; i++) {
+      hash ^= s.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
   }
 
-  overlay.classList.remove("crack-active", "heavy-crack");
-  box.classList.remove("victim-hit-shake");
-
-  // Force reflow so rapid consecutive hits restart the animation cleanly
-  void overlay.offsetWidth;
-
-  if (number(damageAmount) >= 300) {
-    overlay.classList.add("heavy-crack");
+  function seededRandom(seed, step) {
+    const x = Math.sin(seed + step * 12.9898) * 43758.5453;
+    return x - Math.floor(x);
   }
 
-  overlay.classList.add("crack-active");
-  box.classList.add("victim-hit-shake");
-}
-  
-  function triggerGlassCrack(boxOrId, damageAmount = 0) {
+  function triggerGlassCrack(boxOrId, damageAmount = 0, explicitRiderId = null) {
     const box = typeof boxOrId === "string" ? byId(boxOrId) : boxOrId;
     if (!box) return;
 
     const overlay = ensureGlassCrackOverlay(box);
     const svg = overlay.querySelector("svg");
 
+    const boxIdStr = typeof boxOrId === "string" ? boxOrId : (box.id || "");
+    const slot = boxIdStr.split("-")[0].toLowerCase();
+    const player = g.gameState?.[slot] || g.gameState?.core?.[slot];
+    const riderId = String(
+      explicitRiderId || player?.id || player?.riderId || slot || "rider"
+    ).toLowerCase();
+
+    const currentHit = (riderHitCounters.get(riderId) || 0) + 1;
+    riderHitCounters.set(riderId, currentHit);
+
+    const seed = hashRiderId(riderId);
+
     if (svg) {
-      const deg = Math.floor(Math.random() * 360);
-      const flipX = Math.random() > 0.5 ? -1 : 1;
+      const randAngle = seededRandom(seed, currentHit);
+      const randFlip = seededRandom(seed + 100, currentHit);
+
+      const deg = Math.floor(randAngle * 360);
+      const flipX = randFlip > 0.5 ? -1 : 1;
+
       svg.style.transform = `scale(${flipX}, 1) rotate(${deg}deg)`;
     }
 
     overlay.classList.remove("crack-active", "heavy-crack");
     box.classList.remove("victim-hit-shake");
 
-    // Force reflow so rapid consecutive hits cleanly restart the animation
     void overlay.offsetWidth;
 
     if (number(damageAmount) >= 300) {
@@ -971,57 +899,51 @@ function triggerGlassCrack(boxOrId, damageAmount = 0, explicitRiderId = null) {
     box.classList.add("victim-hit-shake");
   }
 
-function showDamagePopup(boxId, text, type = "damage") {
-  const box = byId(boxId);
-  if (!box) return;
+  function showDamagePopup(boxId, text, type = "damage") {
+    const box = byId(boxId);
+    if (!box) return;
 
-  const rawText = String(text ?? "");
+    const rawText = String(text ?? "");
 
-  // Extract numeric value
-  const dmgMatch = rawText.replace(/,/g, "").match(/(-?\d+(?:\.\d+)?)/);
-  const dmgValue = dmgMatch ? Math.abs(number(dmgMatch[1], 0)) : 0;
+    const dmgMatch = rawText.replace(/,/g, "").match(/(-?\d+(?:\.\d+)?)/);
+    const dmgValue = dmgMatch ? Math.abs(number(dmgMatch[1], 0)) : 0;
 
-  const validTypes = new Set(["damage", "heal", "miss", "scratch", "block", "info"]);
-  const resolvedType = validTypes.has(type) ? type : "info";
+    const validTypes = new Set(["damage", "heal", "miss", "scratch", "block", "info"]);
+    const resolvedType = validTypes.has(type) ? type : "info";
 
-  // Trigger glass shatter on victim box
-  if ((resolvedType === "damage" || resolvedType === "scratch") && dmgValue > 0) {
-    triggerGlassCrack(box, dmgValue);
+    if ((resolvedType === "damage" || resolvedType === "scratch") && dmgValue > 0) {
+      triggerGlassCrack(box, dmgValue);
+    }
+
+    const popup = document.createElement("div");
+
+    popup.classList.add("damage-popup", resolvedType);
+    if (dmgValue >= 300 && resolvedType === "damage") {
+      popup.classList.add("heavy-dmg");
+    }
+
+    const battleScreen = byId("battle-screen") || document.body;
+
+    const boxRect = box.getBoundingClientRect();
+    const screenRect = battleScreen.getBoundingClientRect();
+
+    const activeCount = box.querySelectorAll(".damage-popup").length;
+    const topOffsetPercent = activeCount > 0 ? Math.min(0.68, 0.42 + activeCount * 0.12) : 0.42;
+
+    const centerX = (boxRect.left + boxRect.width / 2) - screenRect.left;
+    const centerY = (boxRect.top + boxRect.height * topOffsetPercent) - screenRect.top;
+
+    popup.style.position = "absolute";
+    popup.style.left = `${centerX}px`;
+    popup.style.top = `${centerY}px`;
+    popup.style.zIndex = "9999";
+
+    popup.textContent = localizeBattleText(rawText);
+
+    battleScreen.appendChild(popup);
+
+    setTimeout(() => popup.remove(), 1450);
   }
-
-  const popup = document.createElement("div");
-
-  popup.classList.add("damage-popup", resolvedType);
-  if (dmgValue >= 300 && resolvedType === "damage") {
-    popup.classList.add("heavy-dmg");
-  }
-
-  // Find root battle screen container so popup isn't clipped by .player-box overflow: hidden
-  const battleScreen = byId("battle-screen") || document.body;
-
-  // Calculate box coordinates relative to screen root
-  const boxRect = box.getBoundingClientRect();
-  const screenRect = battleScreen.getBoundingClientRect();
-
-  // Calculate center coordinates
-  const activeCount = box.querySelectorAll(".damage-popup").length;
-  const topOffsetPercent = activeCount > 0 ? Math.min(0.68, 0.42 + activeCount * 0.12) : 0.42;
-
-  const centerX = (boxRect.left + boxRect.width / 2) - screenRect.left;
-  const centerY = (boxRect.top + boxRect.height * topOffsetPercent) - screenRect.top;
-
-  popup.style.position = "absolute";
-  popup.style.left = `${centerX}px`;
-  popup.style.top = `${centerY}px`;
-  popup.style.zIndex = "9999";
-
-  popup.textContent = localizeBattleText(rawText);
-
-  // Append to unclipped battle screen overlay
-  battleScreen.appendChild(popup);
-
-  setTimeout(() => popup.remove(), 1450);
-}
 
   function showBattleBanner(message) {
     const banner = byId("battle-message");
@@ -1042,10 +964,6 @@ function showDamagePopup(boxId, text, type = "damage") {
     banner.hidden = !localized;
   }
 
-  /**
-   * Installs a lightweight observer on shared battle text elements so direct textContent
-   * updates from other battle modules automatically localize when in Japanese mode.
-   */
   function installBattleTextObserver() {
     if (g.__kfBattleTextObserverInstalled) return;
     g.__kfBattleTextObserverInstalled = true;
@@ -1102,7 +1020,6 @@ function showDamagePopup(boxId, text, type = "damage") {
   function installStyles() {
     if (byId("kf-status-hud-styles")) return;
 
-    // Load stylish Latin + Japanese (Kanji / Kana) display fonts
     if (!byId("kf-jp-hud-fonts")) {
       const fontLink = document.createElement("link");
       fontLink.id = "kf-jp-hud-fonts";
@@ -1124,7 +1041,6 @@ function showDamagePopup(boxId, text, type = "damage") {
         --kf-gold: #ffd166;
       }
 
-      /* --- Global In-Game Font Inheritance (Supports English & Japanese) --- */
       #battle-screen,
       #match-transition-screen,
       #loading-screen {
@@ -1133,7 +1049,6 @@ function showDamagePopup(boxId, text, type = "damage") {
         text-rendering: optimizeLegibility;
       }
 
-      /* --- Top HUD Container (#battle-hud) --- */
       #battle-hud.hud-bar {
         background:
           radial-gradient(circle at 14% 25%, rgba(0, 240, 255, 0.14) 0%, transparent 42%),
@@ -1148,7 +1063,6 @@ function showDamagePopup(boxId, text, type = "damage") {
         overflow: hidden;
       }
 
-      /* --- Rider Names (#p1-name, #p2-name) --- */
       #p1-name,
       #p2-name {
         font-family: var(--kf-hud-font-display) !important;
@@ -1169,7 +1083,6 @@ function showDamagePopup(boxId, text, type = "damage") {
         text-shadow: 0 0 14px rgba(255, 42, 109, 0.45), 0 2px 4px rgba(0, 0, 0, 0.9) !important;
       }
 
-      /* --- CPU Difficulty Subtext Pill --- */
       .rider-subtext {
         display: inline-flex;
         align-items: center;
@@ -1209,7 +1122,6 @@ function showDamagePopup(boxId, text, type = "damage") {
         box-shadow: 0 0 10px rgba(187, 100, 255, 0.4);
       }
 
-      /* --- Stat Readouts (LP & CHI Values) --- */
       .stat-line {
         margin: 2px 0 !important;
       }
@@ -1241,7 +1153,6 @@ function showDamagePopup(boxId, text, type = "damage") {
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95), 0 0 12px rgba(255, 42, 85, 0.65) !important;
       }
 
-      /* --- Modern Skewed & Segmented LP Bar --- */
       .lp-bar-wrapper {
         position: relative;
         width: 100%;
@@ -1259,7 +1170,6 @@ function showDamagePopup(boxId, text, type = "damage") {
         transform: skewX(14deg);
       }
 
-      /* 10% Tick Segment Grid Overlay on LP Bar */
       .lp-bar-wrapper::after {
         content: "";
         position: absolute;
@@ -1288,7 +1198,6 @@ function showDamagePopup(boxId, text, type = "damage") {
         margin-left: auto;
       }
 
-      /* --- Modern 16-Cell Segmented CHI Bar --- */
       .chi-bar-wrapper {
         position: relative;
         width: 100%;
@@ -1306,7 +1215,6 @@ function showDamagePopup(boxId, text, type = "damage") {
         transform: skewX(14deg);
       }
 
-      /* 16-Unit Cell Divider Overlay on CHI Bar */
       .chi-bar-wrapper::after {
         content: "";
         position: absolute;
@@ -1334,7 +1242,6 @@ function showDamagePopup(boxId, text, type = "damage") {
         margin-left: auto;
       }
 
-      /* --- Modern Horizontal FAINT / Stun Gauge --- */
       .faint-bar-wrapper {
         display: flex !important;
         align-items: center !important;
@@ -1394,7 +1301,6 @@ function showDamagePopup(boxId, text, type = "damage") {
         margin-left: auto;
       }
 
-      /* --- Center HUD (Round Counter & Digital Timer) --- */
       .center-hud {
         display: flex;
         flex-direction: column;
@@ -1427,7 +1333,6 @@ function showDamagePopup(boxId, text, type = "damage") {
         text-shadow: 0 0 14px rgba(255, 77, 109, 0.55), 0 2px 4px rgba(0, 0, 0, 0.9) !important;
       }
 
-      /* --- Battle Banner & Center Action Sub-Banner --- */
       #battle-message.battle-banner {
         font-family: var(--kf-hud-font-display) !important;
         font-size: clamp(0.78rem, 1.3vw, 0.95rem) !important;
@@ -1449,7 +1354,6 @@ function showDamagePopup(boxId, text, type = "damage") {
         text-shadow: 0 0 12px rgba(0, 240, 255, 0.55), 0 2px 4px #000 !important;
       }
 
-      /* --- Player Viewport Frame & Bottom READY / Charge Bar --- */
       .player-box {
         position: relative !important;
         border-radius: 10px !important;
@@ -1495,7 +1399,6 @@ function showDamagePopup(boxId, text, type = "damage") {
         text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95) !important;
       }
 
-      /* --- Buff & Debuff Status Chips --- */
       .buff-tray {
         display: flex;
         flex-wrap: wrap;
@@ -1541,7 +1444,6 @@ function showDamagePopup(boxId, text, type = "damage") {
         background: rgba(68, 48, 10, 0.85) !important;
       }
 
-      /* --- Glass Shatter Crack Overlay & Victim Viewport Hit Shake --- */
       .glass-crack-overlay {
         position: absolute;
         inset: 0;
@@ -1608,12 +1510,10 @@ function showDamagePopup(boxId, text, type = "damage") {
         75% { transform: translate(-3px, 2px) rotate(-0.4deg); }
       }
 
-      /* --- Big Stylish Arcade Damage & Action Popups (-400, BLOCK, HEAL, MISS) --- */
-/* --- Big Stylish Arcade Damage & Action Popups --- */
       .damage-popup {
         position: absolute !important;
         transform: translate(-50%, -50%);
-        z-index: 9999 !important; /* <--- Set high overlay z-index */
+        z-index: 9999 !important;
         pointer-events: none !important;
         text-align: center !important;
         white-space: nowrap !important;
@@ -1711,7 +1611,6 @@ function showDamagePopup(boxId, text, type = "damage") {
         }
       }
 
-      /* --- On-Screen Control Pad Typography --- */
       .pad-label,
       .charge-status,
       .action-flag,
@@ -1740,7 +1639,6 @@ function showDamagePopup(boxId, text, type = "damage") {
     syncBattleStaticDOM
   };
 
-  // Existing compatibility entry points.
   g.updatePlayerHUD = updatePlayerHUD;
   g.showDamagePopup = showDamagePopup;
   g.triggerGlassCrack = triggerGlassCrack;
