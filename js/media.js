@@ -434,6 +434,19 @@
 
           log("playing", task.id, attemptToken, src);
 
+          // Glass crack FX trigger on reaction hit video playback start
+          const triggerCrack = g.triggerGlassCrack || g.UI?.triggerGlassCrack;
+          if (typeof triggerCrack === "function" && (task.channel === "p1" || task.channel === "p2")) {
+            const srcLower = String(src || "").toLowerCase();
+            const targetBox = `${task.channel}-box`;
+
+            if (srcLower.includes("hit_physical")) {
+              triggerCrack(targetBox, 150, null, false); // Minor breakage for hit_physical.mp4
+            } else if (srcLower.includes("hit")) {
+              triggerCrack(targetBox, 350, null, true);  // Serious breakage for hit.mp4
+            }
+          }
+
           // Background loops resolve as soon as playback is active.
           if (task.background) {
             task.ready({ status: "playing", src });
