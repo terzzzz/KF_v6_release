@@ -449,27 +449,28 @@
           log("playing", task.id, attemptToken, src);
 
           // Reaction hit audio SFX and visual glass shatter integration
-          if (task.channel === "p1" || task.channel === "p2") {
-            const srcLower = String(src || "").toLowerCase();
-            const isHitPhysical = srcLower.includes("hit_physical");
-            const isHit = srcLower.includes("hit");
+        // Inside markPlaying() in js/media.js
+if (task.channel === "p1" || task.channel === "p2") {
+  const srcLower = String(src || "").toLowerCase();
+  const isHitPhysical = srcLower.includes("hit_physical");
+  const isHit = srcLower.includes("hit");
 
-            if (isHitPhysical || isHit) {
-              // 1. Timed Audio Impact SFX via KFAudio
-              if (isHitPhysical) {
-                syncTimestamp(video, 0.12, () => g.KFAudio?.playHitSFX(false));
-              } else if (isHit) {
-                syncTimestamp(video, 0.22, () => g.KFAudio?.playHitSFX(true));
-              }
+  if (isHitPhysical || isHit) {
+    // Determine heavy hit based on move properties or explicitly passed options
+    const isHeavy = Boolean(task.isSpecial || task.heavy || task.moveObj?.type === "S");
 
-              // 2. Glass Crack Visual Shatter
-              const triggerCrack = g.triggerGlassCrack || g.UI?.triggerGlassCrack;
-              if (typeof triggerCrack === "function") {
-                const targetBox = `${task.channel}-box`;
-                triggerCrack(targetBox, isHit ? 350 : 150, null, isHit);
-              }
-            }
-          }
+    if (isHitPhysical) {
+      syncTimestamp(video, 0.12, () => g.KFAudio?.playHitSFX(false));
+    } else {
+      syncTimestamp(video, 0.22, () => g.KFAudio?.playHitSFX(isHeavy));
+    }
+
+    const triggerCrack = g.triggerGlassCrack || g.UI?.triggerGlassCrack;
+    if (typeof triggerCrack === "function") {
+      triggerCrack(`${task.channel}-box`, isHeavy ? 350 : 150, null, isHeavy);
+    }
+  }
+}
 
           // Background loops resolve as soon as playback is active.
           if (task.background) {
