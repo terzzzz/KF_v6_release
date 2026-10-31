@@ -360,7 +360,6 @@
         "label": "INCA BLESSING",
         "type": "heal",
         "duration": 4,
-        "cancelOnLpDamage": true,
         "effects": { "lpRegen": 160 }
       }
     },
