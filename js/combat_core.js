@@ -1226,13 +1226,13 @@
           );
 
           const strongBlock = chance(
-            0.70 * guardFactor
+            0.90 * guardFactor
           );
 
           if (defenseMove.guardKind === "omni") {
-            damageRatio = strongBlock ? 0 : 0.50;
+            damageRatio = strongBlock ? 0 : 0.30;
           } else {
-            damageRatio = strongBlock ? 0.25 : 0.70;
+            damageRatio = strongBlock ? 0.2 : 0.50;
           }
 
           const isFreeGambleGuard =
@@ -1240,7 +1240,7 @@
             defenseMove.chiCost === 0;
 
           guardReward = isFreeGambleGuard
-            ? Math.floor(0.5 * move.chiCost) + 1
+            ? Math.floor(0.5 * move.chiCost) + 2
             : 0;
 
           outcome = strongBlock
