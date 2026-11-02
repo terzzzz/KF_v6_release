@@ -33,6 +33,28 @@
     'qr.png'
   ];
 
+  /** Permanently disables and removes any portrait-rotation blocker overlay (fixes PLiCy/browser iframe lock). */
+  function disablePortraitOrientationOverlay() {
+    const selectors = [
+      '#portrait-orientation-overlay',
+      '.portrait-orientation-overlay',
+      '#orientation-overlay',
+      '.orientation-overlay',
+      '#rotate-device-overlay',
+      '.rotate-device-overlay'
+    ];
+    document.querySelectorAll(selectors.join(', ')).forEach(el => {
+      el.hidden = true;
+      el.style.setProperty('display', 'none', 'important');
+      el.style.setProperty('pointer-events', 'none', 'important');
+      el.style.setProperty('visibility', 'hidden', 'important');
+      el.style.setProperty('z-index', '-1', 'important');
+      if (el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    });
+  }
+
   /*
    * Bilingual UI Dictionary (English & Japanese)
    */
@@ -713,15 +735,9 @@
     window.gameLang = lang === 'ja' ? 'ja' : 'en';
     document.documentElement.lang = window.gameLang;
 
-    // Refresh static labels in orientation overlay if present
+    disablePortraitOrientationOverlay();
+
     const dict = t();
-    const rotateOverlay = document.getElementById('portrait-orientation-overlay');
-    if (rotateOverlay) {
-      const h2 = rotateOverlay.querySelector('h2');
-      const p = rotateOverlay.querySelector('p');
-      if (h2) h2.textContent = dict.rotateTitle;
-      if (p) p.textContent = dict.rotateSub;
-    }
 
     // Refresh How To Play & Credits modal contents if already created
     const howtoModal = document.getElementById('kf-howto-modal');
@@ -883,6 +899,20 @@
         --kf-p2-glow: rgba(255, 42, 109, 0.38);
         --kf-gold: #ffd166;
         --kf-bg-deep: #070a12;
+      }
+
+      /* --- Force-Disable Portrait Orientation Blocker in All Browser/Iframe Contexts --- */
+      #portrait-orientation-overlay,
+      .portrait-orientation-overlay,
+      #orientation-overlay,
+      .orientation-overlay,
+      #rotate-device-overlay,
+      .rotate-device-overlay {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        z-index: -1 !important;
       }
 
       /* --- Screen Atmosphere & Cyber Grid --- */
@@ -2076,6 +2106,7 @@
   }
 
   installRiderBadgeStyles();
+  disablePortraitOrientationOverlay();
 
   /** Renders the HTML content for a specific Rider's movelist inside #kf-movelist-modal in the active language. */
   function renderMovelistModalContent(riderId) {
@@ -3020,6 +3051,7 @@
 
   /** Synchronizes selection screen UI elements, controls, and card highlights with selection state & active language. */
   window.updateSelectionUI = function() {
+    disablePortraitOrientationOverlay();
     ensureCreditsUI();
     ensureHowToPlayUI();
     ensureMovelistUI();
@@ -3203,6 +3235,7 @@
 
   /** Validates selection state and transitions to live battle mode via startBattle(). */
   window.validateAndStartMatch = function() {
+    disablePortraitOrientationOverlay();
     window.closeCreditsModal();
     window.closeHowToPlayModal();
     window.closeMovelistModal();
@@ -3257,6 +3290,7 @@
 
   // DOM initialization and roster fetching
   document.addEventListener('DOMContentLoaded', async () => {
+    disablePortraitOrientationOverlay();
     protectStartPromptButtons();
 
     ensureCreditsUI();
@@ -3289,5 +3323,8 @@
     window.addEventListener('touchstart', unlockAudio, { passive: true });
     window.addEventListener('keydown', unlockAudio);
   });
+
+  window.addEventListener('resize', disablePortraitOrientationOverlay);
+  window.addEventListener('orientationchange', disablePortraitOrientationOverlay);
 
 })(window);
