@@ -1,7 +1,7 @@
 /* js/ui.js
  * Battle HUD and status presentation (Bilingual EN / JA).
  *
- * Patch: numeric-status-hud-2 + cyber-tokusatsu-jp-hud + glass-shatter-dmg-fx + i18n-ja
+ * Patch: numeric-status-hud-2 + cyber-tokusatsu-jp-hud + glass-shatter-dmg-fx + i18n-ja + orientation-unlock
  */
 (function (g) {
   "use strict";
@@ -12,6 +12,7 @@
         typhoon_speed: "Typhoon Charge",
         charge_speed: "Charge Speed",
         focus: "Typhoon Focus",
+        typhoon_bless: "Typhoon Bless",
         v3_focus: "V3 Focus",
         red_shutter: "Red Shutter",
         power_focus: "Power Focus",
@@ -20,11 +21,24 @@
         accuracy_focus: "Target Lock",
         arm_calibration: "Arm Calibration",
         rope_bind: "Rope Bind",
+        rope_tie_up: "Rope Arm Tie-Up",
         mercury_atk: "Mercury Attack",
         mercury_def: "Mercury Defense",
+        mercury_overdrive: "Mercury Overdrive",
+        mercury_fortification: "Mercury Fortification",
+        kaizorg_vitality: "Kaizorg Vitality",
         airborne_evasion: "Airborne Evasion",
         inca_blessing: "Inca Blessing",
         gigi_focus: "Gigi Focus",
+        wild_leap: "Wild Leap",
+        wild_instinct: "Wild Instinct",
+        high_leap: "High Leap",
+        battle_cry: "Battle Cry",
+        rider_high_jump: "Rider High Jump",
+        rider_power_jump: "Rider Power Jump",
+        accelerator: "Accelerator",
+        leap: "Leap",
+        jump: "Jump",
         bleeding: "Bleeding",
         lprecover: "LP Recovery",
         lpRecovery: "LP Recovery",
@@ -92,6 +106,7 @@
         typhoon_speed: "タイフーンチャージ",
         charge_speed: "チャージ加速",
         focus: "タイフーン集中",
+        typhoon_bless: "タイフーンの加護",
         v3_focus: "V3集中",
         red_shutter: "レッドシャッター",
         power_focus: "パワー集中",
@@ -100,11 +115,24 @@
         accuracy_focus: "ターゲットロック",
         arm_calibration: "アーム照準調整",
         rope_bind: "ロープアーム拘束",
+        rope_tie_up: "ロープアーム拘束",
         mercury_atk: "マーキュリー・オーバードライブ",
         mercury_def: "マーキュリー装甲強化",
+        mercury_overdrive: "マーキュリー・オーバードライブ",
+        mercury_fortification: "マーキュリー装甲強化",
+        kaizorg_vitality: "カイゾーグ活性",
         airborne_evasion: "空中回避",
         inca_blessing: "インカの秘術",
         gigi_focus: "ギギの腕輪・集中",
+        wild_leap: "野生の大跳躍",
+        wild_instinct: "野生の本能",
+        high_leap: "ハイジャンプ",
+        battle_cry: "気合の咆哮",
+        rider_high_jump: "ライダー大ジャンプ",
+        rider_power_jump: "ライダーパワージャンプ",
+        accelerator: "アクセラレーター",
+        leap: "V3大ジャンプ",
+        jump: "Xジャンプ",
         bleeding: "出血",
         lprecover: "LP回復",
         lpRecovery: "LP回復",
@@ -250,6 +278,28 @@
 
   const byId = id => document.getElementById(id);
 
+  /** Permanently disables and removes any portrait-rotation blocker overlay (fixes PLiCy/browser iframe lock). */
+  function disablePortraitOrientationOverlay() {
+    const selectors = [
+      "#portrait-orientation-overlay",
+      ".portrait-orientation-overlay",
+      "#orientation-overlay",
+      ".orientation-overlay",
+      "#rotate-device-overlay",
+      ".rotate-device-overlay"
+    ];
+    document.querySelectorAll(selectors.join(", ")).forEach(el => {
+      el.hidden = true;
+      el.style.setProperty("display", "none", "important");
+      el.style.setProperty("pointer-events", "none", "important");
+      el.style.setProperty("visibility", "hidden", "important");
+      el.style.setProperty("z-index", "-1", "important");
+      if (el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    });
+  }
+
   function getLang() {
     const raw =
       g.gameLang ||
@@ -299,11 +349,18 @@
 
   function statusName(id) {
     const d = dict();
+    const key = String(id || "").toLowerCase();
     if (d.statusNames[id]) {
       return d.statusNames[id];
     }
+    if (d.statusNames[key]) {
+      return d.statusNames[key];
+    }
     if (I18N_UI.en.statusNames[id]) {
       return I18N_UI.en.statusNames[id];
+    }
+    if (I18N_UI.en.statusNames[key]) {
+      return I18N_UI.en.statusNames[key];
     }
     return String(id || (isJa() ? "状態" : "Status"))
       .replace(/_/g, " ")
@@ -337,6 +394,12 @@
 
     let out = raw;
 
+    for (const [enTerm, jaTerm] of EN_TO_JA_TERMS) {
+      if (out.includes(enTerm)) {
+        out = out.split(enTerm).join(jaTerm);
+      }
+    }
+
     out = out
       .replace(/\bGET READY!\b/gi, "バトル開始！")
       .replace(/\bREADY FOR BATTLE!\b/gi, "バトル準備完了！")
@@ -367,21 +430,20 @@
       .replace(/\bDOUBLE KO\b/gi, "ダブルKO")
       .replace(/\bTIME OVER\b/gi, "タイムアップ")
       .replace(/\bYOU WIN!\b/gi, "勝利！")
-      .replace(/\bYOU LOSE!\b/gi, "敗北…");
+      .replace(/\bYOU LOSE!\b/gi, "敗北…")
+      .replace(/\bVICTORY!\b/gi, "勝利！")
+      .replace(/\bVICTORY\b/gi, "勝利！")
+      .replace(/\bDEFEAT\.\.\./gi, "敗北…")
+      .replace(/\bDEFEAT!\b/gi, "敗北…")
+      .replace(/\bDEFEAT\b/gi, "敗北…");
 
     out = out
       .replace(/\bROUND\s+(\d+)\b/gi, "ラウンド $1")
       .replace(/\bTIME:\s*([0-9.]+)s\b/gi, "残り時間: $1秒")
       .replace(/\bPLAYER\s*1\s+WINS!\b/gi, "プレイヤー1の勝利！")
       .replace(/\bPLAYER\s*2\s+WINS!\b/gi, "プレイヤー2の勝利！")
-      .replace(/(.+?)\s+WINS!\b/gi, "$1 の勝利！")
+      .replace(/([^\n\r]+?)\s+WINS!\b/gi, "$1 の勝利！")
       .replace(/\bREADY\b/g, "準備完了");
-
-    for (const [enTerm, jaTerm] of EN_TO_JA_TERMS) {
-      if (out.includes(enTerm)) {
-        out = out.split(enTerm).join(jaTerm);
-      }
-    }
 
     out = out
       .replace(/\s+uses\s+/gi, " の ")
@@ -393,6 +455,8 @@
   }
 
   function syncBattleStaticDOM() {
+    disablePortraitOrientationOverlay();
+
     const d = dict();
 
     const p1PadLabel = document.querySelector("#p1-controls .pad-label");
@@ -1057,6 +1121,20 @@
         --kf-gold: #ffd166;
       }
 
+      /* --- Force-Disable Portrait Orientation Blocker in All Browser/Iframe Contexts --- */
+      #portrait-orientation-overlay,
+      .portrait-orientation-overlay,
+      #orientation-overlay,
+      .orientation-overlay,
+      #rotate-device-overlay,
+      .rotate-device-overlay {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        z-index: -1 !important;
+      }
+
       #battle-screen,
       #match-transition-screen,
       #loading-screen {
@@ -1260,11 +1338,12 @@
 
       .faint-bar-wrapper {
         display: flex !important;
+        flex-wrap: wrap !important;
         align-items: center !important;
-        gap: 8px !important;
+        gap: 6px 8px !important;
         margin-top: 3px !important;
         width: 100% !important;
-        max-width: 220px !important;
+        max-width: min(220px, 100%) !important;
       }
 
       .p2-hud .faint-bar-wrapper {
@@ -1280,7 +1359,7 @@
         letter-spacing: 0.08em !important;
         color: #fbbf24 !important;
         white-space: nowrap;
-        min-width: 68px;
+        min-width: 60px;
       }
 
       .p2-hud .faint-label {
@@ -1293,7 +1372,7 @@
       }
 
       .faint-track {
-        flex: 1 1 auto !important;
+        flex: 1 1 80px !important;
         width: 100% !important;
         height: 7px !important;
         background: rgba(8, 12, 22, 0.95) !important;
@@ -1420,6 +1499,7 @@
         flex-wrap: wrap;
         gap: 4px;
         margin-top: 4px;
+        max-width: 100%;
       }
 
       .p2-hud .buff-tray {
@@ -1428,13 +1508,15 @@
 
       .buff-tray .buff-tag {
         font-family: var(--kf-hud-font-ui) !important;
-        font-size: 0.68rem !important;
+        font-size: clamp(0.6rem, 1.05vw, 0.68rem) !important;
         font-weight: 700 !important;
         letter-spacing: 0.03em;
-        padding: 2px 8px !important;
+        padding: 2px 7px !important;
         border-radius: 6px !important;
         max-width: 100%;
+        box-sizing: border-box;
         white-space: normal;
+        word-break: break-word;
         overflow-wrap: anywhere;
         line-height: 1.25;
         pointer-events: auto;
@@ -1620,7 +1702,7 @@
       }
 
       .damage-popup.heal {
-        font-size: clamp(1.5rem, 3.6vw, 1.1rem) !important;
+        font-size: clamp(1.4rem, 3.6vw, 2.2rem) !important;
         background: linear-gradient(180deg, #ffffff 0%, #a8ffdb 35%, #00e676 78%, #007a3d 100%) !important;
         -webkit-background-clip: text !important;
         background-clip: text !important;
@@ -1688,7 +1770,11 @@
   }
 
   installStyles();
+  disablePortraitOrientationOverlay();
   installBattleTextObserver();
+
+  g.addEventListener("resize", disablePortraitOrientationOverlay);
+  g.addEventListener("orientationchange", disablePortraitOrientationOverlay);
 
   g.UI = {
     ...(g.UI || {}),
