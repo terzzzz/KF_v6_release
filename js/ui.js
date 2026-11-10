@@ -1097,7 +1097,7 @@
     }
   }
 
-  function installStyles() {
+function installStyles() {
     if (byId("kf-status-hud-styles")) return;
 
     if (!byId("kf-jp-hud-fonts")) {
@@ -1449,18 +1449,45 @@
         text-shadow: 0 0 12px rgba(0, 240, 255, 0.55), 0 2px 4px #000 !important;
       }
 
+      /* --- BATTLE VIEWPORT & CHROME VIDEO ASPECT RATIO FIX --- */
+      #battle-viewport.battle-viewport {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        gap: 8px !important;
+      }
+
       .player-box {
         position: relative !important;
+        flex: 1 1 0% !important;          /* Enforces equal player box flex distribution */
+        min-width: 0 !important;          /* CHROME FIX: Overrides default min-width: auto */
+        max-width: 48% !important;        /* Prevents horizontal expansion */
         border-radius: 10px !important;
         border: 1px solid rgba(255, 255, 255, 0.14) !important;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65) !important;
-        overflow: hidden;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+      }
+
+      .player-box video {
+        width: 100% !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        object-fit: contain !important;   /* Prevents video horizontal/vertical stretching */
+        aspect-ratio: 16 / 9 !important; /* Preserves 16:9 Tokusatsu video ratio */
+        display: block !important;
+        background-color: #000 !important;
       }
 
       .player-charge-container {
         padding: 4px 6px !important;
         background: rgba(6, 9, 17, 0.92) !important;
         border-top: 1px solid rgba(0, 240, 255, 0.25) !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
       }
 
       .player-charge-track {
