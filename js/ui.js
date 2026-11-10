@@ -1449,7 +1449,7 @@ function installStyles() {
         text-shadow: 0 0 12px rgba(0, 240, 255, 0.55), 0 2px 4px #000 !important;
       }
 
-      /* --- BATTLE VIEWPORT & CHROME VIDEO ASPECT RATIO FIX --- */
+   /* --- BATTLE VIEWPORT & CHROME VIDEO ASPECT RATIO FIX --- */
       #battle-viewport.battle-viewport {
         display: flex !important;
         justify-content: space-between !important;
@@ -1465,6 +1465,7 @@ function installStyles() {
         flex: 1 1 0% !important;          /* Enforces equal player box flex distribution */
         min-width: 0 !important;          /* CHROME FIX: Overrides default min-width: auto */
         max-width: 48% !important;        /* Prevents horizontal expansion */
+        aspect-ratio: 16 / 9 !important;  /* Hard-locks container proportions to 16:9 */
         border-radius: 10px !important;
         border: 1px solid rgba(255, 255, 255, 0.14) !important;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65) !important;
@@ -1568,6 +1569,7 @@ function installStyles() {
         color: #ffe8a3 !important;
         background: rgba(68, 48, 10, 0.85) !important;
       }
+      
 
       /* Base Glass Crack Overlay Container */
       .glass-crack-overlay {
